@@ -1,0 +1,36 @@
+{
+  "name": "WavebornTD",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      },
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "Configs": {
+        "$path": "src/ReplicatedStorage/Configs"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/ServerScriptService/Server"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "GuiScripts": {
+        "$path": "src/StarterGui/GuiScripts"
+      }
+    }
+  }
+}
