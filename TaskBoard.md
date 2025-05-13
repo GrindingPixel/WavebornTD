@@ -16,7 +16,7 @@ GuiResolver	✅	Zugriff per GetPanel(guiName, panelName)
 Logging & Debug	✅	Alle Scripts mit print() / warn() versehen
 
 🖼️ 3. GUI-Panelsystem (Client)
-Panel/GUI	Status	Besonderheiten
+Panel/GUI	Status	Beschreibung
 BattlepassPanel	✅	EXP-Bar, LockSystem, modular aufgebaut
 ShopPanel	✅	Gamepasses, DevProducts + Serverhandler
 CodesPanel	✅	FocusLost + Server-Validation
@@ -24,8 +24,14 @@ NewsPanel	✅	Markdown-Parsing, Mehrfachauswahl
 ProfilePanel	✅	Titelwahl, Avatarbild, Neonfarben
 TitlesPanel	✅	Auswahl-Logik + Feedback
 MainMenuGui	✅	Breath-Tween + Mapping via Buttons
-QuestsGui	🔜	Mehrtab-System (Daily, Weekly, Story …), Testdaten
+QuestsGui	🔜	Multi-Tab-System mit Testdaten & Claim-Funktion
 Weitere (Units etc.)	🔜	Noch nicht begonnen
+
+📐 GUI-Standardgrößen
+Typ	Größe (Size)	Position
+StandardPanel	{0, 910}, {0, 705}	{0, 410}, {0, 80}
+MidSizePanel	{0, 450}, {0, 585}	{0, 660}, {0, 150}
+SmallPanel	{0, 500}, {0, 350}	{0, 620}, {0, 250}
 
 🔧 4. Serverseitige Systeme
 System	Status	Beschreibung
@@ -71,15 +77,17 @@ Debug-Log-Ausgaben	✅	Vollständig in allen Scripts eingebaut
 Panel-Logging	✅	Jede Öffnung/Schließung sichtbar im Output
 
 🔜 Nächste Schritte
-✅ GitHub-Repo online + initialer Commit
+🧱 QuestServerHandler mit RemoteFunction + ClaimEvent aufsetzen
 
-🧪 Alle Panels via GuiInitScript bei Join sicher laden
+🧠 QuestProgressService erstellen (simuliert Summons, Kills etc.)
 
-🎁 Battlepass-Claim-System (Einzel + Alle) beginnen
+🧪 Claim-Aktionen serverseitig simulieren & mit UI synchronisieren
 
-🧰 Tooltip-System + Item-Vorschau umsetzen
+🧰 Tooltip-System vorbereiten für QuestBelohnungen & Shop-Items
 
-📦 Inventarsystem vorbereiten (Struktur + Anzeige)
+📦 InventoryGUI vorbereiten (Struktur + leeres ItemTemplate)
 
-📋 Quest-System fertigstellen (Client + Server + Fortschrittssimulation)
+🎁 BattlepassClaim-System umsetzen (Client & Server)
+
+🔗 Konsistentes Mapping in GuiInitScript und GuiResolver prüfen
 
