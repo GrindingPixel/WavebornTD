@@ -24,7 +24,7 @@ NewsPanel	✅	Markdown-Parsing, Mehrfachauswahl
 ProfilePanel	✅	Titelwahl, Avatarbild, Neonfarben
 TitlesPanel	✅	Auswahl-Logik + Feedback
 MainMenuGui	✅	Breath-Tween + Mapping via Buttons
-QuestsGui	✅	Multi-Tab-System, Claim-Buttons, InfoFrame, Popup
+QuestsGui	✅	Multi-Tab-System, Claim-System, Indikator, HoverOverlay
 Weitere (Units etc.)	🔜	Noch nicht begonnen
 
 📐 GUI-Standardgrößen
@@ -38,7 +38,7 @@ System	Status	Beschreibung
 ShopServerHandler	✅	Kaufverarbeitung, Abbruchsicherheit, Logging
 CodesServerHandler	✅	Codeprüfung mit DataStore
 BattlepassInfoProvider	✅	RemoteFunction liefert EXP, Level
-QuestServerHandler	✅	Liefert Testquests, verarbeitet Claims & RewardEvent
+QuestServerHandler	✅	Liefert Testquests, verarbeitet Claims & Rewards
 RemoteEvents / Functions	✅	Einheitlich in ReplicatedStorage.Remotes vorhanden
 
 🧩 5. Battlepass-System
@@ -47,16 +47,16 @@ BattlepassModule	✅	Belohnungen über Table, modular
 EXP-Bar + Levelanzeige	✅	UI-gebunden, animiert
 Lock-Status / Premiumcheck	✅	Sichtbarkeit dynamisch
 Claim-System	🔜	Muss noch angebunden & mit Server verknüpft werden
-Infinity Mode	❌	Verworfen / deaktiviert
+Infinity Mode	❌	Noch nicht implementiert
 
 📋 6. Quest-System
 Element	Status	Beschreibung
-QuestsGui	✅	Multi-Tab-System mit ImageButtons, InfoFrame, Claim-System
-QuestClientScript	✅	Zeigt Quests, holt Daten, triggert Claims + Popup
-QuestServerHandler	✅	Gibt Testdaten zurück, verarbeitet Claims
-QuestProgressService	✅	Simuliert Fortschritt lokal (Kills, Summons etc.)
-QuestClaimResult	✅	Belohnungspopup über RemoteEvent
-ClaimAllButton	🔜	Vorbereitet, Funktion noch leer
+QuestsGui	✅	Tabs (Daily–Progress), Claim-Logik, HoverOverlay, Indicator
+QuestClientScript	✅	Serveranbindung, Fortschritt, Rewards, persistente Tab-Auswahl
+QuestServerHandler	✅	Gibt Testdaten zurück, verarbeitet Claim + RewardPopup
+QuestProgressService	✅	Simuliert Fortschritt (Kills, Summons etc.)
+QuestClaimResult	✅	Sendet Popup-Daten bei Erfolg
+ClaimAllButton	🔜	Sichtbar, aber noch ohne Funktion
 DataStore-Tracking	❌	Noch nicht implementiert
 
 📦 7. Geplante Features
@@ -65,7 +65,7 @@ Feature	Status	Beschreibung
 🎟️ Premium Unlock (Item-basiert)	🟡	Aktivierung über Inventory-Eintrag
 🧰 Tooltip-System	🟡	Hover-Text für Rewards, Einheiten etc.
 📦 Inventory-System	🔜	Struktur, Anzeige, Filter
-📋 Quest-System	🔜	Daily / Weekly Fortschritt mit echtem Fortschritts-Trigger
+📋 Quest-System	🔜	Daily / Weekly Fortschritt mit echtem Trigger
 🧪 Unit-System	🔜	Tags, Traits, Rarity
 🌐 Leaderboards	❌	Noch nicht entworfen
 
@@ -77,16 +77,17 @@ Debug-Log-Ausgaben	✅	Vollständig in allen Scripts eingebaut
 Panel-Logging	✅	Jede Öffnung/Schließung sichtbar im Output
 
 🔜 Nächste Schritte
-🧠 RewardPopupGui erstellen (statt nur TextLabel bei ClaimResult)
+🎁 ClaimAll aktivieren (Client + Server-Verarbeitung)
 
-🔗 RewardDispatcher: Verbindet Claim mit echtem Inventory (später)
+✨ RewardPopupGui für visuelles Item-Feedback nach Claim
 
-🧪 Quests im Server als „erledigt“ markieren & UI sichtbar abschließen
+🧠 QuestServerHandler: type-Feld pro Quest standardisieren
 
-🗃️ QuestServerHandler: type-Feld pro Quest einführen (für dynamisches Mapping)
+🔁 QuestProgressService: Trigger über Spielaktionen einbauen
 
-🧠 QuestProgressService: Fortschritts-Inkrementierung über Gameplay-Events
+🟢 Tab-Indikatoren bei Server-Fail (z. B. F5) stabilisieren
 
-⚙️ UI-Komponenten standardisieren (z. B. QuestCard Template mit ClickZone, Hover)
+🌈 HoverOverlay-Effekt weiter optimieren (Kollisionsvermeidung, Mausgeschwindigkeit)
 
-✨ Animationen & Statusanzeige (neu, abgeschlossen, Fortschritt live)
+🎨 Visuals für erfüllte/erledigte Quests (z. B. graue Card + ✓ Symbol)
+

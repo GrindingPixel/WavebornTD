@@ -1,21 +1,17 @@
--- StarterGui.GuiScripts.QuestClientScript
-print("🎮 QuestClientScript gestartet – wartet auf Tabs & Serverdaten")
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
 local panelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
 local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
 local QuestProgress = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("QuestProgressService"))
 
-
--- 🔁 Remote-Zugriff
 local remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Quests")
 local GetPlayerQuests = remotes:WaitForChild("GetPlayerQuests")
 local ClaimQuestRequest = remotes:WaitForChild("ClaimQuestRequest")
+local QuestClaimResult = remotes:WaitForChild("QuestClaimResult")
 
--- Panel-Struktur
 local panel = GuiResolver:GetPanel("QuestGui", "QuestPanel")
 if not panel then return end
 panelManager:RegisterPanel(panel)
@@ -28,7 +24,6 @@ local template = listFrame:WaitForChild("QuestTemplate")
 local closeButton = canvas:WaitForChild("QuestCloseButton")
 local claimAllButton = canvas:WaitForChild("QuestClaimAllButton")
 
--- Info-UI-Komponenten
 local titleLabel = infoFrame:WaitForChild("TitleLabel")
 local descriptionLabel = infoFrame:WaitForChild("DescriptionLabel")
 local progressLabel = infoFrame:WaitForChild("ProgressLabel")
@@ -37,8 +32,66 @@ local claimButton = infoFrame:WaitForChild("ClaimButton")
 
 local currentQuest = nil
 local currentTab = "Daily"
+local selectedTab = nil
 
--- UI-Reset
+local TAB_COLORS = {
+	Daily = Color3.fromRGB(0, 255, 150),
+	Weekly = Color3.fromRGB(100, 170, 255),
+	Story = Color3.fromRGB(220, 150, 255),
+	Special = Color3.fromRGB(255, 190, 80),
+	Trials = Color3.fromRGB(255, 80, 80),
+	Progress = Color3.fromRGB(200, 200, 200)
+}
+
+local function setTabStyle(tab, color, isActive)
+	local stroke = tab:FindFirstChildWhichIsA("UIStroke")
+	if stroke then
+		stroke.Transparency = isActive and 0 or 0.5
+	end
+	tab.ImageColor3 = color or Color3.fromRGB(255, 255, 255)
+	tab.Size = isActive and UDim2.new(0, 150, 0, 75) or UDim2.new(0, 141, 0, 66)
+end
+
+local function applyTabHover(tab, tabKey)
+	local color = TAB_COLORS[tabKey] or Color3.fromRGB(255, 255, 255)
+	tab.MouseEnter:Connect(function()
+		if selectedTab ~= tab then
+			setTabStyle(tab, color, false)
+		end
+	end)
+	tab.MouseLeave:Connect(function()
+		if selectedTab ~= tab then
+			setTabStyle(tab, Color3.fromRGB(255, 255, 255), false)
+		end
+	end)
+end
+
+local function updateTabIndicators()
+	for _, tab in ipairs(tabs:GetChildren()) do
+		if tab:IsA("ImageButton") then
+			local cleanTabName = tab.Name:gsub("Tab$", "")
+			local indicator = tab:FindFirstChild("Indicator")
+			if not indicator then continue end
+
+			local success, questList = pcall(function()
+				return GetPlayerQuests:InvokeServer(cleanTabName)
+			end)
+
+			if success and questList then
+				local anyClaimable = false
+				for _, q in ipairs(questList) do
+					local progress = QuestProgress:GetProgress(q.type or "") or 0
+					if progress >= q.goal then
+						anyClaimable = true
+						break
+					end
+				end
+				indicator.Visible = anyClaimable
+			end
+		end
+	end
+end
+
 local function clearList()
 	for _, child in ipairs(listFrame:GetChildren()) do
 		if child:IsA("Frame") and child.Name ~= "QuestTemplate" then
@@ -55,13 +108,12 @@ local function clearRewards()
 	end
 end
 
--- 🖼️ Info-Anzeige
 local function showQuestInfo(quest)
 	currentQuest = quest
+	infoFrame.Visible = true
 	titleLabel.Text = quest.title
 	descriptionLabel.Text = quest.description
 	progressLabel.Text = string.format("%d / %d", quest.progress, quest.goal)
-
 	clearRewards()
 	for _, reward in ipairs(quest.rewards or {}) do
 		local icon = Instance.new("ImageLabel")
@@ -70,49 +122,55 @@ local function showQuestInfo(quest)
 		icon.Image = reward.image
 		icon.Parent = rewardIconsFrame
 	end
-
 	claimButton.Visible = quest.progress >= quest.goal
 end
 
--- 📤 Server-Claim
 claimButton.MouseButton1Click:Connect(function()
 	if currentQuest then
-		print("⏩ Claiming Quest ID:", currentQuest.id)
 		ClaimQuestRequest:FireServer(currentQuest.id)
 		claimButton.Visible = false
+		updateTabIndicators()
 	end
 end)
 
--- 📥 Questliste laden
+local function applyQuestHoverEffect(entry, color)
+	local overlay = entry:FindFirstChild("HoverOverlay")
+	local clickZone = entry:FindFirstChild("ClickZone")
+	if not overlay or not clickZone then return end
+
+	overlay.BackgroundColor3 = color
+	local fadeIn = TweenService:Create(overlay, TweenInfo.new(0.15), {BackgroundTransparency = 0.25})
+	local fadeOut = TweenService:Create(overlay, TweenInfo.new(0.15), {BackgroundTransparency = 1})
+
+	clickZone.MouseEnter:Connect(function()
+		fadeOut:Cancel()
+		fadeIn:Play()
+	end)
+
+	clickZone.MouseLeave:Connect(function()
+		fadeIn:Cancel()
+		fadeOut:Play()
+	end)
+end
+
 local function loadQuests(tabName)
 	currentTab = tabName
 	clearList()
 	clearRewards()
-	titleLabel.Text = ""
-	descriptionLabel.Text = ""
-	progressLabel.Text = ""
-	claimButton.Visible = false
 	infoFrame.Visible = false
-
-	print("⚙️ Lade Quests für Tab:", tabName)
+	claimButton.Visible = false
 
 	local success, questList = pcall(function()
 		return GetPlayerQuests:InvokeServer(tabName)
 	end)
 
-	if not success then
-		warn("❌ Fehler beim Abrufen der Quests:", questList)
-		return
-	end
-
-	if not questList or #questList == 0 then
-		warn("⚠️ Keine Quests erhalten für Kategorie:", tabName)
-		return
-	end
-
-	print("📦 Quests empfangen:", #questList)
+	if not success or not questList then return end
 
 	for _, quest in ipairs(questList) do
+		if quest.type then
+			quest.progress = QuestProgress:GetProgress(quest.type)
+		end
+
 		local entry = template:Clone()
 		entry.Name = "Quest_" .. quest.id
 		entry.Visible = true
@@ -130,51 +188,43 @@ local function loadQuests(tabName)
 		if clickZone and clickZone:IsA("ImageButton") then
 			clickZone.MouseButton1Click:Connect(function()
 				showQuestInfo(quest)
-				infoFrame.Visible = true
 			end)
-		else
-			warn("❌ Kein ClickZone in Template:", entry.Name)
 		end
+
+		local activeColor = TAB_COLORS[currentTab] or Color3.fromRGB(255,255,255)
+		applyQuestHoverEffect(entry, activeColor)
 	end
+
+	updateTabIndicators()
 end
 
-
-
--- 🗂️ Tabs verbinden
 for _, tab in ipairs(tabs:GetChildren()) do
 	if tab:IsA("ImageButton") then
+		local tabKey = tab.Name:gsub("Tab$", "")
+		applyTabHover(tab, tabKey)
 		tab.MouseButton1Click:Connect(function()
-	local cleanTabName = tab.Name:gsub("Tab$", "") -- "DailyTab" → "Daily"
-	print("🖱️ Tab geklickt:", tab.Name, "→", cleanTabName)
-	loadQuests(cleanTabName)
-end)
-
+			local cleanTabName = tab.Name:gsub("Tab$", "")
+			if selectedTab and selectedTab ~= tab then
+				setTabStyle(selectedTab, Color3.fromRGB(255, 255, 255), false)
+			end
+			selectedTab = tab
+			setTabStyle(tab, TAB_COLORS[cleanTabName], true)
+			loadQuests(cleanTabName)
+		end)
 	end
 end
 
-
--- 🧹 Close
 if closeButton then
 	closeButton.MouseButton1Click:Connect(function()
 		panelManager:ClosePanel(panel)
 	end)
 end
 
--- 🧪 Claim All (vorbereitet)
 claimAllButton.MouseButton1Click:Connect(function()
 	print("Claim All gedrückt – Funktion folgt")
 end)
 
--- 🔁 Direkt initialisieren
-loadQuests(currentTab)
-
-local QuestClaimResult = remotes:WaitForChild("QuestClaimResult")
-
--- 🧾 Belohnungspopup
 QuestClaimResult.OnClientEvent:Connect(function(data)
-	print("🎁 QuestClaimResult erhalten:", data.title)
-
-	-- Dummy-Popup (kann später ersetzt werden)
 	local popup = Instance.new("TextLabel")
 	popup.Size = UDim2.new(0, 300, 0, 50)
 	popup.Position = UDim2.new(0.5, -150, 0.4, 0)
@@ -183,9 +233,10 @@ QuestClaimResult.OnClientEvent:Connect(function(data)
 	popup.TextColor3 = Color3.fromRGB(0, 255, 180)
 	popup.TextStrokeTransparency = 0.5
 	popup.Text = "You received: " .. (data.rewards[1] and data.rewards[1].label or "Reward")
-	popup.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
+	popup.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	task.delay(2.5, function()
 		popup:Destroy()
 	end)
 end)
+
+loadQuests(currentTab)
