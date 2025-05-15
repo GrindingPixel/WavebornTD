@@ -16,7 +16,7 @@ GuiResolver	✅	Zugriff per GetPanel(guiName, panelName)
 Logging & Debug	✅	Alle Scripts mit print() / warn() versehen
 
 🖼️ 3. GUI-Panelsystem (Client)
-Panel/GUI	Status	Beschreibung
+Panel/GUI	Status	Besonderheiten
 BattlepassPanel	✅	EXP-Bar, LockSystem, modular aufgebaut
 ShopPanel	✅	Gamepasses, DevProducts + Serverhandler
 CodesPanel	✅	FocusLost + Server-Validation
@@ -24,7 +24,7 @@ NewsPanel	✅	Markdown-Parsing, Mehrfachauswahl
 ProfilePanel	✅	Titelwahl, Avatarbild, Neonfarben
 TitlesPanel	✅	Auswahl-Logik + Feedback
 MainMenuGui	✅	Breath-Tween + Mapping via Buttons
-QuestsGui	🔜	Multi-Tab-System mit Testdaten & Claim-Funktion
+QuestsGui	✅	Multi-Tab-System, Claim-Buttons, InfoFrame, Popup
 Weitere (Units etc.)	🔜	Noch nicht begonnen
 
 📐 GUI-Standardgrößen
@@ -38,8 +38,8 @@ System	Status	Beschreibung
 ShopServerHandler	✅	Kaufverarbeitung, Abbruchsicherheit, Logging
 CodesServerHandler	✅	Codeprüfung mit DataStore
 BattlepassInfoProvider	✅	RemoteFunction liefert EXP, Level
-RemoteEvents / Functions	✅	Einheitlich in ReplicatedStorage vorhanden
-QuestServerHandler	🔜	Gibt Test-Questdaten zurück, verarbeitet Claims
+QuestServerHandler	✅	Liefert Testquests, verarbeitet Claims & RewardEvent
+RemoteEvents / Functions	✅	Einheitlich in ReplicatedStorage.Remotes vorhanden
 
 🧩 5. Battlepass-System
 Element	Status	Beschreibung
@@ -51,12 +51,12 @@ Infinity Mode	❌	Verworfen / deaktiviert
 
 📋 6. Quest-System
 Element	Status	Beschreibung
-QuestsGui	🔜	GUI mit Tabs + QuestInfo + ClaimButton + QuestCloseButton
-QuestClientScript	🔜	Lädt Testdaten, zeigt Fortschritt, Claim funktioniert lokal
-QuestService (Clientdaten)	🔜	Enthält Dummy-Daten für Daily/Weekly etc.
-QuestServerHandler	🔜	Gibt Questdaten zurück, verarbeitet ClaimRequests
-QuestProgressService	🔜	Zählt Fortschritt lokal/testweise (Kills, Summons etc.)
-ClaimAllButton	🔜	Funktion muss noch eingebunden werden
+QuestsGui	✅	Multi-Tab-System mit ImageButtons, InfoFrame, Claim-System
+QuestClientScript	✅	Zeigt Quests, holt Daten, triggert Claims + Popup
+QuestServerHandler	✅	Gibt Testdaten zurück, verarbeitet Claims
+QuestProgressService	✅	Simuliert Fortschritt lokal (Kills, Summons etc.)
+QuestClaimResult	✅	Belohnungspopup über RemoteEvent
+ClaimAllButton	🔜	Vorbereitet, Funktion noch leer
 DataStore-Tracking	❌	Noch nicht implementiert
 
 📦 7. Geplante Features
@@ -65,7 +65,7 @@ Feature	Status	Beschreibung
 🎟️ Premium Unlock (Item-basiert)	🟡	Aktivierung über Inventory-Eintrag
 🧰 Tooltip-System	🟡	Hover-Text für Rewards, Einheiten etc.
 📦 Inventory-System	🔜	Struktur, Anzeige, Filter
-📋 Quest-System	🔜	Daily / Weekly Fortschritt
+📋 Quest-System	🔜	Daily / Weekly Fortschritt mit echtem Fortschritts-Trigger
 🧪 Unit-System	🔜	Tags, Traits, Rarity
 🌐 Leaderboards	❌	Noch nicht entworfen
 
@@ -77,17 +77,16 @@ Debug-Log-Ausgaben	✅	Vollständig in allen Scripts eingebaut
 Panel-Logging	✅	Jede Öffnung/Schließung sichtbar im Output
 
 🔜 Nächste Schritte
-🧱 QuestServerHandler mit RemoteFunction + ClaimEvent aufsetzen
+🧠 RewardPopupGui erstellen (statt nur TextLabel bei ClaimResult)
 
-🧠 QuestProgressService erstellen (simuliert Summons, Kills etc.)
+🔗 RewardDispatcher: Verbindet Claim mit echtem Inventory (später)
 
-🧪 Claim-Aktionen serverseitig simulieren & mit UI synchronisieren
+🧪 Quests im Server als „erledigt“ markieren & UI sichtbar abschließen
 
-🧰 Tooltip-System vorbereiten für QuestBelohnungen & Shop-Items
+🗃️ QuestServerHandler: type-Feld pro Quest einführen (für dynamisches Mapping)
 
-📦 InventoryGUI vorbereiten (Struktur + leeres ItemTemplate)
+🧠 QuestProgressService: Fortschritts-Inkrementierung über Gameplay-Events
 
-🎁 BattlepassClaim-System umsetzen (Client & Server)
+⚙️ UI-Komponenten standardisieren (z. B. QuestCard Template mit ClickZone, Hover)
 
-🔗 Konsistentes Mapping in GuiInitScript und GuiResolver prüfen
-
+✨ Animationen & Statusanzeige (neu, abgeschlossen, Fortschritt live)
