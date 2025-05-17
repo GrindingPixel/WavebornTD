@@ -29,7 +29,7 @@ ProfilePanel | ✅ | Titelwahl, Avatarbild, Neonfarben
 TitlesPanel | ✅ | Auswahl-Logik + Feedback  
 MainMenuGui | ✅ | Breath-Tween + Mapping via Buttons  
 QuestsGui | ✅ | Multi-Tab-System, Claim-System, Indikator, HoverOverlay  
-InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, dynamischer Tooltip  
+InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, Labelanzeige pro Item  
 Weitere (Units etc.) | 🔜 | Noch nicht begonnen  
 
 📐 GUI-Standardgrößen  
@@ -46,6 +46,7 @@ ShopServerHandler | ✅ | Kaufverarbeitung, Abbruchsicherheit, Logging
 CodesServerHandler | ✅ | Codeprüfung mit DataStore  
 BattlepassInfoProvider | ✅ | RemoteFunction liefert EXP, Level  
 QuestServerHandler | ✅ | Gibt Testquests zurück, verarbeitet Claim + RewardPopup  
+InventoryServerHandler | ✅ | Gibt gestackte Items zurück, Testdaten via Modul  
 RemoteEvents / Functions | ✅ | Einheitlich in ReplicatedStorage.Remotes vorhanden  
 
 🧩 5. Battlepass-System  
@@ -73,9 +74,9 @@ Feature | Status | Beschreibung
 ---|---|---  
 🎁 Claim-All Button | 🟡 | Claim + Servercheck + UI-Finish  
 🎟️ Premium Unlock (Item-basiert) | 🟡 | Aktivierung über Inventory-Eintrag  
-🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, wenn Daten serverseitig geregelt sind  
-📦 Inventory-System | ✅ | Grundstruktur vollständig umgesetzt (Tabelle, Tabs, Suche, Tooltip)  
-📋 Quest-System | 🔜 | Daily / Weekly Fortschritt mit echtem Trigger  
+🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, aktuell nur Labelanzeige pro Item im Inventory  
+📦 Inventory-System | ✅ | Grundstruktur vollständig umgesetzt (Grid, Tabs, Suche, Platzhalter)  
+📋 Quest-System (Trigger) | 🔜 | Daily / Weekly Fortschritt mit echtem Trigger  
 🧪 Unit-System | 🔜 | Tags, Traits, Rarity  
 🌐 Leaderboards | ❌ | Noch nicht entworfen  
 
@@ -95,4 +96,4 @@ Panel-Logging | ✅ | Jede Öffnung/Schließung sichtbar im Output
 🟢 Tab-Indikatoren bei Server-Fail (z. B. F5) stabilisieren  
 🌈 HoverOverlay-Effekt weiter optimieren (Kollisionsvermeidung, Mausgeschwindigkeit)  
 🎨 Visuals für erfüllte/erledigte Quests (z. B. graue Card + ✓ Symbol)  
-🧰 Tooltip-Modul als zentrales System vorbereiten (für Shop, Quests, Inventory)  
+🧰 Tooltip-Modul als zentrales System vorbereiten (für Shop, Quests, Inventory)
