@@ -25,7 +25,35 @@ Units.BaseUnits = {
 		type = "Ground",
 		trait = "None",
 		stats = {}
-	}
+	},
+    rukia = {
+        name = "Rukia",
+        image = "rbxassetid://12345678",
+        modelName = "rukia",
+        rarity = "Epic",
+        type = "HybridAir",
+        trait = "IceQueen",
+        stats = {
+            damage = 12000,
+            range = 40,
+            spa = 3.0,
+            crit = 15
+        }
+    },
+    ichigo = {
+        name = "Ichigo",
+        image = "rbxassetid://12345678",
+        modelName = "ichigo",
+        rarity = "Legendary",
+        type = "HybridGround",
+        trait = "SoulReaper",
+        stats = {
+            damage = 15000,
+            range = 50,
+            spa = 2.0,
+            crit = 20
+        }
+    },
 }
 
 
