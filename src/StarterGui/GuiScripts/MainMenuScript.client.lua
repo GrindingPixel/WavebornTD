@@ -107,6 +107,8 @@ for _, btn in ipairs(buttons) do
 			targetPanelName = "CodesPanel"
 		elseif btn.Name == "QuestsButton" then
 			targetPanelName = "QuestPanel"
+		elseif btn.Name == "ItemsButton" then
+			targetPanelName = "InventoryPanel"
 		end
 
 		if targetPanelName then
