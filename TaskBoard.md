@@ -1,4 +1,4 @@
-📋 Waveborn TD – TaskBoard (Stand: 2025-05-17)
+📋 Waveborn TD – TaskBoard (Stand: 2025-05-18)
 
 🧱 1. Projektstruktur & Rojo Setup  
 Element | Status | Beschreibung  
@@ -30,7 +30,8 @@ TitlesPanel | ✅ | Auswahl-Logik + Feedback
 MainMenuGui | ✅ | Breath-Tween + Mapping via Buttons  
 QuestsGui | ✅ | Multi-Tab-System, Claim-System, Indikator, HoverOverlay  
 InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, dynamischer Tooltip  
-Weitere (Units etc.) | 🔜 | Noch nicht begonnen  
+UnitInventoryGui | ✅ | UnitGridFrame, InfoPanel, EquipSystem, SlotBar  
+Weitere (z. B. SkillTree) | 🔜 | Noch nicht begonnen  
 
 📐 GUI-Standardgrößen  
 Typ | Größe (Size) | Position  
@@ -68,24 +69,29 @@ QuestClaimResult | ✅ | Sendet Popup-Daten bei Erfolg
 ClaimAllButton | 🔜 | Sichtbar, aber noch ohne Funktion  
 DataStore-Tracking | ❌ | Noch nicht implementiert  
 
-📦 7. Geplante Features (Update)  
-Feature | Status | Beschreibung  
+📦 7. Units-System  
+Element | Status | Beschreibung  
 ---|---|---  
-🎁 Claim-All Button | 🟡 | Claim + Servercheck + UI-Finish  
-🎟️ Premium Unlock (Item-basiert) | 🟡 | Aktivierung über Inventory-Eintrag  
-🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, wenn Daten serverseitig geregelt sind  
-📦 Inventory-System | ✅ | Grundstruktur vollständig umgesetzt (Tabelle, Tabs, Suche, Tooltip)  
-📋 Quest-System | 🔜 | Daily / Weekly Fortschritt mit echtem Trigger  
-🧪 Unit-System | 🔜 | Tags, Traits, Rarity  
-🌐 Leaderboards | ❌ | Noch nicht entworfen  
+UnitInventoryGui | ✅ | Vollständige Struktur inkl. SlotBar, InfoPanel  
+UnitClientScript | ✅ | Equip-Logik, Slot-Anzeige, PreviewRenderer  
+UnitModels (ReplicatedStorage) | ✅ | Modelle geladen & zentralisiert  
+UnitStatsModule | ✅ | Einheitliche Statstruktur (PlacementCost, Damage usw.)  
+UnitAbilitiesModule | ✅ | Passive/Active Auflistung, dynamisch generiert  
+UnitInfoPanelScript | ✅ | Preview, Seitenwechsel, Stat-Parsing  
+EquipButton | ✅ | Triggert Slot-Vergabe und Slot-Preview  
+UnEquipButton | ✅ | Entfernt Unit visuell & logisch  
+CameraSetup | ✅ | Einheitlich mit FieldOfView, Licht & PrimaryPart-Check  
+InfoPanelStats | ✅ | Dynamisch geladen über Frame.Name  
+AbilityPage | ✅ | UIListLayout, Auto-Inhalt via AbilitiesModule  
 
-📊 8. Entwicklung & Organisation  
+📋 8. Entwicklung & Organisation  
 Bereich | Status | Beschreibung  
 ---|---|---  
 GitHub-Verknüpfung | ✅ | Repository live & synchronisiert  
 Rojo-Sync Tools | ✅ | .bat/.sh zum Synchronisieren  
 Debug-Log-Ausgaben | ✅ | Vollständig in allen Scripts eingebaut  
 Panel-Logging | ✅ | Jede Öffnung/Schließung sichtbar im Output  
+Kamera-Syntax vereinheitlicht | ✅ | Alle UnitPreviews nutzen einheitliche Render-Funktion  
 
 🔜 9. Nächste Schritte  
 🎁 ClaimAll aktivieren (Client + Server-Verarbeitung)  
@@ -95,4 +101,9 @@ Panel-Logging | ✅ | Jede Öffnung/Schließung sichtbar im Output
 🟢 Tab-Indikatoren bei Server-Fail (z. B. F5) stabilisieren  
 🌈 HoverOverlay-Effekt weiter optimieren (Kollisionsvermeidung, Mausgeschwindigkeit)  
 🎨 Visuals für erfüllte/erledigte Quests (z. B. graue Card + ✓ Symbol)  
-🧰 Tooltip-Modul als zentrales System vorbereiten (für Shop, Quests, Inventory)  
+📊 UnitInventory: UnitCount fixen (korrekte Anzahl anzeigen)  
+🔍 UnitInventory: funktionierende SearchBar einbauen  
+📖 InfoPanel: AbilityPage-Button aktivieren (manueller Wechsel)  
+❌ InfoPanel: CloseButton-Funktion einbauen  
+
+🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, wenn Daten serverseitig geregelt sind
