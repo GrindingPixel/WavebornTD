@@ -1,19 +1,19 @@
--- UnitInfoPanelScript.client.lua
-
 task.defer(function()
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Players = game:GetService("Players")
+	local TweenService = game:GetService("TweenService")
+	local UserInputService = game:GetService("UserInputService")
 
 	local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
 	local UnitStats = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UnitStatsModule"))
 	local UnitAbilities = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UnitAbilitiesModule"))
 
-	-- ✅ GUI-Pfad angepasst auf deine Struktur:
 	local gui = GuiResolver:Get("UnitInventoryGui")
 	if not gui then return end
-    local panel = gui:WaitForChild("UnitInventoryPanel")
-    local canvas = panel:WaitForChild("CanvasGroup")
-    local infoPanel = canvas:WaitForChild("UnitInfoPanel")
+
+	local panel = gui:WaitForChild("UnitInventoryPanel")
+	local canvas = panel:WaitForChild("CanvasGroup")
+	local infoPanel = canvas:WaitForChild("UnitInfoPanel")
 	local viewport = infoPanel:WaitForChild("InfoUnitPreview")
 	local scroll = infoPanel:WaitForChild("ScrollingFrame")
 	local statList = scroll:WaitForChild("StatList")
@@ -31,6 +31,14 @@ task.defer(function()
 	local skillTree = panel:FindFirstChild("SkillTreeButton")
 	local unequip = panel:FindFirstChild("UnEquipButton")
 
+	local menuToggleButton = infoPanel:WaitForChild("UnitMenu")
+	local menuFrame = menuToggleButton:WaitForChild("UnitMenuFrame")
+
+	local feedButton = menuFrame:WaitForChild("FeedButton")
+	local fuseButton = menuFrame:WaitForChild("FuseButton")
+	local evolveButton = menuFrame:WaitForChild("EvolveButton")
+	local skillTreeButton = menuFrame:WaitForChild("SkillTreeButton")
+
 	local traitLabel = panel:FindFirstChild("TraitIcon")
 	local typeIcon = panel:FindFirstChild("TypeIcon")
 	local unitImage = panel:FindFirstChild("UnitImage")
@@ -42,7 +50,29 @@ task.defer(function()
 
 	local currentPage = 1
 	local totalPages = 2
-	local currentUnit = "Issoi_HighSchool" -- Beispiel
+	local currentUnit = "Issoi_Highschool"
+
+	local menuOpen = false
+	local ignoreNextOutsideClick = false
+
+
+
+	-- 🔧 Tween-Animation
+	local function tweenSize(frame, targetSize, visible)
+		if visible then
+			frame.Visible = true
+		end
+
+		TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = targetSize
+		}):Play()
+
+		if not visible then
+			task.delay(0.2, function()
+				frame.Visible = false
+			end)
+		end
+	end
 
 	-- 🔁 Seitenumschalter
 	local function updatePages()
@@ -140,38 +170,103 @@ task.defer(function()
 
 	-- 🔄 Viewport aktualisieren
 	local function showModel(modelName)
-	local UnitModels = ReplicatedStorage:WaitForChild("UnitModels")
-	local model = UnitModels:FindFirstChild(modelName)
-	if not model then
-		warn("❌ Modell nicht gefunden:", modelName)
-		return
+		local UnitModels = ReplicatedStorage:WaitForChild("UnitModels")
+		local model = UnitModels:FindFirstChild(modelName)
+		if not model then
+			warn("❌ Modell nicht gefunden:", modelName)
+			return
+		end
+
+		viewport:ClearAllChildren()
+		viewport.BackgroundTransparency = 1
+		viewport.Ambient = Color3.fromRGB(25, 25, 25)
+		viewport.LightColor = Color3.fromRGB(255, 255, 255)
+		viewport.LightDirection = Vector3.new(0, -1, 1)
+
+		local clone = model:Clone()
+		if not clone.PrimaryPart then
+			warn("❌ Kein PrimaryPart im Modell:", modelName)
+			return
+		end
+
+		local cam = Instance.new("Camera")
+		cam.Name = "PreviewCamera"
+		cam.FieldOfView = 80
+		cam.CFrame = CFrame.new(Vector3.new(0, 2, -3.175), Vector3.new(0, 2, 0))
+		cam.Parent = viewport
+		viewport.CurrentCamera = cam
+
+		clone:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+		clone.Parent = viewport
 	end
 
-	viewport:ClearAllChildren()
-	viewport.BackgroundTransparency = 1
-	viewport.Ambient = Color3.fromRGB(25, 25, 25)
-	viewport.LightColor = Color3.fromRGB(255, 255, 255)
-	viewport.LightDirection = Vector3.new(0, -1, 1)
+	-- 🧠 Hover-Effekt für Buttons
+	local function bindHoverEffect(button)
+		local stroke = button:FindFirstChild("HoverStroke")
+		if not stroke then return end
 
-	local clone = model:Clone()
-	if not clone.PrimaryPart then
-		warn("❌ Kein PrimaryPart im Modell:", modelName)
-		return
+		button.MouseEnter:Connect(function()
+			stroke.Transparency = 0
+		end)
+		button.MouseLeave:Connect(function()
+			stroke.Transparency = 1
+		end)
 	end
 
-	local cam = Instance.new("Camera")
-	cam.Name = "PreviewCamera"
-	cam.FieldOfView = 80
-	cam.CFrame = CFrame.new(Vector3.new(-4, -2.5, -6.175), Vector3.new(0, -2.5, 0))
-	cam.Parent = viewport
-	viewport.CurrentCamera = cam
+	bindHoverEffect(feedButton)
+	bindHoverEffect(fuseButton)
+	bindHoverEffect(evolveButton)
+	bindHoverEffect(skillTreeButton)
 
-	clone:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
-	clone.Parent = viewport
-end
+	-- 📦 Outside-Klick schließt Menü
+UserInputService.InputEnded:Connect(function(input, gpe)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if ignoreNextOutsideClick then
+			ignoreNextOutsideClick = false
+			return
+		end
+
+		local mouse = Players.LocalPlayer:GetMouse()
+		local pos = mouse.X
+		local y = mouse.Y
+		local absPos = menuFrame.AbsolutePosition
+		local absSize = menuFrame.AbsoluteSize
+
+		local inside = pos > absPos.X and pos < absPos.X + absSize.X and y > absPos.Y and y < absPos.Y + absSize.Y
+		if not inside and menuOpen then
+			menuOpen = false
+			tweenSize(menuFrame, UDim2.new(0, 200, 0, 0), false)
+		end
+	end
+end)
 
 
-	-- 🔁 Setup aufrufen
+	-- 🧪 Menü Toggle
+	menuToggleButton.MouseButton1Click:Connect(function()
+	ignoreNextOutsideClick = true
+task.delay(0.1, function()
+	ignoreNextOutsideClick = false
+end)
+	menuOpen = not menuOpen
+		local size = menuOpen and UDim2.new(0, 190,0, 320) or UDim2.new(0, 190, 0, 0)
+		tweenSize(menuFrame, size, menuOpen)
+	end)
+
+	-- Platzhalter Aktionen
+	feedButton.MouseButton1Click:Connect(function()
+		warn("🧪 Feed-Feature wird später implementiert.")
+	end)
+	fuseButton.MouseButton1Click:Connect(function()
+		warn("🧪 Fuse-Feature wird später implementiert.")
+	end)
+	evolveButton.MouseButton1Click:Connect(function()
+		warn("🧪 Evolve-Feature wird später implementiert.")
+	end)
+	skillTreeButton.MouseButton1Click:Connect(function()
+		warn("🧪 SkillTree-Feature wird später implementiert.")
+	end)
+
+	-- 🟢 Init
 	fillStats(currentUnit)
 	fillAbilities(currentUnit)
 	showModel(currentUnit)

@@ -1,4 +1,4 @@
-📋 Waveborn TD – TaskBoard (Stand: 2025-05-18)
+📋 Waveborn TD – TaskBoard (Stand: 2025-05-20)
 
 🧱 1. Projektstruktur & Rojo Setup  
 Element | Status | Beschreibung  
@@ -83,6 +83,7 @@ UnEquipButton | ✅ | Entfernt Unit visuell & logisch
 CameraSetup | ✅ | Einheitlich mit FieldOfView, Licht & PrimaryPart-Check  
 InfoPanelStats | ✅ | Dynamisch geladen über Frame.Name  
 AbilityPage | ✅ | UIListLayout, Auto-Inhalt via AbilitiesModule  
+Dropdown-Menü (Feed, Evolve etc.) | ✅ | Animiertes Menü mit Hover + Outside-Klick-Schließen  
 
 📋 8. Entwicklung & Organisation  
 Bereich | Status | Beschreibung  
@@ -105,5 +106,6 @@ Kamera-Syntax vereinheitlicht | ✅ | Alle UnitPreviews nutzen einheitliche Rend
 🔍 UnitInventory: funktionierende SearchBar einbauen  
 📖 InfoPanel: AbilityPage-Button aktivieren (manueller Wechsel)  
 ❌ InfoPanel: CloseButton-Funktion einbauen  
+🧪 UnitMenu: Eigene Fensterstruktur vorbereiten für Feed/Evolve/Fuse/SkillTree  
 
 🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, wenn Daten serverseitig geregelt sind
