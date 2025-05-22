@@ -5,8 +5,10 @@ task.defer(function()
 	local Players = game:GetService("Players")
 
 	local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-	local PanelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
+	local panelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
 	local UnitsModule = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UnitDataModule"))
+	local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+
 
 	local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Units"):WaitForChild("GetPlayerUnits")
 
@@ -21,6 +23,7 @@ task.defer(function()
 	local searchBar = canvas:WaitForChild("SearchBar")
 	local unitCountLabel = canvas:WaitForChild("UnitCountLabel")
 	local infoPanel = canvas:WaitForChild("UnitInfoPanel")
+	local closeButton = canvas:WaitForChild("UnitCloseButton")
 	local equipButton = infoPanel:WaitForChild("EquipButton")
 	local unequipButton = infoPanel:WaitForChild("UnEquipButton")
 
@@ -187,6 +190,13 @@ end)
 		currentSelectedUnit = nil
 		infoPanel.Visible = false
 	end)
+
+
+if closeButton then
+	closeButton.MouseButton1Click:Connect(function()
+		panelManager:ClosePanel(panel)
+	end)
+end
 
 	loadUnits()
 end)

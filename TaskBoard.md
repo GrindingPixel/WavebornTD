@@ -1,4 +1,4 @@
-📋 Waveborn TD – TaskBoard (Stand: 2025-05-20)
+📋 Waveborn TD – TaskBoard (Stand: 2025-05-22)
 
 🧱 1. Projektstruktur & Rojo Setup  
 Element | Status | Beschreibung  
@@ -31,6 +31,7 @@ MainMenuGui | ✅ | Breath-Tween + Mapping via Buttons
 QuestsGui | ✅ | Multi-Tab-System, Claim-System, Indikator, HoverOverlay  
 InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, dynamischer Tooltip  
 UnitInventoryGui | ✅ | UnitGridFrame, InfoPanel, EquipSystem, SlotBar  
+MapTeleportGui | ✅ | Zweiteilig: Auswahl Welt + Stage, RewardInfo  
 Weitere (z. B. SkillTree) | 🔜 | Noch nicht begonnen  
 
 📐 GUI-Standardgrößen  
@@ -85,27 +86,35 @@ InfoPanelStats | ✅ | Dynamisch geladen über Frame.Name
 AbilityPage | ✅ | UIListLayout, Auto-Inhalt via AbilitiesModule  
 Dropdown-Menü (Feed, Evolve etc.) | ✅ | Animiertes Menü mit Hover + Outside-Klick-Schließen  
 
-📋 8. Entwicklung & Organisation  
+📍 8. Teleport-System (NEU)
+Element | Status | Beschreibung
+---|---|---  
+Portal-Part `Touched` → UI | ✅ | Server-Script erkennt Portal, öffnet MapGUI via Remote  
+MapTeleportGui | ✅ | Zeigt Welten, Stages, Rewards  
+StageRewardInfo | ✅ | Belohnungsanzeige bei Stage-Klick  
+Client-Trennung (Controller + GUI) | ✅ | GUI in GuiScripts, Steuerung in StarterPlayerScripts  
+TeleportStageRequest | 🔜 | RemoteEvent für Teleport zu Map/Stage – wird später ergänzt  
+FastTravelGui | 🔜 | Schnellreise zwischen Lobbyzonen folgt  
+
+📋 9. Entwicklung & Organisation  
 Bereich | Status | Beschreibung  
 ---|---|---  
 GitHub-Verknüpfung | ✅ | Repository live & synchronisiert  
 Rojo-Sync Tools | ✅ | .bat/.sh zum Synchronisieren  
 Debug-Log-Ausgaben | ✅ | Vollständig in allen Scripts eingebaut  
-Panel-Logging | ✅ | Jede Öffnung/Schließung sichtbar im Output  
 Kamera-Syntax vereinheitlicht | ✅ | Alle UnitPreviews nutzen einheitliche Render-Funktion  
 
-🔜 9. Nächste Schritte  
+🔜 10. Nächste Schritte  
 🎁 ClaimAll aktivieren (Client + Server-Verarbeitung)  
 ✨ RewardPopupGui für visuelles Item-Feedback nach Claim  
 🧠 QuestServerHandler: type-Feld pro Quest standardisieren  
 🔁 QuestProgressService: Trigger über Spielaktionen einbauen  
 🟢 Tab-Indikatoren bei Server-Fail (z. B. F5) stabilisieren  
 🌈 HoverOverlay-Effekt weiter optimieren (Kollisionsvermeidung, Mausgeschwindigkeit)  
-🎨 Visuals für erfüllte/erledigte Quests (z. B. graue Card + ✓ Symbol)  
 📊 UnitInventory: UnitCount fixen (korrekte Anzahl anzeigen)  
 🔍 UnitInventory: funktionierende SearchBar einbauen  
 📖 InfoPanel: AbilityPage-Button aktivieren (manueller Wechsel)  
 ❌ InfoPanel: CloseButton-Funktion einbauen  
 🧪 UnitMenu: Eigene Fensterstruktur vorbereiten für Feed/Evolve/Fuse/SkillTree  
-
-🧰 Tooltip-System | 🔜 | Zentrales Modul folgt später, wenn Daten serverseitig geregelt sind
+📦 TeleportStageRequest | 🔜 wird später umgesetzt (Serververarbeitung vorbereiten)
+🧰 Tooltip-System | 🔜 zentrales Modul folgt später, wenn Daten serverseitig geregelt sind
