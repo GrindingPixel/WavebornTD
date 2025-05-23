@@ -1,24 +1,29 @@
--- GuiScripts/MapTeleportScript.client.lua
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local mapData = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("MapDataModule"))
+local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
+local PanelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
+local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+
+local teleportRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Teleport"):WaitForChild("TeleportStageRequest")
 
 local player = Players.LocalPlayer
-local gui = script.Parent
+local gui = GuiResolver:Get("MapTeleportGui")
 local panel = gui:WaitForChild("MapTeleportPanel")
 local canvas = panel:WaitForChild("CanvasGroup")
-local worldPanel = panel:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
-local stagePanel = panel:WaitForChild("WorldsStagePanel")
-local rewardFrame = panel:WaitForChild("StageRewardInfo")
+local worldPanel = canvas:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
+local stagePanel = canvas:WaitForChild("WorldsStagePanel")
+local rewardFrame = stagePanel:WaitForChild("StageRewardInfo")
 
 local currentWorld = nil
 
--- Welt-Auswahl
+-- 🌍 Welt-Auswahl
 for _, button in ipairs(worldPanel:GetChildren()) do
 	if button:IsA("ImageButton") then
 		button.MouseButton1Click:Connect(function()
+			if not PanelDebounce:Check("MapTeleport_SelectWorld_" .. button.Name) then return end
+
 			local worldName = button.Name
 			if mapData[worldName] then
 				currentWorld = worldName
@@ -29,12 +34,14 @@ for _, button in ipairs(worldPanel:GetChildren()) do
 	end
 end
 
--- Stage-Auswahl
+-- 🗺️ Stage-Auswahl + Teleport-Button
 for i = 1, 6 do
 	local stageButton = stagePanel:FindFirstChild("Stage" .. i)
 	if stageButton then
 		stageButton.MouseButton1Click:Connect(function()
+			if not PanelDebounce:Check("MapTeleport_Stage" .. i) then return end
 			if not currentWorld then return end
+
 			local world = mapData[currentWorld]
 			local stageData = world and world.Stages[i]
 			if not stageData then return end
@@ -64,6 +71,23 @@ for i = 1, 6 do
 					r.Parent = rewardFrame
 				end
 			end
+
+			-- ▶ Teleport starten Button
+			local teleportButton = Instance.new("TextButton")
+			teleportButton.Size = UDim2.new(1, 0, 0, 32)
+			teleportButton.Position = UDim2.new(0, 0, 1, -36)
+			teleportButton.AnchorPoint = Vector2.new(0, 1)
+			teleportButton.Text = "▶ Teleport starten"
+			teleportButton.Font = Enum.Font.GothamBold
+			teleportButton.TextSize = 15
+			teleportButton.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
+			teleportButton.TextColor3 = Color3.new(1, 1, 1)
+			teleportButton.BorderSizePixel = 0
+			teleportButton.Parent = rewardFrame
+
+			teleportButton.MouseButton1Click:Connect(function()
+				teleportRemote:FireServer(currentWorld, stageData.StageId)
+			end)
 		end)
 	end
 end

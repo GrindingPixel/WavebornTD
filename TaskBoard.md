@@ -86,14 +86,15 @@ InfoPanelStats | ✅ | Dynamisch geladen über Frame.Name
 AbilityPage | ✅ | UIListLayout, Auto-Inhalt via AbilitiesModule  
 Dropdown-Menü (Feed, Evolve etc.) | ✅ | Animiertes Menü mit Hover + Outside-Klick-Schließen  
 
-📍 8. Teleport-System (NEU)
+📍 8. Teleport-System
 Element | Status | Beschreibung
 ---|---|---  
 Portal-Part `Touched` → UI | ✅ | Server-Script erkennt Portal, öffnet MapGUI via Remote  
 MapTeleportGui | ✅ | Zeigt Welten, Stages, Rewards  
 StageRewardInfo | ✅ | Belohnungsanzeige bei Stage-Klick  
-Client-Trennung (Controller + GUI) | ✅ | GUI in GuiScripts, Steuerung in StarterPlayerScripts  
-TeleportStageRequest | 🔜 | RemoteEvent für Teleport zu Map/Stage – wird später ergänzt  
+Teleport starten Button | ✅ | Sendet `TeleportStageRequest` an Server  
+Client-Trennung GUI/Logic | ✅ | GuiScript vs Controller getrennt  
+TeleportStageRequest | 🔜 | Remote + Handler vorbereitet, Logik folgt später  
 FastTravelGui | 🔜 | Schnellreise zwischen Lobbyzonen folgt  
 
 📋 9. Entwicklung & Organisation  
@@ -103,8 +104,18 @@ GitHub-Verknüpfung | ✅ | Repository live & synchronisiert
 Rojo-Sync Tools | ✅ | .bat/.sh zum Synchronisieren  
 Debug-Log-Ausgaben | ✅ | Vollständig in allen Scripts eingebaut  
 Kamera-Syntax vereinheitlicht | ✅ | Alle UnitPreviews nutzen einheitliche Render-Funktion  
+GuiSplit (Controller vs GUI) | ✅ | Teleport wurde in 2 Module getrennt  
 
-🔜 10. Nächste Schritte  
+🐞 10. Bekannte Bugs & ToDos  
+Beschreibung | Status  
+---|---  
+PanelManager:Open() fehlt standardmäßig im Modul | 🔜 Wird später ergänzt + in allen GUIs vereinheitlicht  
+Controller ruft `Open()` auf, Methode existiert nicht | ✅ durch Wrapper fixbar oder direkter Zugriff auf OpenPanel  
+Panel wird doppelt geöffnet bei mehrfachem Touched | ✅ durch `isOpen`-Flag und Debounce im Controller gelöst  
+MapTeleportGui nicht geladen bei Controllerstart | ✅ durch `task.defer` und Event-only Trigger gelöst  
+PanelDebounce:Check() → nil (bei falschem Import) | ✅ durch Modulprüfung (return + Methodendefinition)  
+
+🔜 11. Nächste Schritte  
 🎁 ClaimAll aktivieren (Client + Server-Verarbeitung)  
 ✨ RewardPopupGui für visuelles Item-Feedback nach Claim  
 🧠 QuestServerHandler: type-Feld pro Quest standardisieren  
@@ -116,5 +127,6 @@ Kamera-Syntax vereinheitlicht | ✅ | Alle UnitPreviews nutzen einheitliche Rend
 📖 InfoPanel: AbilityPage-Button aktivieren (manueller Wechsel)  
 ❌ InfoPanel: CloseButton-Funktion einbauen  
 🧪 UnitMenu: Eigene Fensterstruktur vorbereiten für Feed/Evolve/Fuse/SkillTree  
-📦 TeleportStageRequest | 🔜 wird später umgesetzt (Serververarbeitung vorbereiten)
-🧰 Tooltip-System | 🔜 zentrales Modul folgt später, wenn Daten serverseitig geregelt sind
+📦 TeleportStageRequest | 🔜 Serververarbeitung vorbereiten  
+🧰 Tooltip-System | 🔜 Zentrales Modul folgt, wenn Daten serverseitig geregelt sind  
+🧩 PanelManager-Vereinheitlichung | 🔜 `:Open()`/`:Close()` als Standard für alle GUIs
