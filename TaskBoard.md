@@ -130,3 +130,18 @@ PanelDebounce:Check() → nil (bei falschem Import) | ✅ durch Modulprüfung (r
 📦 TeleportStageRequest | 🔜 Serververarbeitung vorbereiten  
 🧰 Tooltip-System | 🔜 Zentrales Modul folgt, wenn Daten serverseitig geregelt sind  
 🧩 PanelManager-Vereinheitlichung | 🔜 `:Open()`/`:Close()` als Standard für alle GUIs
+
+
+
+
+----------------------------------------------------------------------------
+Mojang to do:
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------
+Leshaun Dinglet to do:
