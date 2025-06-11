@@ -1,93 +1,95 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+local Players           = game:GetService("Players")
 
-local mapData = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("MapDataModule"))
-local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-local PanelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+local mapData      = require(ReplicatedStorage.Modules.MapDataModule)
+local GuiResolver  = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager = require(ReplicatedStorage.Modules.PanelManager)
+local PanelDebounce= require(ReplicatedStorage.Modules.PanelDebounce)
 
-local teleportRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Teleport"):WaitForChild("TeleportStageRequest")
+local teleportRemote = ReplicatedStorage.Remotes.Teleport.TeleportStageRequest
 
-local player = Players.LocalPlayer
-local gui = GuiResolver:Get("MapTeleportGui")
-local panel = gui:WaitForChild("MapTeleportPanel")
-local canvas = panel:WaitForChild("CanvasGroup")
-local worldPanel = canvas:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
-local stagePanel = canvas:WaitForChild("WorldsStagePanel")
+local gui         = GuiResolver:Get("MapTeleportGui")
+local panel       = GuiResolver:GetPanel("MapTeleportGui", "MapTeleportPanel")
+local canvas      = panel:WaitForChild("CanvasGroup")
+local worldPanel  = canvas:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
+local stagePanel  = canvas:WaitForChild("WorldsStagePanel")
 local rewardFrame = stagePanel:WaitForChild("StageRewardInfo")
+local closeBtn    = canvas:WaitForChild("MapTeleportCloseButton")
 
-local currentWorld = nil
+PanelManager:RegisterPanel(panel)
 
--- 🌍 Welt-Auswahl
-for _, button in ipairs(worldPanel:GetChildren()) do
-	if button:IsA("ImageButton") then
+local currentWorld
+
+-- 🌍 Welt-Auswahl mit korrektem Closure und Debounce
+for _, child in ipairs(worldPanel:GetChildren()) do
+	if child:IsA("ImageButton") then
+		local button = child
 		button.MouseButton1Click:Connect(function()
-			if not PanelDebounce:Check("MapTeleport_SelectWorld_" .. button.Name) then return end
+			-- Spam-Schutz
+			if PanelDebounce:Block("MapTeleport_SelectWorld_" .. button.Name, 0.5) then return end
 
-			local worldName = button.Name
-			if mapData[worldName] then
-				currentWorld = worldName
-			else
-				warn("❌ Welt nicht gefunden:", worldName)
-			end
+			-- Setze die aktuelle Welt
+			currentWorld = mapData[button.Name] and button.Name or nil
 		end)
 	end
 end
 
--- 🗺️ Stage-Auswahl + Teleport-Button
+-- 🗺️ Stage-Auswahl + Reward + Teleport-Button
 for i = 1, 6 do
-	local stageButton = stagePanel:FindFirstChild("Stage" .. i)
-	if stageButton then
+	local sb = stagePanel:FindFirstChild("Stage" .. i)
+	if sb then
+		local stageButton = sb
 		stageButton.MouseButton1Click:Connect(function()
-			if not PanelDebounce:Check("MapTeleport_Stage" .. i) then return end
+			-- Spam-Schutz
+			if PanelDebounce:Block("MapTeleport_Stage" .. i, 0.5) then return end
 			if not currentWorld then return end
 
-			local world = mapData[currentWorld]
-			local stageData = world and world.Stages[i]
-			if not stageData then return end
+			local sd = mapData[currentWorld].Stages[i]
+			if not sd then return end
 
 			rewardFrame:ClearAllChildren()
-
-			local title = Instance.new("TextLabel")
-			title.Text = "📘 " .. stageData.Name .. " (Stage " .. i .. ")"
-			title.Size = UDim2.new(1, 0, 0, 24)
+			-- Titel
+			local title = Instance.new("TextLabel", rewardFrame)
+			title.Size = UDim2.new(1,0,0,24)
+			title.BackgroundTransparency = 1
 			title.Font = Enum.Font.GothamBold
 			title.TextSize = 16
-			title.TextColor3 = Color3.new(1, 1, 1)
-			title.BackgroundTransparency = 1
+			title.TextColor3 = Color3.new(1,1,1)
 			title.TextXAlignment = Enum.TextXAlignment.Left
-			title.Parent = rewardFrame
+			title.Text = "📘 "..sd.Name.." (Stage "..i..")"
 
-			if stageData.Rewards then
-				for _, reward in ipairs(stageData.Rewards) do
-					local r = Instance.new("TextLabel")
-					r.Text = "- " .. tostring(reward.amount) .. "x " .. (reward.id or reward.type)
-					r.Size = UDim2.new(1, 0, 0, 20)
-					r.Font = Enum.Font.Gotham
-					r.TextSize = 14
-					r.TextColor3 = Color3.fromRGB(180, 180, 180)
-					r.BackgroundTransparency = 1
-					r.TextXAlignment = Enum.TextXAlignment.Left
-					r.Parent = rewardFrame
-				end
+			-- Rewards
+			for _, rwd in ipairs(sd.Rewards) do
+				local lbl = Instance.new("TextLabel", rewardFrame)
+				lbl.Size = UDim2.new(1,0,0,20)
+				lbl.BackgroundTransparency = 1
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 14
+				lbl.TextColor3 = Color3.fromRGB(180,180,180)
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Text = "- "..rwd.amount.."x "..(rwd.id or rwd.type)
 			end
 
-			-- ▶ Teleport starten Button
-			local teleportButton = Instance.new("TextButton")
-			teleportButton.Size = UDim2.new(1, 0, 0, 32)
-			teleportButton.Position = UDim2.new(0, 0, 1, -36)
-			teleportButton.AnchorPoint = Vector2.new(0, 1)
-			teleportButton.Text = "▶ Teleport starten"
-			teleportButton.Font = Enum.Font.GothamBold
-			teleportButton.TextSize = 15
-			teleportButton.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
-			teleportButton.TextColor3 = Color3.new(1, 1, 1)
-			teleportButton.BorderSizePixel = 0
-			teleportButton.Parent = rewardFrame
-
-			teleportButton.MouseButton1Click:Connect(function()
-				teleportRemote:FireServer(currentWorld, stageData.StageId)
+			-- Teleport starten
+			local tpBtn = Instance.new("TextButton", rewardFrame)
+			tpBtn.Size = UDim2.new(1,0,0,32)
+			tpBtn.AnchorPoint = Vector2.new(0,1)
+			tpBtn.Position = UDim2.new(0,0,1,-36)
+			tpBtn.Font = Enum.Font.GothamBold
+			tpBtn.TextSize = 15
+			tpBtn.BackgroundColor3 = Color3.fromRGB(60,120,255)
+			tpBtn.TextColor3 = Color3.new(1,1,1)
+			tpBtn.BorderSizePixel = 0
+			tpBtn.Text = "▶ Teleport starten"
+			tpBtn.MouseButton1Click:Connect(function()
+				teleportRemote:FireServer(currentWorld, sd.StageId)
 			end)
 		end)
 	end
 end
+
+-- ❌ Close-Button schließt und teleportiert zurück
+closeBtn.MouseButton1Click:Connect(function()
+	PanelManager:ClosePanel(panel)
+	ReplicatedStorage.Remotes.Teleport.TimeoutReturn:FireServer("ReturnToLobby")
+end)
