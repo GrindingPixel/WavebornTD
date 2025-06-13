@@ -1,37 +1,40 @@
 -- InventoryClientScript.client.lua
 
 task.defer(function()
+	--// Services
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local Players = game:GetService("Players")
-	local RunService = game:GetService("RunService")
+	local Players           = game:GetService("Players")
 
-	local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-	local PanelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-	local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+	--// Modules
+	local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
+	local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
+	local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
+	local TooltipModule  = require(ReplicatedStorage.Modules.TooltipModule)
 
-	local inventoryRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Inventory"):WaitForChild("GetInventoryRequest")
+	--// Remote
+	local inventoryRemote = ReplicatedStorage.Remotes.Inventory:WaitForChild("GetInventoryRequest")
 
-	local panel = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
+	--// GUI
+	local gui           = GuiResolver:Get("InventoryGui")
+	local panel         = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
 	if not panel then return end
-
 	PanelManager:RegisterPanel(panel)
 
-	local canvas = panel:WaitForChild("CanvasGroup")
-	local tabsFrame = canvas:WaitForChild("TabsFrame")
-	local scrollFrame = canvas:WaitForChild("ItemScrollFrame")
-	local searchBox = canvas:WaitForChild("SearchBox")
-	local template = scrollFrame:WaitForChild("ItemTemplate")
-	local closeButton = canvas:FindFirstChild("InventoryCloseButton")
-	local tooltip = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("InventoryGui"):FindFirstChild("ItemTooltip")
+	local canvas        = panel:WaitForChild("CanvasGroup")
+	local scrollFrame   = canvas:WaitForChild("ItemScrollFrame")
+	local tabsFrame     = canvas:WaitForChild("TabsFrame")
+	local searchBox     = canvas:WaitForChild("SearchBox")
+	local template      = scrollFrame:WaitForChild("ItemTemplate")
+	local closeButton   = canvas:FindFirstChild("InventoryCloseButton")
 
-	local allTab = tabsFrame:WaitForChild("AllTab")
-	local summonTab = tabsFrame:WaitForChild("SummonTab")
+	local allTab        = tabsFrame:WaitForChild("AllTab")
+	local summonTab     = tabsFrame:WaitForChild("SummonTab")
 
-	local currentTab = "All"
-	local fullItemList = {}
-	local tooltipConnection = nil
+	--// State
+	local currentTab    = "All"
+	local fullItemList  = {}
 
-	-- GridLayout einrichten (nur einmal)
+	--// Setup
 	local function ensureGridLayout()
 		if not scrollFrame:FindFirstChild("GridLayout") then
 			local layout = Instance.new("UIGridLayout")
@@ -43,35 +46,6 @@ task.defer(function()
 			layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 			layout.VerticalAlignment = Enum.VerticalAlignment.Top
 			layout.Parent = scrollFrame
-		end
-	end
-
-	-- Tooltip-Logik mit präziser Mausverfolgung
-	local function updateTooltipPosition()
-		if tooltip and tooltip.Visible then
-			local mouse = Players.LocalPlayer:GetMouse()
-			tooltip.Position = UDim2.new(0, mouse.X + 14, 0, mouse.Y + 14)
-		end
-	end
-
-	local function showTooltip(text)
-		if tooltip then
-			tooltip.Text = text
-			tooltip.Visible = true
-
-			if not tooltipConnection then
-				tooltipConnection = RunService.RenderStepped:Connect(updateTooltipPosition)
-			end
-		end
-	end
-
-	local function hideTooltip()
-		if tooltip then
-			tooltip.Visible = false
-		end
-		if tooltipConnection then
-			tooltipConnection:Disconnect()
-			tooltipConnection = nil
 		end
 	end
 
@@ -102,26 +76,20 @@ task.defer(function()
 			entry.Parent = scrollFrame
 
 			local slotFrame = entry:FindFirstChild("InventarSlot")
-			local icon = entry:FindFirstChild("ItemIcon")
-			local label = entry:FindFirstChild("ItemLabel")
-			local amount = entry:FindFirstChild("ItemAmount")
+			local icon      = entry:FindFirstChild("ItemIcon")
+			local label     = entry:FindFirstChild("ItemLabel")
+			local amount    = entry:FindFirstChild("ItemAmount")
 
 			if slotFrame then slotFrame.ImageTransparency = 0 end
 			if icon then icon.Image = item.image; icon.Visible = true end
 			if label then label.Text = item.name; label.Visible = true end
 			if amount then amount.Text = "x" .. tostring(item.quantity); amount.Visible = true end
 
-			-- Tooltip Hover
 			local hoverArea = icon or entry
-			hoverArea.MouseEnter:Connect(function()
-				local tooltipText = item.name .. "\n" .. item.type .. " | x" .. item.quantity
-				showTooltip(tooltipText)
-			end)
-
-			hoverArea.MouseLeave:Connect(hideTooltip)
+			TooltipModule:Attach(hoverArea, item.name .. "\n" .. item.type .. " | x" .. item.quantity)
 		end
 
-		-- 📦 Platzhalter hinzufügen, um Zeile zu füllen
+		-- Leere Slots auffüllen (Platzhalter)
 		local layout = scrollFrame:FindFirstChild("GridLayout")
 		local columnsPerRow = 4
 		local remainder = #visibleItems % columnsPerRow
@@ -134,9 +102,9 @@ task.defer(function()
 			placeholder.Parent = scrollFrame
 
 			local slotFrame = placeholder:FindFirstChild("InventarSlot")
-			local icon = placeholder:FindFirstChild("ItemIcon")
-			local label = placeholder:FindFirstChild("ItemLabel")
-			local amount = placeholder:FindFirstChild("ItemAmount")
+			local icon      = placeholder:FindFirstChild("ItemIcon")
+			local label     = placeholder:FindFirstChild("ItemLabel")
+			local amount    = placeholder:FindFirstChild("ItemAmount")
 
 			if slotFrame then slotFrame.ImageTransparency = 0 end
 			if icon then icon.Image = ""; icon.Visible = false end
@@ -158,6 +126,7 @@ task.defer(function()
 		end
 	end
 
+	--// Events
 	searchBox:GetPropertyChangedSignal("Text"):Connect(renderItems)
 
 	allTab.MouseButton1Click:Connect(function()
@@ -176,6 +145,7 @@ task.defer(function()
 		end)
 	end
 
+	--// Init
 	ensureGridLayout()
 	refreshInventory()
 end)

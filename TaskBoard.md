@@ -1,4 +1,4 @@
-📋 Waveborn TD – TaskBoard (Stand: 2025-05-22)
+📋 Waveborn TD – TaskBoard (Stand: 2025-06-12)
 
 🧱 1. Projektstruktur & Rojo Setup  
 Element | Status | Beschreibung  
@@ -29,10 +29,11 @@ ProfilePanel | ✅ | Titelwahl, Avatarbild, Neonfarben
 TitlesPanel | ✅ | Auswahl-Logik + Feedback  
 MainMenuGui | ✅ | Breath-Tween + Mapping via Buttons  
 QuestsGui | ✅ | Multi-Tab-System, Claim-System, Indikator, HoverOverlay  
-InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, dynamischer Tooltip  
+InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, TooltipModule integriert  
 UnitInventoryGui | ✅ | UnitGridFrame, InfoPanel, EquipSystem, SlotBar  
-MapTeleportGui | ✅ | Welten- und Stage-Auswahl, RewardInfo, Teleport + Timeout  
-Weitere (z. B. SkillTree) | 🔜 | Noch nicht begonnen  
+MapTeleportGui | ✅ | Welten- und Stage-Auswahl, RewardInfo, Tooltip, Teleport + Timeout  
+TooltipGui | ✅ | Eigenes ScreenGui für globalen Tooltip (ZIndex via DisplayOrder)  
+Weitere (z. B. SkillTree) | 🔜 | Noch nicht begonnen  
 
 📐 GUI-Standardgrößen  
 Typ | Größe (Size) | Position  
@@ -49,7 +50,7 @@ CodesServerHandler | ✅ | Codeprüfung mit DataStore
 BattlepassInfoProvider | ✅ | RemoteFunction liefert EXP, Level  
 QuestServerHandler | ✅ | Gibt Testquests zurück, verarbeitet Claim + RewardPopup  
 TeleportPortalHandler | ✅ | Portal-Touched → MapTeleportGui öffnen  
-TeleportStageHandler | ✅ | TeleportStageRequest + TimeoutReturn → CFrame-Teleport  
+TeleportStageHandler | ✅ | TeleportStageRequest → echter PlaceId-Teleport  
 RemoteEvents / Functions | ✅ | Einheitlich in ReplicatedStorage.Remotes vorhanden  
 
 🧩 5. Battlepass-System  
@@ -93,23 +94,34 @@ Element | Status | Beschreibung
 ---|---|---  
 Portal-Part `Touched` → UI | ✅ | Öffnet MapTeleportGui via Remote  
 MapTeleportGui | ✅ | Zeigt Welten, Stages, Rewards  
-TeleportStageRequest | ✅ | TeleportStageRequest + TimeoutReturn → CFrame-Teleport  
+TeleportStageRequest | ✅ | Teleport zu echtem Roblox-PlaceId  
 TimeoutReturn | ✅ | Rückteleport zu `Portals.BacktoLobby`  
 Close-Button | ✅ | Schließt Panel + löst Rückteleport aus  
 Debounce/Touched-Guard | ✅ | Verhindert Mehrfach-Öffnen  
 Countdown-Anzeige | ✅ | Zeigt verbleibende Zeit (5 s)  
 TouchEnded-Abort | ✅ | Panel schließt beim Portal-Verlassen  
 
-📋 9. Entwicklung & Organisation  
+📚 9. Tooltip-System  
+Element | Status | Beschreibung  
+---|---|---  
+TooltipGui | ✅ | Zentrales GUI für alle Tooltips mit DisplayOrder  
+TooltipModule | ✅ | Unterstützt [b], \n, [img:id], dynamische Callbacks  
+Markup-Parser | ✅ | Farben, Fonts, Icons, Multiline  
+Attach-API | ✅ | TooltipModule:Attach(instance, text|function)  
+Hover-Follow | ✅ | Positioniert sich zum Cursor, Icon-Support  
+Komplexe Inhalte (Stat-Cards) | 🔜 | Geplant für später  
+
+📋 10. Entwicklung & Organisation  
 Bereich | Status | Beschreibung  
 ---|---|---  
 GitHub-Verknüpfung | ✅ | Repository live & synchronisiert  
 Rojo-Sync Tools | ✅ | .bat/.sh zum Synchronisieren  
 Debug-Log-Ausgaben | ✅ | Vollständig in allen Scripts eingebaut  
 PanelManager-Vereinheitlichung | 🔜 | `Open()`/`Close()` Wrapper in allen GUIs  
-Zentrales Tooltip-System | 🔜 | Zentrales Modul folgt, wenn Daten serverseitig geregelt sind  
+Zentrales Styling-Modul | 🔜 | Für Fonts, Farben & UI-Standards  
+GuiLayerManager | 🔜 | Zentrale Verwaltung von DisplayOrder / ZIndex-Prioritäten  
 
-🔜 10. Nächste Schritte  
+🔜 11. Nächste Schritte  
 🎁 ClaimAll aktivieren (Client + Server-Verarbeitung)  
 ✨ RewardPopupGui für visuelles Item-Feedback nach Claim  
 🧠 QuestServerHandler: type-Feld pro Quest standardisieren  
@@ -118,5 +130,6 @@ Zentrales Tooltip-System | 🔜 | Zentrales Modul folgt, wenn Daten serverseitig
 📊 UnitInventory: UnitCount fixen (korrekte Anzahl anzeigen)  
 🔍 UnitInventory: funktionierende SearchBar einbauen  
 📖 InfoPanel: AbilityPage-Button aktivieren (manueller Wechsel)  
-❌ PanelManager: Open()/Close() Wrapper ergänzen  
-📦 FastTravelGui | 🔜 Schnellreise‐UI zwischen Lobby-Zonen geplante Umsetzung
+🚪 MapDataModule: Stage.PlaceId einfügen für Teleport pro Map  
+🧭 StageTeleport: Dynamisch je nach Modus (Story, Trial, Raid)  
+👥 TeleportQueue-System: Gruppen-Matchmaking und Warteschlangen
