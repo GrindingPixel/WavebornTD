@@ -101,7 +101,18 @@ for i = 1, 6 do
 					label.Text = reward.amount .. "x " .. (reward.id or reward.type)
 					label.Parent = entry
 
-					TooltipModule:Attach(entry, reward.id and (reward.id .. " (" .. reward.type .. ")") or reward.type)
+					local function rewardTooltip(reward)
+	if reward.id then
+		return "[b]" .. reward.id .. "\\n[img:12345678] x" .. reward.amount
+	else
+		return "[b]" .. reward.type .. "\\n+" .. reward.amount
+	end
+end
+
+TooltipModule:Attach(entry, function()
+	return rewardTooltip(reward)
+end)
+
 
 					entry.Parent = rewardList
 				end

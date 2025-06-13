@@ -1,27 +1,37 @@
 -- TeleportStageHandler.server.lua
 
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
+local TeleportService   = game:GetService("TeleportService")
 
-local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Teleport"):WaitForChild("TeleportStageRequest")
+--// Modules
+local MapData           = require(ReplicatedStorage.Modules.MapDataModule)
+local MapDataUtils      = require(ReplicatedStorage.Modules.MapDataUtils)
 
--- Beispiel-Ziel: TestMap für jetzt
-local TEST_PLACE_ID = 91395451659768 -- 🟡 HIER deine echte PlaceId eintragen
+--// Remote
+local remote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportStageRequest")
 
 remote.OnServerEvent:Connect(function(player, worldName, stageId)
-	print("📦 TeleportStageRequest empfangen von", player.Name)
-	print("🌍 Welt:", worldName, "🗺️ Stage:", stageId)
+	print("📦 TeleportStageRequest empfangen:", player.Name, worldName, stageId)
 
-	-- Optional: Überprüfen ob worldName/stageId gültig sind
+	local stage = MapDataUtils.GetStageById(worldName, stageId)
+	if not stage then
+		warn("❌ Ungültige Stage:", worldName, stageId)
+		return
+	end
 
-	-- Teleport ausführen
+	local worldData = MapData[worldName]
+	if not worldData or not worldData.PlaceId then
+		warn("❌ Kein gültiger PlaceId für Welt:", worldName)
+		return
+	end
+
 	local success, result = pcall(function()
-		TeleportService:Teleport(TEST_PLACE_ID, player)
+		return TeleportService:Teleport(worldData.PlaceId, player)
 	end)
 
 	if success then
-		print("✅ Teleport erfolgreich gestartet für", player.Name)
+		print("✅ Teleport gestartet für", player.Name)
 	else
 		warn("❌ Teleport fehlgeschlagen:", result)
 	end
