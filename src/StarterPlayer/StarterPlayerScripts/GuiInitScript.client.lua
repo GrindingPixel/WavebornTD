@@ -13,6 +13,7 @@ local panelMap = {
 	{ gui = "ShopGui",       panel = "ShopPanel" },
 	{ gui = "ProfileGui",    panel = "ProfilePanel" },
 	{ gui = "ProfileGui",    panel = "TitlesPanel" },
+	{ gui = "FastTravelGui",    panel = "FastTravelPanel" },
 }
 
 for _, entry in ipairs(panelMap) do

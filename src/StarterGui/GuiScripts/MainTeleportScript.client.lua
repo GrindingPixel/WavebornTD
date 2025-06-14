@@ -12,18 +12,18 @@ local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 local TooltipModule  = require(ReplicatedStorage.Modules.TooltipModule)
 
 --// Remotes
-local teleportRemote = ReplicatedStorage.Remotes.Teleport.TeleportStageRequest
-local timeoutRemote  = ReplicatedStorage.Remotes.Teleport.TimeoutReturn
+local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportStageRequest")
+local timeoutRemote  = ReplicatedStorage.Remotes.Teleport:WaitForChild("TimeoutReturn")
 
 --// GUI
-local gui            = GuiResolver:Get("MapTeleportGui")
-local panel          = GuiResolver:GetPanel("MapTeleportGui", "MapTeleportPanel")
-local canvas         = panel:WaitForChild("CanvasGroup")
-local worldPanel     = canvas:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
-local stagePanel     = canvas:WaitForChild("WorldsStagePanel")
-local rewardFrame    = stagePanel:WaitForChild("StageRewardInfo")
-local rewardTemplate = rewardFrame:WaitForChild("StageRewardTemplate")
-local closeBtn       = canvas:WaitForChild("MapTeleportCloseButton")
+local gui             = GuiResolver:Get("MapTeleportGui")
+local panel           = GuiResolver:GetPanel("MapTeleportGui", "MapTeleportPanel")
+local canvas          = panel:WaitForChild("CanvasGroup")
+local worldPanel      = canvas:WaitForChild("WorldsPanel"):WaitForChild("ScrollingFrame")
+local stagePanel      = canvas:WaitForChild("WorldsStagePanel")
+local rewardFrame     = stagePanel:WaitForChild("StageRewardInfo")
+local rewardTemplate  = rewardFrame:WaitForChild("StageRewardTemplate")
+local closeBtn        = canvas:WaitForChild("MapTeleportCloseButton")
 
 --// State
 local currentWorld = nil
@@ -31,19 +31,64 @@ local currentWorld = nil
 --// Init
 PanelManager:RegisterPanel(panel)
 
---// Welt-Auswahl
+-- Beim Öffnen initial alles verstecken
+panel:GetPropertyChangedSignal("Visible"):Connect(function()
+	if panel.Visible then
+		currentWorld = nil
+		stagePanel.Visible = false
+		rewardFrame.Visible = false
+
+		for _, button in ipairs(worldPanel:GetChildren()) do
+			if button:IsA("ImageButton") then
+				local stroke = button:FindFirstChild("UIStroke")
+				if stroke then
+					stroke.Enabled = false
+				end
+			end
+		end
+	end
+end)
+
+-- Tooltip aus Reward-Daten erzeugen
+local function rewardTooltip(reward)
+	if reward.id then
+		return "[b]" .. reward.id .. "\\n[img:12345678] x" .. reward.amount
+	else
+		return "[b]" .. reward.type .. "\\n+" .. reward.amount
+	end
+end
+
+-- Welt-Auswahl
 for _, button in ipairs(worldPanel:GetChildren()) do
 	if button:IsA("ImageButton") then
 		button.MouseButton1Click:Connect(function()
 			if PanelDebounce:Block("MapTeleport_SelectWorld_" .. button.Name, 0.5) then return end
-			if mapData[button.Name] then
-				currentWorld = button.Name
+			if not mapData[button.Name] then return end
+
+			currentWorld = button.Name
+			stagePanel.Visible = true
+			rewardFrame.Visible = false
+
+			-- Alle anderen Strokes deaktivieren
+			for _, other in ipairs(worldPanel:GetChildren()) do
+				if other:IsA("ImageButton") then
+					local stroke = other:FindFirstChild("UIStroke")
+					if stroke then
+						stroke.Enabled = false
+					end
+				end
+			end
+
+			-- Aktiven Stroke aktivieren
+			local activeStroke = button:FindFirstChild("UIStroke")
+			if activeStroke then
+				activeStroke.Enabled = true
 			end
 		end)
 	end
 end
 
---// Stage-Auswahl
+-- Stage-Auswahl
 for i = 1, 6 do
 	local stageButton = stagePanel:FindFirstChild("Stage" .. i)
 	if stageButton then
@@ -54,14 +99,13 @@ for i = 1, 6 do
 			local stageData = mapData[currentWorld].Stages[i]
 			if not stageData then return end
 
-			-- Alte Anzeige entfernen
+			-- Alte Reward-Anzeige entfernen
 			for _, child in ipairs(rewardFrame:GetChildren()) do
 				if child:IsA("Frame") and child ~= rewardTemplate then
 					child:Destroy()
 				end
 			end
 
-			-- Template klonen
 			local clone = rewardTemplate:Clone()
 			clone.Name = "RewardDisplay_" .. tostring(i)
 			clone.Visible = true
@@ -101,35 +145,27 @@ for i = 1, 6 do
 					label.Text = reward.amount .. "x " .. (reward.id or reward.type)
 					label.Parent = entry
 
-					local function rewardTooltip(reward)
-	if reward.id then
-		return "[b]" .. reward.id .. "\\n[img:12345678] x" .. reward.amount
-	else
-		return "[b]" .. reward.type .. "\\n+" .. reward.amount
-	end
-end
-
-TooltipModule:Attach(entry, function()
-	return rewardTooltip(reward)
-end)
-
+					TooltipModule:Attach(entry, function()
+						return rewardTooltip(reward)
+					end)
 
 					entry.Parent = rewardList
 				end
 			end
 
-			-- TeleportButton (ImageButton)
 			local tpButton = clone:FindFirstChild("TeleportButton")
 			if tpButton and tpButton:IsA("ImageButton") then
 				tpButton.MouseButton1Click:Connect(function()
 					teleportRemote:FireServer(currentWorld, stageData.StageId)
 				end)
 			end
+
+			rewardFrame.Visible = true
 		end)
 	end
 end
 
---// Schließen + Rückteleport
+-- Panel schließen + Rückteleport
 closeBtn.MouseButton1Click:Connect(function()
 	PanelManager:ClosePanel(panel)
 	timeoutRemote:FireServer("ReturnToLobby")

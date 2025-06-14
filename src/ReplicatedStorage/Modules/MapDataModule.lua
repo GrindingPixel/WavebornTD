@@ -1,48 +1,181 @@
 -- MapDataModule.lua
 
+--// World & Stage Map Data
+
 local MapData = {
-	Test1 = {
-		DisplayName = "Spiele Welt 1",
+	--Story Worlds
+	["SpiritRealm"] = {
+		DisplayName = "Spirit Realm",
+		PlaceId = 91395451659768, -- Einheitliche Map für alle Stages dieser Welt
+
 		Stages = {
 			{
 				StageId = 1,
-				Name = "Stage 1",
+				Name = "The Beginning",
 				Rewards = {
-					{ type = "Scroll", id = "CommonScroll", amount = 1 },
-					{ type = "Gold", amount = 100 }
-				}
+					{ type = "Gold", amount = 100 },
+					{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				},
 			},
 			{
 				StageId = 2,
-				Name = "Stage 2",
+				Name = "Ruined Alley",
 				Rewards = {
-					{ type = "Scroll", id = "RareScroll", amount = 1 },
-					{ type = "EXP", amount = 150 }
-				}
+					{ type = "Gold", amount = 150 },
+					{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				},
 			},
 			{
 				StageId = 3,
-				Name = "Bosskampf",
+				Name = "Underground Nest",
 				Rewards = {
-					{ type = "Medal", id = "BossMedal", amount = 1 }
-				}
-			}
-		}
+					{ type = "Gold", amount = 200 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
+			{
+				StageId = 4,
+				Name = "The Beginning",
+				Rewards = {
+					{ type = "Gold", amount = 100 },
+					{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				},
+			},
+			{
+				StageId = 5,
+				Name = "Ruined Alley",
+				Rewards = {
+					{ type = "Gold", amount = 150 },
+					{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				},
+			},
+			{
+				StageId = 6,
+				Name = "Underground Nest",
+				Rewards = {
+					{ type = "Gold", amount = 200 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
+		},
 	},
 
-	Test2 = {
-		DisplayName = "Spiele Welt 2",
+	["City_of_Ashes"] = {
+		DisplayName = "City of Ashes",
+		PlaceId = 91395451659768, -- oder die neue Map-ID
+
 		Stages = {
 			{
 				StageId = 1,
-				Name = "Dunkle Pfade",
+				Name = "Ash Gate",
 				Rewards = {
 					{ type = "Gold", amount = 200 },
-					{ type = "EXP", amount = 100 }
-				}
-			}
+					{ type = "Item", id = "Scroll_Ash", amount = 1 },
+				},
+			},
+			{
+				StageId = 2,
+				Name = "Forgotten Quarters",
+				Rewards = {
+					{ type = "Gold", amount = 250 },
+					{ type = "Item", id = "Scroll_Ash", amount = 2 },
+				},
+			},
+			{
+				StageId = 3,
+				Name = "Inner Sanctum",
+				Rewards = {
+					{ type = "Gold", amount = 300 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
+			{
+				StageId = 4,
+				Name = "The Beginning",
+				Rewards = {
+					{ type = "Gold", amount = 100 },
+					{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				},
+			},
+			{
+				StageId = 5,
+				Name = "Ruined Alley",
+				Rewards = {
+					{ type = "Gold", amount = 150 },
+					{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				},
+			},
+			{
+				StageId = 6,
+				Name = "Underground Nest",
+				Rewards = {
+					{ type = "Gold", amount = 200 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
 		}
-	}
+	},
+
+	["Mirai-Tokyo"] = {
+		DisplayName = "City of Ashes",
+		PlaceId = 91395451659768, -- oder die neue Map-ID
+
+		Stages = {
+			{
+				StageId = 1,
+				Name = "Ash Gate",
+				Rewards = {
+					{ type = "Gold", amount = 200 },
+					{ type = "Item", id = "Scroll_Ash", amount = 1 },
+				},
+			},
+			{
+				StageId = 2,
+				Name = "Forgotten Quarters",
+				Rewards = {
+					{ type = "Gold", amount = 250 },
+					{ type = "Item", id = "Scroll_Ash", amount = 2 },
+				},
+			},
+			{
+				StageId = 3,
+				Name = "Inner Sanctum",
+				Rewards = {
+					{ type = "Gold", amount = 300 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
+			{
+				StageId = 4,
+				Name = "The Beginning",
+				Rewards = {
+					{ type = "Gold", amount = 100 },
+					{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				},
+			},
+			{
+				StageId = 5,
+				Name = "Ruined Alley",
+				Rewards = {
+					{ type = "Gold", amount = 150 },
+					{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				},
+			},
+			{
+				StageId = 6,
+				Name = "Underground Nest",
+				Rewards = {
+					{ type = "Gold", amount = 200 },
+					{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				},
+			},
+		}	
+	},
+
+
+	-- Weitere Welten können hier folgen:
+	-- ["Raid"] = { ... },
+	-- ["Trial"] = { ... },
 }
 
 return MapData
