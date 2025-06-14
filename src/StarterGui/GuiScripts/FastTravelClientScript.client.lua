@@ -26,6 +26,7 @@ task.defer(function()
 	local storyButton     = scrollingFrame:WaitForChild("Story")
 	local raidButton      = scrollingFrame:WaitForChild("Raid")
 	local summonButton    = scrollingFrame:WaitForChild("Summoning")
+	local marketButton    = scrollingFrame:WaitForChild("Market")
 
 	--// Setup
 	PanelManager:RegisterPanel(panel)
@@ -44,12 +45,17 @@ task.defer(function()
 	end)
 
 	raidButton.MouseButton1Click:Connect(function()
-		teleport("Raid")
+		teleport("RaidAreaTP")
 	end)
 
 	summonButton.MouseButton1Click:Connect(function()
-		teleport("Summon")
+		teleport("SummonAreaTP")
 	end)
+
+	marketButton.MouseButton1Click:Connect(function()
+		teleport("UtilsAreaTP")
+	end)
+
 
 	if closeButton then
 		closeButton.MouseButton1Click:Connect(function()
