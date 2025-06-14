@@ -8,6 +8,7 @@ Rojo src/-Struktur | ✅ | Modules, GuiScripts, Server sauber getrennt
 .lua UTF-8 Format | ✅ | Alle Dateien UTF-8 ohne BOM  
 ModuleScript Struktur | ✅ | Einheitlich unter ReplicatedStorage/Modules  
 GUI-ScreenGuis (Rojo/Studio) | ✅ | Registriert via GuiInitScript  
+Scriptstruktur (neu) | ✅ | Einheitliche Blöcke: Services, Modules, GUI etc.
 
 🧾 2. Technische Kernsysteme  
 System | Status | Beschreibung  
@@ -16,9 +17,8 @@ PanelManager | ✅ | Öffnet/schließt Panels via CanvasGroup
 PanelDebounce | ✅ | Clientseitiger Klickschutz  
 ServerDebounce | ✅ | Schutz vor Server-Spam via RemoteEvents  
 GuiResolver | ✅ | Zugriff per GetPanel(guiName, panelName)  
-TooltipModule | ✅ | Unterstützt [b], [img:id], dynamische Inhalte  
-Logging & Debug | ✅ | Alle Scripts mit Debug-Ausgaben ausgestattet  
-Neue Scriptstruktur | ✅ | Einheitlich: Services, Modules, GUI, Remotes, Events  
+TooltipModule | ✅ | Finalisiert – mit Markup, Images, Funktionsunterstützung  
+Logging & Debug | ✅ | Alle Scripts mit print() / warn() versehen  
 
 🖼️ 3. GUI-Panelsystem (Client)  
 Panel/GUI | Status | Besonderheiten  
@@ -29,13 +29,13 @@ CodesPanel | ✅ | FocusLost + Server-Validation
 NewsPanel | ✅ | Markdown-Parsing, Mehrfachauswahl  
 ProfilePanel | ✅ | Titelwahl, Avatarbild, Neonfarben  
 TitlesPanel | ✅ | Auswahl-Logik + Feedback  
-MainMenuGui | ✅ | Breath-Tween, zentraler `TeleportButton`  
-QuestsGui | ✅ | Multi-Tab-System, Claim-System, Tooltip, Indikator  
-InventoryGui | ✅ | Stackanzeige, Tabs, Suchfunktion vorbereitet, Tooltip  
-UnitInventoryGui | ✅ | InfoPanel, EquipSystem, SlotBar  
-MapTeleportGui | ✅ | Stage-Wahl, Rewards + Tooltip, Server-Teleport  
-FastTravelGui | ✅ | Lobby-Teleport per UI (Story, Raid, Summon)  
-Weitere (z. B. SkillTree) | 🔜 | Noch nicht begonnen  
+MainMenuGui | ✅ | Breath-Tween + Mapping via Buttons  
+QuestsGui | ✅ | Multi-Tab-System, Claim-System, Indikator, HoverOverlay  
+InventoryGui | ✅ | Grid-Layout, Tabs, Stackanzeige, dynamischer Tooltip  
+UnitInventoryGui | ✅ | UnitGridFrame, InfoPanel, EquipSystem, SlotBar  
+MapTeleportGui | ✅ | Welten- und Stage-Auswahl, RewardInfo, Teleport + Timeout  
+FastTravelGui | ✅ | Panel mit Story/Raid/Summon-Zielbuttons, teleportfähig  
+Weitere (z. B. Trade/SkillTree) | 🔜 | Noch nicht begonnen  
 
 📐 GUI-Standardgrößen  
 Typ | Größe (Size) | Position  
@@ -47,88 +47,91 @@ SmallPanel | {0, 500}, {0, 350} | {0, 620}, {0, 250}
 🔧 4. Serverseitige Systeme  
 System | Status | Beschreibung  
 ---|---|---  
-ShopServerHandler | ✅ | Kaufverarbeitung + Logging  
-CodesServerHandler | ✅ | Einlösung + DataStore-Prüfung  
-BattlepassInfoProvider | ✅ | EXP, Level via RemoteFunction  
-QuestServerHandler | ✅ | Testquests, Claim, RewardPopup-Support  
-TeleportPortalHandler | ✅ | Trigger per Part.Touch  
-TeleportStageHandler | ✅ | Teleportiert zu PlaceId  
-TeleportLobbyHandler | ✅ | In-Place-Teleport zu Ziel-Parts (Story etc.)  
-RemoteEvents / Functions | ✅ | Standardisiert in ReplicatedStorage  
+ShopServerHandler | ✅ | Kaufverarbeitung, Abbruchsicherheit, Logging  
+CodesServerHandler | ✅ | Codeprüfung mit DataStore  
+BattlepassInfoProvider | ✅ | RemoteFunction liefert EXP, Level  
+QuestServerHandler | ✅ | Gibt Testquests zurück, ClaimSingle + ClaimAll  
+TeleportPortalHandler | ✅ | Portal-Touched → MapTeleportGui öffnen  
+TeleportStageHandler | ✅ | TeleportStageRequest + TimeoutReturn → CFrame-Teleport  
+TeleportLobbyHandler | ✅ | Empfängt Zielname → Positionswechsel  
+RemoteEvents / Functions | ✅ | Einheitlich in ReplicatedStorage.Remotes vorhanden  
 
 🧩 5. Battlepass-System  
 Element | Status | Beschreibung  
 ---|---|---  
-BattlepassModule | ✅ | Stufen und Rewards als Tabelle  
-EXP-Bar + Levelanzeige | ✅ | Fortschrittsbalken animiert  
-Lock-Status / Premiumcheck | ✅ | Dynamisch sichtbar  
-Claim-System | 🔜 | Visuelles Popup + Serverabgleich folgt  
-Infinity Mode | ❌ | Noch nicht begonnen  
+BattlepassModule | ✅ | Belohnungen über Table, modular  
+EXP-Bar + Levelanzeige | ✅ | UI-gebunden, animiert  
+Lock-Status / Premiumcheck | ✅ | Sichtbarkeit dynamisch  
+Claim-System | 🔜 | Muss noch angebunden & mit Server verknüpft werden  
+Infinity Mode | ❌ | Noch nicht implementiert  
 
 📋 6. Quest-System  
 Element | Status | Beschreibung  
 ---|---|---  
-QuestsGui | ✅ | Multi-Tab (Daily, Weekly etc.), ClaimButtons  
-QuestClientScript | ✅ | Refactored, TooltipModule integriert  
-QuestServerHandler | ✅ | DummyQuests, verarbeitet Claim + Serverlogik  
-QuestProgressService | ✅ | Simulierte Fortschrittsverarbeitung  
-QuestClaimResult | ✅ | Serverantwort → Popup später  
-ClaimAllButton | 🔜 | Sichtbar, aber keine Funktion  
-DataStore-Tracking | ❌ | Noch nicht begonnen  
+QuestsGui | ✅ | Tabs (Daily–Progress), Claim-Logik, HoverOverlay, Indicator  
+QuestClientScript | ✅ | Refactort – ClaimAll, Fortschritt, UI aktualisiert  
+QuestServerHandler | ✅ | Refactort – ClaimAll + RewardEvent  
+QuestProgressService | ✅ | Dummy-Tracker – bereit für Spielaktionen  
+QuestClaimResult | ✅ | Sendet Popup-Daten bei Erfolg  
+ClaimAllButton | ✅ | Funktioniert, Debounce + Eventanbindung  
+DataStore-Tracking | ❌ | Noch nicht implementiert  
 
 📦 7. Units-System  
 Element | Status | Beschreibung  
 ---|---|---  
-UnitInventoryGui | ✅ | GridFrame, EquipBar, InfoPanel  
-UnitClientScript | ✅ | EquipLogik, SlotSync, PreviewRender  
-UnitModels | ✅ | Models zentral in ReplicatedStorage  
-UnitStatsModule | ✅ | PlacementCost, Damage, Range etc.  
-UnitAbilitiesModule | ✅ | Aktive/passive Fähigkeiten  
-UnitInfoPanelScript | ✅ | PageSwitch, Hover-Stat-Felder  
-Dropdown-Menü | ✅ | Feed, Evolve, Fuse etc. per Button aufrufbar  
-CameraSetup | ✅ | Einheitlich: FOV, Licht, PrimaryPart-Check  
+UnitInventoryGui | ✅ | Vollständige Struktur inkl. SlotBar, InfoPanel  
+UnitClientScript | ✅ | Equip-Logik, Slot-Anzeige, PreviewRenderer  
+UnitModels (ReplicatedStorage) | ✅ | Modelle geladen & zentralisiert  
+UnitStatsModule | ✅ | InfoPanel-Werte klar getrennt  
+UnitAbilitiesModule | ✅ | Passive/Active-Auflistung, dynamisch generiert  
+UnitInfoPanelScript | ✅ | Preview, Seitenwechsel, Stat-Parsing  
+EquipButton | ✅ | Triggert Slot-Vergabe und Slot-Preview  
+UnEquipButton | ✅ | Entfernt Unit visuell & logisch  
+CameraSetup | ✅ | Einheitlich mit FieldOfView, Licht & PrimaryPart-Check  
+InfoPanelStats | ✅ | Dynamisch geladen über Frame.Name  
+AbilityPage | ✅ | UIListLayout, Auto-Inhalt via AbilitiesModule  
+Dropdown-Menü (Feed, Evolve etc.) | ✅ | Animiertes Menü mit Hover + Outside-Klick-Schließen  
 
 📍 8. Teleport-System  
 Element | Status | Beschreibung  
 ---|---|---  
-Touched → MapTeleportGui | ✅ | Trigger über Portal  
-MapTeleportGui | ✅ | Weltwahl → Stagewahl → Teleport  
-UIStroke für Weltbuttons | ✅ | Visueller Auswahlrahmen  
-StageRewardInfo | ✅ | Erst bei Stageklick sichtbar  
-TeleportStageRequest | ✅ | Ziel wird durch MapData bestimmt  
-MapDataModule | ✅ | Weltname → Stages mit Rewards + PlaceId  
-TimeoutReturn | ✅ | Rück-Teleport via Remote  
-FastTravelGui | ✅ | Eigenes GUI mit ScrollingFrame, Buttons  
-TeleportToAreaRequest | ✅ | Zielname → Server → Position  
-TeleportLobbyHandler | ✅ | Setzt CFrame auf ZielPart  
-Responsives Layout | ✅ | Alle GUIs 100 % auf `Scale`, AnchorPoint  
+Portal-Part `Touched` → UI | ✅ | Öffnet MapTeleportGui via Remote  
+MapTeleportGui | ✅ | Zeigt Welten, Stages, Rewards  
+TeleportStageRequest | ✅ | TeleportStageRequest + TimeoutReturn → CFrame-Teleport  
+TimeoutReturn | ✅ | Rückteleport zu `Portals.BacktoLobby`  
+Close-Button | ✅ | Schließt Panel + löst Rückteleport aus  
+Debounce/Touched-Guard | ✅ | Verhindert Mehrfach-Öffnen  
+Countdown-Anzeige | ✅ | Zeigt verbleibende Zeit (5 s)  
+TouchEnded-Abort | ✅ | Panel schließt beim Portal-Verlassen  
+MapDataModule | ✅ | Pro Welt einheitliche Map, Stages definierbar  
+WorldSelection | ✅ | Auswahl via Button + UIStroke  
+StageInfo | ✅ | Rewards mit Tooltip, ImageLabel + Text  
+Initialzustand | ✅ | Keine Stage/Info sichtbar bis Auswahl  
 
-📋 9. Entwicklung & Organisation  
+🧭 9. FastTravel-System  
+Element | Status | Beschreibung  
+---|---|---  
+FastTravelGui | ✅ | Separates GUI, öffnet über MainMenu  
+PanelManager | ✅ | Integration mit PanelDebounce  
+TeleportToAreaRequest | ✅ | Serverevent, Ziel: CFrame-Positionswechsel  
+Teleportziele | ✅ | Story, Raid, Summon, Utils (Trade folgt später)  
+Buttonstruktur | ✅ | ImageButtons mit Beschriftung, Hover über Tooltip  
+
+🧪 10. Refactoring & Codepflege  
 Bereich | Status | Beschreibung  
 ---|---|---  
-GitHub-Verknüpfung | ✅ | Repo synchronisiert mit Rojo  
-Debug-Log-Ausgaben | ✅ | Alle wichtigen Scripts loggen Server/Client  
-Tooltip-System zentral | ✅ | In allen GUIs verfügbar  
-Scriptstruktur-Standard | 🔜 | Alle Module auf neues Format umstellen  
-PanelManager-Wrapper | 🔜 | Alle GUIs auf `Open()` / `Close()` migrieren  
+PanelManager-Vereinheitlichung | ✅ | Standardisiert (Open/Close)  
+Scriptformatierung | ✅ | Alle Scripts refactort (Formatblöcke, Struktur)  
+TooltipModule | ✅ | Final – mit [b], \n, [img:id], Attach per Function  
+Debounce-System | ✅ | PanelDebounce, ServerDebounce systemweit im Einsatz  
+MapDataUtils | ✅ | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet  
 
-🧠 Technische Erweiterungen & Roadmap  
-Eintrag | Status | Notiz  
----|---|---  
-[Tooltip] mit [img:id] | ✅ | Funktioniert inkl. Hover  
-[Tooltip] StatTemplate | 🔜 | z. B. für Quests und Items  
-PanelManager:CloseSync | 🔜 | Rücksetzen isOpen-State später  
-ClaimAll | 🔜 | Funktion + Serverlogik fehlt  
-RewardPopupGui | 🔜 | Visuelles Feedback nach Claim  
-TeleportQueue | 🔜 | Vorbereitung für Gruppen/Trial-Teleports  
-MapData: PlaceId je Stage | 🔜 | Struktur bereits angelegt  
-HoverOverlay-Optimierung | 🔜 | Verbesserter Maus-Check  
-FastTravelGui: Slide-FX | 🔜 | Panel-Effekt optional später  
-
-🔜 10. Nächste Schritte  
-🎁 ClaimAll aktivieren (Client + Server)  
-✨ RewardPopupGui visuell implementieren  
-📘 QuestClientScript vereinheitlichen  
-📊 Inventory: UnitCount + Suchleiste  
-📦 PanelManager `Open()`/`Close()` Wrapper in allen GUIs  
-🧭 FastTravelGui visuell erweitern (FX, Lock, etc.)  
+🔜 11. Nächste Schritte  
+🎁 RewardPopupGui: visuelle Darstellung echter Rewards  
+📦 InventorySystem: echte Item-Integration mit Daten  
+🧠 Quest-Tracking: dynamisch per Spielaktionen (z. B. Kills, StageClear)  
+📉 UnitInventory: Count-Update & SearchBar finalisieren  
+🔐 Codes: Anzeige eingelöster Codes (UI)  
+🌈 Hover-Effekte weiter optimieren (Overlay, Tooltip-Delay)  
+💬 TradeSystem: später geplant – noch nicht begonnen  
+🧪 PvP-Arena: als langfristige Erweiterung vorgemerkt
