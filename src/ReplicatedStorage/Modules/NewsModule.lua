@@ -1,24 +1,33 @@
+-- NewsModule.lua
+
+--// Modul
 local NewsModule = {}
 
+--// Daten
 NewsModule.NewsData = {
+
 	NewsItem1 = {
-		title = "Waveborn TD - Closed Beta Start",
-		body = "Die Closed Beta beginnt jetzt! Sei dabei und sammle exklusive Belohnungen.",
-		image = ""
+		title = "🔥 Waveborn TD - Closed Beta Start",
+		body  = "Die Closed Beta beginnt jetzt!\nSei dabei und sammle exklusive Belohnungen.",
+		image = "", -- Optional
 	},
+
 	NewsItem2 = {
-		title = "Waveborn TD - Release 1.0",
-		body = "Die Vollversion ist da mit neuen Maps, Einheiten und mehr!✔️",
-		image = ""
+		title = "✅ Waveborn TD - Release 1.0",
+		body  = "Die Vollversion ist da!\n✔️ Neue Maps\n✔️ Neue Einheiten\n✔️ Neue Belohnungen",
+		image = "", -- Optional
 	},
+
 	NewsItem3 = {
-		title = "Waveborn TD - mongo",
-		body = "Die Open Beta wurde gestartet – lade deine Freunde ein!/n",
-		image = "rbxassetid://130155373081470"
-	}
+		title = "🌐 Waveborn TD - Open Beta",
+		body  = "Die Open Beta wurde gestartet – lade deine Freunde ein!\n\n• Neue Features\n• Events\n• Mehr Inhalte",
+		image = "rbxassetid://130155373081470",
+	},
 }
 
+--// Rückgabe
 return NewsModule
+
 
 
 --[[

@@ -1,18 +1,25 @@
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+-- MainMenuScript.client.lua
 
-local player = Players.LocalPlayer
-local panelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+--// Services
+local TweenService       = game:GetService("TweenService")
+local ReplicatedStorage  = game:GetService("ReplicatedStorage")
+local Players            = game:GetService("Players")
 
-local menuGui = GuiResolver:Get("MainMenuGui")
+--// Modules
+local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
+local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
+
+--// State
+local player     = Players.LocalPlayer
+local menuGui    = GuiResolver:Get("MainMenuGui")
 if not menuGui then
 	warn("❌ MainMenuGui nicht gefunden!")
 	return
 end
-local leftPanel = menuGui:WaitForChild("LeftButtonPanel")
+
+--// GUI References
+local leftPanel  = menuGui:WaitForChild("LeftButtonPanel")
 local rightPanel = menuGui:WaitForChild("RightButtonPanel")
 
 local buttons = {
@@ -28,40 +35,35 @@ local buttons = {
 	rightPanel.NewsButton
 }
 
+--// Hover Tweens
 local function startBreath(button)
-	local randomDuration = math.random(2, 8) / 10
-	local stroke = button:FindFirstChildWhichIsA("UIStroke")
+	local duration = math.random(2, 8) / 10
+	local stroke   = button:FindFirstChildWhichIsA("UIStroke")
 
-	local sizeTween = TweenService:Create(button, TweenInfo.new(randomDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Size = button.Size + UDim2.new(0, 4, 0, 4) })
+	local sizeTween = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+		Size = button.Size + UDim2.new(0, 4, 0, 4)
+	})
 
-	local colorTween = TweenService:Create(button, TweenInfo.new(randomDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ ImageColor3 = Color3.fromRGB(150, 100, 255) })
+	local colorTween = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+		ImageColor3 = Color3.fromRGB(150, 100, 255)
+	})
 
-	local glowTween = nil
-	if stroke then
-		glowTween = TweenService:Create(stroke, TweenInfo.new(randomDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-			{ Transparency = 0 })
-	end
+	local glowTween = stroke and TweenService:Create(stroke, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+		Transparency = 0
+	}) or nil
 
 	sizeTween:Play()
 	colorTween:Play()
-	if glowTween then
-		glowTween:Play()
-	end
+	if glowTween then glowTween:Play() end
 
 	return { sizeTween, colorTween, glowTween }
 end
 
 local function stopBreath(button, tweens)
-	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-	local stroke = button:FindFirstChildWhichIsA("UIStroke")
+	for _, t in ipairs(tweens) do if t then t:Cancel() end end
 
-	for _, t in ipairs(tweens) do
-		if t then
-			t:Cancel()
-		end
-	end
+	local stroke = button:FindFirstChildWhichIsA("UIStroke")
+	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
 	TweenService:Create(button, tweenInfo, {
 		Size = UDim2.new(0, 80, 0, 80),
@@ -73,7 +75,7 @@ local function stopBreath(button, tweens)
 	end
 end
 
--- Button-Klicklogik
+--// Button-Events
 for _, btn in ipairs(buttons) do
 	local activeTweens = nil
 
@@ -86,55 +88,40 @@ for _, btn in ipairs(buttons) do
 	end)
 
 	btn.MouseButton1Click:Connect(function()
-		print(btn.Name .. " clicked!")
+		if PanelDebounce:Block("MainMenuButton_" .. btn.Name) then return end
 
-		local sound = menuGui:FindFirstChild("GlobalClickSound")
-		if sound then sound:Play() end
+		local clickSound = menuGui:FindFirstChild("GlobalClickSound")
+		if clickSound then clickSound:Play() end
 
-		local targetPanelName = nil
-
-		if btn.Name == "BattlepassButton" then
-			targetPanelName = "BattlepassPanel"
-		elseif btn.Name == "ProfileButton" then
-			targetPanelName = "ProfilePanel"
-		elseif btn.Name == "ShopButton" then
-			targetPanelName = "ShopPanel"
-		elseif btn.Name == "TradeButton" then
-			targetPanelName = "TradePanel"
-		elseif btn.Name == "NewsButton" then
-			targetPanelName = "NewsPanel"
-		elseif btn.Name == "CodesButton" then
-			targetPanelName = "CodesPanel"
-		elseif btn.Name == "QuestsButton" then
-			targetPanelName = "QuestPanel"
-		elseif btn.Name == "ItemsButton" then
-			targetPanelName = "InventoryPanel"
-		elseif btn.Name == "UnitsButton" then
-			targetPanelName = "UnitInventoryPanel"
-		elseif btn.Name == "TeleportButton" then
-			targetPanelName = "FastTravelPanel"
-		end
+		local targetPanelName = ({
+			BattlepassButton = "BattlepassPanel",
+			ItemsButton      = "InventoryPanel",
+			UnitsButton      = "UnitInventoryPanel",
+			QuestsButton     = "QuestPanel",
+			TeleportButton   = "FastTravelPanel",
+			ShopButton       = "ShopPanel",
+			CodesButton      = "CodesPanel",
+			ProfileButton    = "ProfilePanel",
+			TradeButton      = "TradePanel",
+			NewsButton       = "NewsPanel"
+	 })[btn.Name]
 
 		if targetPanelName then
-			if PanelDebounce:Block(targetPanelName) then return end
-
-			local guiName = targetPanelName:gsub("Panel", "Gui")
-			local targetGui = player.PlayerGui:FindFirstChild(guiName)
+			local guiName     = targetPanelName:gsub("Panel", "Gui")
+			local targetGui   = player:WaitForChild("PlayerGui"):FindFirstChild(guiName)
 			local targetPanel = targetGui and targetGui:FindFirstChild(targetPanelName)
 
 			if targetPanel then
 				if targetPanel.Visible then
-					print("Schließe Panel: " .. targetPanelName)
-					panelManager:ClosePanel(targetPanel)
+					PanelManager:ClosePanel(targetPanel)
 				else
-					print("Öffne Panel: " .. targetPanelName)
-					panelManager:OpenPanel(targetPanel)
+					PanelManager:OpenPanel(targetPanel)
 				end
 			else
-				warn("⚠️ Panel '" .. targetPanelName .. "' nicht gefunden!")
+				warn("⚠️ Zielpanel nicht gefunden:", targetPanelName)
 			end
 		else
-			print("⚠️ Kein Panel zugeordnet für: " .. btn.Name)
+			warn("⚠️ Kein Panel zugeordnet für Button:", btn.Name)
 		end
 	end)
 end

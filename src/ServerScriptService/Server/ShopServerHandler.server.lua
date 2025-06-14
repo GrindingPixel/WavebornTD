@@ -1,19 +1,30 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local MarketplaceService = game:GetService("MarketplaceService")
-local DataStoreService = game:GetService("DataStoreService")
+-- ShopServerHandler.server.lua
 
-local ServerDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ServerDebounce"))
-local shopEvent = ReplicatedStorage:WaitForChild("ShopPurchaseRequest")
+--// Services
+local Players             = game:GetService("Players")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local MarketplaceService  = game:GetService("MarketplaceService")
+local DataStoreService    = game:GetService("DataStoreService")
+
+--// Modules
+local ServerDebounce = require(ReplicatedStorage.Modules.ServerDebounce)
+
+--// Remotes
+local shopEvent              = ReplicatedStorage:WaitForChild("ShopPurchaseRequest")
 local purchaseCompletedEvent = ReplicatedStorage:WaitForChild("ShopPurchaseCompleted")
 
--- 🔖 Versionsinfo
+--// DataStore
+local purchasesDataStore = DataStoreService:GetDataStore("PlayerPurchases")
+
+--// State
+local activePurchases = {}
+
+--// Init
 local shopHandler = {}
 shopHandler.version = "1.0.3"
 warn("📦 ShopServerHandler geladen (v" .. shopHandler.version .. ")")
 
-local purchasesDataStore = DataStoreService:GetDataStore("PlayerPurchases")
-local activePurchases = {}
+--// Events
 
 -- Cleanup bei Disconnect
 Players.PlayerRemoving:Connect(function(player)
@@ -53,7 +64,6 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, purcha
 	if wasPurchased then
 		print("✅ Kauf abgeschlossen: " .. player.Name .. " | Produkt-ID: " .. tostring(productId))
 
-		-- speichern usw.
 		local key = "Player_" .. player.UserId
 		local currentData = {}
 
@@ -75,7 +85,7 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, purcha
 			warn("❌ Fehler beim Speichern des Kaufs für " .. player.Name .. ": " .. tostring(err))
 		end
 
-		-- Beispiel-Belohnung
+		-- Beispielbelohnung (Platzhalter)
 		if productId == 12345678 then
 			print("🎁 Beispielbelohnung aktivieren")
 		end
@@ -89,9 +99,8 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, purcha
 		print("activePurchase:", activePurchase and typeof(activePurchase), activePurchase)
 		print("activePurchases[player]:", activePurchases[player])
 
-		-- sichere fallback-Werte
 		local fallbackButtonName = "[unbekannt]"
-		local fallbackProductId = purchasedProductId
+		local fallbackProductId  = purchasedProductId
 
 		if activePurchase then
 			fallbackButtonName = tostring(activePurchase.ButtonName or "[kein ButtonName]")
@@ -102,4 +111,3 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, purcha
 		purchaseCompletedEvent:FireClient(player, fallbackProductId, fallbackButtonName)
 	end
 end)
-

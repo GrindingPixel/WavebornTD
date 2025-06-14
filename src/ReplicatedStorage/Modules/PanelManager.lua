@@ -1,9 +1,17 @@
+-- PanelManager.lua
+
+--// Services
 local TweenService = game:GetService("TweenService")
 
+--// Modul
 local PanelManager = {}
-PanelManager.RegisteredPanels = {}
-PanelManager.OriginalSizes = {}
-PanelManager.CurrentlyOpenPanel = nil  -- NEU: merkt sich das aktuelle Panel
+
+--// State
+PanelManager.RegisteredPanels     = {}
+PanelManager.OriginalSizes        = {}
+PanelManager.CurrentlyOpenPanel  = nil
+
+--// Funktionen
 
 -- Panel registrieren
 function PanelManager:RegisterPanel(panel)
@@ -13,45 +21,42 @@ function PanelManager:RegisterPanel(panel)
 	end
 end
 
--- NEU: Panel öffnen (schließt vorheriges Panel automatisch)
+-- Panel öffnen (schließt vorheriges automatisch)
 function PanelManager:OpenPanel(panel)
 	if not panel then return end
 
 	print("PanelManager: OpenPanel für", panel.Name)
 
-	-- ✅ Wenn aktuell ein Panel offen ist (und nicht das gleiche), schließen wir es
+	-- Schließe ggf. vorheriges Panel
 	if self.CurrentlyOpenPanel and self.CurrentlyOpenPanel ~= panel and self.CurrentlyOpenPanel.Visible then
-		print("PanelManager: Schließe vorher offenes Panel:", self.CurrentlyOpenPanel.Name)
+		print("PanelManager: Schließe vorheriges Panel:", self.CurrentlyOpenPanel.Name)
 		self:ClosePanel(self.CurrentlyOpenPanel)
 	end
 
-	-- Panel öffnen
+	-- Panel sichtbar machen
 	local originalSize = self.OriginalSizes[panel] or panel.Size
 	panel.Size = originalSize
 	panel.Visible = true
 
 	local canvasGroup = panel:FindFirstChildWhichIsA("CanvasGroup")
 	if canvasGroup then
-		print("CanvasGroup gefunden: ", canvasGroup.Name)
 		canvasGroup.GroupTransparency = 1
-
 		TweenService:Create(canvasGroup, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
 			GroupTransparency = 0
 		}):Play()
 	end
 
-	-- ✅ Jetzt merken wir uns dieses Panel als aktuell offen
 	self.CurrentlyOpenPanel = panel
 end
 
--- Panel schließen mit Fade + Shrink
+-- Panel schließen (inkl. Fade & Shrink)
 function PanelManager:ClosePanel(panel)
 	if not panel then return end
 
 	print("PanelManager: ClosePanel für", panel.Name)
 
 	local originalSize = self.OriginalSizes[panel] or panel.Size
-	local canvasGroup = panel:FindFirstChildWhichIsA("CanvasGroup")
+	local canvasGroup  = panel:FindFirstChildWhichIsA("CanvasGroup")
 
 	if canvasGroup then
 		local shrinkSize = originalSize - UDim2.new(0.05, 0, 0.05, 0)
@@ -69,8 +74,7 @@ function PanelManager:ClosePanel(panel)
 
 		fadeTween.Completed:Connect(function()
 			panel.Visible = false
-			panel.Size = originalSize  -- Originalgröße wiederherstellen
-			-- NEU: Wenn das geschlossene Panel das aktive war, zurücksetzen
+			panel.Size = originalSize
 			if panel == self.CurrentlyOpenPanel then
 				self.CurrentlyOpenPanel = nil
 			end
@@ -83,16 +87,15 @@ function PanelManager:ClosePanel(panel)
 	end
 end
 
--- Optional: Für Sonderfälle weiterhin verfügbar
+-- Schließt alle Panels sofort, außer eines (z. B. bei Notfallwechsel)
 function PanelManager:InstantCloseAll(exceptPanel)
 	for _, panel in ipairs(self.RegisteredPanels) do
 		if panel ~= exceptPanel and panel.Visible then
-			print("PanelManager: ClosePanel für", panel.Name)
+			print("PanelManager: InstantClose für", panel.Name)
 			self:ClosePanel(panel)
-		else
-			print("PanelManager: Skipping close für", panel.Name)
 		end
 	end
 end
 
+--// Rückgabe
 return PanelManager

@@ -1,52 +1,48 @@
+-- CodesClientScript.client.lua
+
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+local Players           = game:GetService("Players")
 
-local redeemCodeEvent = ReplicatedStorage:WaitForChild("RedeemCodeRequest")
-local codeResultEvent = ReplicatedStorage:WaitForChild("RedeemCodeResult")
+--// Modules
+local GuiResolver   = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager  = require(ReplicatedStorage.Modules.PanelManager)
+local PanelDebounce = require(ReplicatedStorage.Modules.PanelDebounce)
 
-local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-local panelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+--// Remotes
+local redeemCodeEvent  = ReplicatedStorage:WaitForChild("RedeemCodeRequest")
+local codeResultEvent  = ReplicatedStorage:WaitForChild("RedeemCodeResult")
 
-local panel = GuiResolver:GetPanel("CodesGui", "CodesPanel")
+--// GUI
+local panel        = GuiResolver:GetPanel("CodesGui", "CodesPanel")
 if not panel then return end
 
-local canvasGroup = panel:WaitForChild("CanvasGroup")
+local canvasGroup  = panel:WaitForChild("CanvasGroup")
 local redeemButton = canvasGroup:WaitForChild("RedeemButton")
-local codeInput = canvasGroup:WaitForChild("CodeInput")
-local feedbackLabel = canvasGroup:WaitForChild("FeedbackLabel")
-local closeButton = canvasGroup:WaitForChild("CodesCloseButton")
+local codeInput    = canvasGroup:WaitForChild("CodeInput")
+local feedbackLabel= canvasGroup:WaitForChild("FeedbackLabel")
+local closeButton  = canvasGroup:WaitForChild("CodesCloseButton")
 
-panelManager:RegisterPanel(panel)
+--// Init
+PanelManager:RegisterPanel(panel)
 
 feedbackLabel.Visible = false
-panel.Position = UDim2.new(0, 620, 0, 250)
-panel.Size = UDim2.new(0, 500, 0, 350)
 
+--// State
 local successTimer = nil
-local errorTimer = nil
+local errorTimer   = nil
 
-local function startSuccessTimer(duration)
-	if successTimer then
-		task.cancel(successTimer)
+--// Helper
+local function startTimer(timerRef, duration)
+	if timerRef then
+		task.cancel(timerRef)
 	end
-	successTimer = task.delay(duration, function()
+	return task.delay(duration, function()
 		feedbackLabel.Visible = false
-		successTimer = nil
 	end)
 end
 
-local function startErrorTimer(duration)
-	if errorTimer then
-		task.cancel(errorTimer)
-	end
-	errorTimer = task.delay(duration, function()
-		feedbackLabel.Visible = false
-		errorTimer = nil
-	end)
-end
-
--- ✅ Eingabe validieren + Debounce verwenden
+--// Functions
 local function redeemCode()
 	if PanelDebounce:Block("RedeemCode", 1) then return end
 
@@ -55,60 +51,62 @@ local function redeemCode()
 		feedbackLabel.Text = "Please enter a code!"
 		feedbackLabel.TextColor3 = Color3.fromRGB(255, 170, 0)
 		feedbackLabel.Visible = true
-		startErrorTimer(0.5)
+		errorTimer = startTimer(errorTimer, 0.5)
 		return
 	end
 
-	print("Sende Code zur Einlösung: " .. codeText)
+	print("Sende Code zur Einlösung:", codeText)
 	redeemCodeEvent:FireServer(codeText)
 	codeInput.Text = ""
 end
 
+--// Events
 redeemButton.MouseButton1Click:Connect(redeemCode)
 
 codeInput.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		redeemCode()
-	end
+	if enterPressed then redeemCode() end
 end)
 
--- ✅ Server-Feedback anzeigen
 codeResultEvent.OnClientEvent:Connect(function(result)
 	if not result or not result.status then
-		warn("Ungültige Serverantwort für Code-Redemption!")
+		warn("⚠️ Ungültige Serverantwort für Code-Redemption!")
 		return
 	end
 
+	local textColor, message, duration
+
 	if result.status == "success" then
-		feedbackLabel.Text = "Success: You received " .. tostring(result.message)
-		feedbackLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-		feedbackLabel.Visible = true
-		startSuccessTimer(2.5)
+		message = "Success: You received " .. tostring(result.message)
+		textColor = Color3.fromRGB(0, 255, 0)
+		duration = 2.5
+		successTimer = startTimer(successTimer, duration)
 	elseif result.status == "already_redeemed" then
-		feedbackLabel.Text = "Code already redeemed!"
-		feedbackLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-		feedbackLabel.Visible = true
-		startErrorTimer(1)
+		message = "Code already redeemed!"
+		textColor = Color3.fromRGB(255, 0, 0)
+		duration = 1
+		errorTimer = startTimer(errorTimer, duration)
 	elseif result.status == "expired" then
-		feedbackLabel.Text = "Code expired!"
-		feedbackLabel.TextColor3 = Color3.fromRGB(255, 170, 0)
-		feedbackLabel.Visible = true
-		startErrorTimer(1)
+		message = "Code expired!"
+		textColor = Color3.fromRGB(255, 170, 0)
+		duration = 1
+		errorTimer = startTimer(errorTimer, duration)
 	elseif result.status == "invalid" then
-		feedbackLabel.Text = "Invalid code!"
-		feedbackLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-		feedbackLabel.Visible = true
-		startErrorTimer(1)
+		message = "Invalid code!"
+		textColor = Color3.fromRGB(255, 0, 0)
+		duration = 1
+		errorTimer = startTimer(errorTimer, duration)
 	else
-		feedbackLabel.Text = "Unknown error."
-		feedbackLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-		feedbackLabel.Visible = true
-		startErrorTimer(1)
+		message = "Unknown error."
+		textColor = Color3.fromRGB(255, 0, 0)
+		duration = 1
+		errorTimer = startTimer(errorTimer, duration)
 	end
+
+	feedbackLabel.Text = message
+	feedbackLabel.TextColor3 = textColor
+	feedbackLabel.Visible = true
 end)
 
--- Schließen
 closeButton.MouseButton1Click:Connect(function()
-	print("CodesPanel wird mit PanelManager geschlossen.")
-	panelManager:ClosePanel(panel)
+	PanelManager:ClosePanel(panel)
 end)

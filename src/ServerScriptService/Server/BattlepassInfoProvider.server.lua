@@ -1,26 +1,29 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- BattlepassInfoProvider.server.lua
 
--- RemoteFunction initialisieren (nur 1× bei Serverstart)
+--// Services
+local Players            = game:GetService("Players")
+local ReplicatedStorage  = game:GetService("ReplicatedStorage")
+
+--// RemoteFunction Setup
 local infoFunction = Instance.new("RemoteFunction")
 infoFunction.Name = "BattlepassInfoRequest"
 infoFunction.Parent = ReplicatedStorage
 
--- 🔧 Simulierter Speicher – später durch echtes DataStore-Modul ersetzen
+--// Testdaten (Platzhalter, später durch DataStore ersetzen)
 local testData = {
 	[123456] = { Level = 7, EXP = 160, MaxEXP = 200 }
 }
 
--- Serverfunktion zur Datenabfrage
+--// Handler
 infoFunction.OnServerInvoke = function(player)
 	local userId = player.UserId
 	local data = testData[userId]
 
 	if data then
-		print("[Battlepass] InfoRequest von", player.Name, "→ L:", data.Level, "XP:", data.EXP)
+		print(string.format("[Battlepass] InfoRequest von %s → L: %d | XP: %d/%d", player.Name, data.Level, data.EXP, data.MaxEXP))
 		return data.Level, data.EXP, data.MaxEXP
 	else
-		print("[Battlepass] Keine Daten für", player.Name, "- sende Defaults")
+		print("[Battlepass] ⚠️ Keine Daten für", player.Name, "– sende Defaults")
 		return 1, 0, 100
 	end
 end

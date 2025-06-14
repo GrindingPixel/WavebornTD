@@ -1,11 +1,13 @@
 -- InventoryServerHandler.server.lua
 
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+local Players           = game:GetService("Players")
 
+--// Modules
 local InventoryData = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("InventoryDataModule"))
 
--- Remotes vorbereiten
+--// Remotes
 local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder")
 remoteFolder.Name = "Remotes"
 remoteFolder.Parent = ReplicatedStorage
@@ -18,7 +20,7 @@ local getInventory = Instance.new("RemoteFunction")
 getInventory.Name = "GetInventoryRequest"
 getInventory.Parent = inventoryFolder
 
--- Serverfunktion: Gibt Inventar zurück
+--// Handler
 getInventory.OnServerInvoke = function(player)
 	print("[InventoryServer] Sende Inventardaten an:", player.Name)
 	return InventoryData.Items

@@ -1,25 +1,31 @@
--- StarterPlayerScripts/MapTeleportClientController.client.lua
+-- MapTeleportClientController.client.lua
 
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
-local PanelManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-local GuiResolver       = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
+local Workspace         = game:GetService("Workspace")
 
-local openRemote    = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Teleport"):WaitForChild("OpenMapSelection")
-local timeoutRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Teleport"):WaitForChild("TimeoutReturn")
+--// Modules
+local PanelManager  = require(ReplicatedStorage.Modules.PanelManager)
+local GuiResolver   = require(ReplicatedStorage.Modules.GuiResolver)
 
+--// Remotes
+local openRemote    = ReplicatedStorage.Remotes.Teleport:WaitForChild("OpenMapSelection")
+local timeoutRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TimeoutReturn")
+
+--// State
 local player = Players.LocalPlayer
 
+--// Events
 openRemote.OnClientEvent:Connect(function()
 	task.defer(function()
-		-- Panel öffnen
 		local panel = GuiResolver:GetPanel("MapTeleportGui", "MapTeleportPanel")
 		if not panel or panel.Visible then return end
 		PanelManager:OpenPanel(panel)
 
-		-- Canvas und Countdown-Label sichern
-		local canvas = panel:WaitForChild("CanvasGroup")
+		local canvas    = panel:WaitForChild("CanvasGroup")
 		local countdown = canvas:FindFirstChild("CountdownLabel")
+
 		if not countdown then
 			countdown = Instance.new("TextLabel")
 			countdown.Name = "CountdownLabel"
@@ -34,11 +40,10 @@ openRemote.OnClientEvent:Connect(function()
 			countdown.Parent = canvas
 		end
 
-		-- Abbruch-Flag und TouchEnded-Listener
 		local canceled = false
-		local portalsFolder = workspace:WaitForChild("Portals")
-		local storyPortal  = portalsFolder:WaitForChild("StoryPortal")
-		local character    = player.Character or player.CharacterAdded:Wait()
+		local portalsFolder = Workspace:WaitForChild("Portals")
+		local storyPortal   = portalsFolder:WaitForChild("StoryPortal")
+		local character     = player.Character or player.CharacterAdded:Wait()
 
 		local exitConn
 		exitConn = storyPortal.TouchEnded:Connect(function(hit)
@@ -49,16 +54,15 @@ openRemote.OnClientEvent:Connect(function()
 			end
 		end)
 
-		-- 5-Sekunden-Countdown
 		for i = 60, 1, -1 do
 			if canceled or not panel.Visible then break end
 			countdown.Text = "Return in " .. i .. "s"
 			task.wait(1)
 		end
 
-		-- Cleanup & Rückteleport
 		countdown.Text = ""
 		exitConn:Disconnect()
+
 		if not canceled and panel.Visible then
 			PanelManager:ClosePanel(panel)
 			timeoutRemote:FireServer("ReturnToLobby")

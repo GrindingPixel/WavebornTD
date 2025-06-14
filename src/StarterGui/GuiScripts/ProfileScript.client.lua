@@ -1,47 +1,57 @@
+-- ProfileScript.client.lua
+
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+local Players           = game:GetService("Players")
 
-local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-local panelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
-local PanelDebounce = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelDebounce"))
+--// Modules
+local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
+local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 
-local player = Players.LocalPlayer
-
-local panel = GuiResolver:GetPanel("ProfileGui", "ProfilePanel")
+--// GUI
+local panel       = GuiResolver:GetPanel("ProfileGui", "ProfilePanel")
 local titlesPanel = GuiResolver:GetPanel("ProfileGui", "TitlesPanel")
 if not panel or not titlesPanel then return end
 
--- Panels registrieren
-panelManager:RegisterPanel(panel)
-panelManager:RegisterPanel(titlesPanel)
-
--- CanvasGroups holen
 local profileGroup = panel:WaitForChild("CanvasGroup")
-local titlesGroup = titlesPanel:WaitForChild("CanvasGroup")
+local titlesGroup  = titlesPanel:WaitForChild("CanvasGroup")
 
--- Neonfarbe setzen
+--// Player
+local player         = Players.LocalPlayer
+local playerName     = profileGroup:FindFirstChild("PlayerName")
+local playerLevel    = profileGroup:FindFirstChild("PlayerLevel")
+local titleLabel     = profileGroup:FindFirstChild("TitleLabel")
+local playerAvatar   = profileGroup:FindFirstChild("PlayerAvatar")
+local titlesList     = titlesGroup:WaitForChild("TitleList")
+local equipButton    = titlesGroup:FindFirstChild("EquipButton")
+local closeBtn       = profileGroup:FindFirstChild("ProfileCloseButton")
+local titlesBtn      = profileGroup:FindFirstChild("TitlesButton")
+local titleCloseBtn  = titlesGroup:FindFirstChild("TitleCloseButton")
+
+--// State
+local selectedTitle = nil
 local neonColor = Color3.fromRGB(100, 200, 255)
 
-local playerNameLabel = profileGroup:FindFirstChild("PlayerName")
-local playerLevelLabel = profileGroup:FindFirstChild("PlayerLevel")
-local titleLabel = profileGroup:FindFirstChild("TitleLabel")
+--// Init
+PanelManager:RegisterPanel(panel)
+PanelManager:RegisterPanel(titlesPanel)
 
-if playerNameLabel then
-	playerNameLabel.Text = player.Name
-	playerNameLabel.TextColor3 = neonColor
+--// Setup
+if playerName then
+	playerName.Text = player.Name
+	playerName.TextColor3 = neonColor
 end
 
-if playerLevelLabel then
-	playerLevelLabel.Text = "Level: 15"
-	playerLevelLabel.TextColor3 = neonColor
+if playerLevel then
+	playerLevel.Text = "Level: 15"
+	playerLevel.TextColor3 = neonColor
 end
 
 if titleLabel then
 	titleLabel.TextColor3 = neonColor
 end
 
--- Avatar setzen
-local playerAvatar = profileGroup:FindFirstChild("PlayerAvatar")
 if playerAvatar then
 	local success, thumbnail = pcall(function()
 		return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
@@ -53,72 +63,59 @@ if playerAvatar then
 	end
 end
 
--- Buttons verbinden
-local profileCloseButton = profileGroup:FindFirstChild("ProfileCloseButton")
-if profileCloseButton then
-	profileCloseButton.MouseButton1Click:Connect(function()
-		panelManager:ClosePanel(panel)
+--// Events
+if closeBtn then
+	closeBtn.MouseButton1Click:Connect(function()
+		PanelManager:ClosePanel(panel)
 	end)
 end
 
-local titlesButton = profileGroup:FindFirstChild("TitlesButton")
-if titlesButton then
-	titlesButton.MouseButton1Click:Connect(function()
-		panelManager:OpenPanel(titlesPanel)
+if titlesBtn then
+	titlesBtn.MouseButton1Click:Connect(function()
+		PanelManager:OpenPanel(titlesPanel)
 	end)
 end
 
-local titleCloseButton = titlesGroup:FindFirstChild("TitleCloseButton")
-if titleCloseButton then
-	titleCloseButton.MouseButton1Click:Connect(function()
-		panelManager:ClosePanel(titlesPanel)
+if titleCloseBtn then
+	titleCloseBtn.MouseButton1Click:Connect(function()
+		PanelManager:ClosePanel(titlesPanel)
 	end)
 end
 
 -- Titel-Auswahl
-local selectedTitle = nil
-local titleButtons = titlesGroup:WaitForChild("TitleList"):GetChildren()
-
-for _, button in ipairs(titleButtons) do
+for _, button in ipairs(titlesList:GetChildren()) do
 	if button:IsA("TextButton") or button:IsA("ImageButton") then
 		local selectFrame = button:FindFirstChild("SelectFrame")
-		if selectFrame then
-			selectFrame.Visible = false
-		end
+		if selectFrame then selectFrame.Visible = false end
 
 		button.MouseButton1Click:Connect(function()
-			-- Alle Auswahlrahmen deaktivieren
-			for _, otherButton in ipairs(titleButtons) do
-				if otherButton:IsA("TextButton") or otherButton:IsA("ImageButton") then
-					local otherFrame = otherButton:FindFirstChild("SelectFrame")
-					if otherFrame then
-						otherFrame.Visible = false
-					end
-				end
+			-- Alle Rahmen deaktivieren
+			for _, other in ipairs(titlesList:GetChildren()) do
+				local otherFrame = other:FindFirstChild("SelectFrame")
+				if otherFrame then otherFrame.Visible = false end
 			end
 
-			-- Aktuelles aktivieren
 			if selectFrame then
 				selectFrame.Visible = true
 			end
+
 			selectedTitle = button.Name
-			print("Selected title: " .. selectedTitle)
+			print("Selected title:", selectedTitle)
 		end)
 	end
 end
 
--- Equip Button
-local equipButton = titlesGroup:FindFirstChild("EquipButton")
+-- Equip
 if equipButton then
 	equipButton.MouseButton1Click:Connect(function()
 		if selectedTitle then
-			print("Equipping title:", selectedTitle)
+			print("🎖️ Titel aktiviert:", selectedTitle)
 			if titleLabel then
 				titleLabel.Text = "Equipped: " .. selectedTitle
 			end
-			-- Später: Hier könnte ein Server-Call erfolgen!
+			-- Später: ServerCall zur Speicherung
 		else
-			warn("⚠️ Kein Titel ausgewählt!")
+			warn("⚠️ Kein Titel ausgewählt.")
 		end
 	end)
 end

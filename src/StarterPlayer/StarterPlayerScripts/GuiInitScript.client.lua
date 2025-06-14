@@ -1,21 +1,28 @@
--- GuiInitScript.lua
--- Registriert alle wichtigen Panels beim Spielstart
+-- GuiInitScript.client.lua
 
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local GuiResolver = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GuiResolver"))
-local PanelManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PanelManager"))
 
+--// Modules
+local GuiResolver   = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager  = require(ReplicatedStorage.Modules.PanelManager)
+
+--// Panels
 local panelMap = {
-	-- guiName        panelName
-	{ gui = "BattlepassGui", panel = "BattlepassPanel" },
-	{ gui = "CodesGui",      panel = "CodesPanel" },
-	{ gui = "NewsGui",       panel = "NewsPanel" },
-	{ gui = "ShopGui",       panel = "ShopPanel" },
-	{ gui = "ProfileGui",    panel = "ProfilePanel" },
-	{ gui = "ProfileGui",    panel = "TitlesPanel" },
-	{ gui = "FastTravelGui",    panel = "FastTravelPanel" },
+	{ gui = "BattlepassGui",  panel = "BattlepassPanel" },
+	{ gui = "CodesGui",       panel = "CodesPanel" },
+	{ gui = "NewsGui",        panel = "NewsPanel" },
+	{ gui = "ShopGui",        panel = "ShopPanel" },
+	{ gui = "ProfileGui",     panel = "ProfilePanel" },
+	{ gui = "ProfileGui",     panel = "TitlesPanel" },
+	{ gui = "FastTravelGui",  panel = "FastTravelPanel" },
+	{ gui = "QuestGui",       panel = "QuestPanel" },
+	{ gui = "InventoryGui",   panel = "InventoryPanel" },
+	{ gui = "UnitInventoryGui", panel = "UnitInventoryPanel" },
+	{ gui = "MapTeleportGui", panel = "MapTeleportPanel" },
 }
 
+--// Init
 for _, entry in ipairs(panelMap) do
 	local panel = GuiResolver:GetPanel(entry.gui, entry.panel)
 	if panel then
