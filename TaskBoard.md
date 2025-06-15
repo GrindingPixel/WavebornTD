@@ -62,7 +62,7 @@ Element | Status | Beschreibung
 BattlepassModule | ✅ | Belohnungen über Table, modular  
 EXP-Bar + Levelanzeige | ✅ | UI-gebunden, animiert  
 Lock-Status / Premiumcheck | ✅ | Sichtbarkeit dynamisch  
-Claim-System | 🔜 | Muss noch angebunden & mit Server verknüpft werden  
+Claim-System | ✅ | Belohnung per Event + RewardService  
 Infinity Mode | ❌ | Noch nicht implementiert  
 
 📋 6. Quest-System  
@@ -71,10 +71,10 @@ Element | Status | Beschreibung
 QuestsGui | ✅ | Tabs (Daily–Progress), Claim-Logik, HoverOverlay, Indicator  
 QuestClientScript | ✅ | Refactort – ClaimAll, Fortschritt, UI aktualisiert  
 QuestServerHandler | ✅ | Refactort – ClaimAll + RewardEvent  
-QuestProgressService | ✅ | Dummy-Tracker – bereit für Spielaktionen  
+QuestProgressService | ❌ | Veraltet, wird entfernt  
 QuestClaimResult | ✅ | Sendet Popup-Daten bei Erfolg  
 ClaimAllButton | ✅ | Funktioniert, Debounce + Eventanbindung  
-DataStore-Tracking | ❌ | Noch nicht implementiert  
+DataStore-Tracking | ❌ | Wird durch PlayerDataService ersetzt  
 
 📦 7. Units-System  
 Element | Status | Beschreibung  
@@ -126,7 +126,20 @@ TooltipModule | ✅ | Final – mit [b], \n, [img:id], Attach per Function
 Debounce-System | ✅ | PanelDebounce, ServerDebounce systemweit im Einsatz  
 MapDataUtils | ✅ | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet  
 
-🔜 11. Nächste Schritte  
+🔒 11. Persistent PlayerData (ProfileService)  
+Element | Status | Beschreibung  
+---|---|---  
+PlayerDataService | ✅ | ProfileService-basiert, SessionLock, Logging  
+RewardService | ✅ | Rewards aus allen Systemen über zentrale Methode  
+BattlepassData | ✅ | EXP, ClaimStatus per Profile gespeichert  
+QuestData | ✅ | Fortschritt + ClaimStates gespeichert  
+Shop-Käufe | ✅ | Rewards verarbeitet + gespeichert  
+Debug-Logging | ✅ | print/warn mit Abschalt-Option  
+Default-Fallback | ✅ | Datenstruktur bei Erst-Join  
+AutoSave + Leave-Save | ✅ | integriert  
+Inventory / Units / Codes | 🔜 | Anbindung folgt  
+
+🔜 12. Nächste Schritte  
 🎁 RewardPopupGui: visuelle Darstellung echter Rewards  
 📦 InventorySystem: echte Item-Integration mit Daten  
 🧠 Quest-Tracking: dynamisch per Spielaktionen (z. B. Kills, StageClear)  
@@ -134,4 +147,4 @@ MapDataUtils | ✅ | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet
 🔐 Codes: Anzeige eingelöster Codes (UI)  
 🌈 Hover-Effekte weiter optimieren (Overlay, Tooltip-Delay)  
 💬 TradeSystem: später geplant – noch nicht begonnen  
-🧪 PvP-Arena: als langfristige Erweiterung vorgemerkt
+🧪 PvP-Arena: als langfristige Erweiterung vorgemerkt  

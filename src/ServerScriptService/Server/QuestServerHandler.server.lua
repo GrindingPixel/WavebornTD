@@ -2,8 +2,14 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
---// Remote Setup
+--// Modules
+local QuestService       = require(script.Parent:WaitForChild("QuestService"))
+local PlayerDataService  = require(script.Parent:WaitForChild("PlayerDataService"))
+local RewardService      = require(script.Parent:WaitForChild("RewardService"))
+
+--// Remotes
 local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder")
 remoteFolder.Name = "Remotes"
 remoteFolder.Parent = ReplicatedStorage
@@ -12,131 +18,121 @@ local questFolder = remoteFolder:FindFirstChild("Quests") or Instance.new("Folde
 questFolder.Name = "Quests"
 questFolder.Parent = remoteFolder
 
---// Remotes
-local getQuestFunction      = Instance.new("RemoteFunction")
-getQuestFunction.Name       = "GetPlayerQuests"
-getQuestFunction.Parent     = questFolder
+local GetPlayerQuests       = Instance.new("RemoteFunction")
+GetPlayerQuests.Name        = "GetPlayerQuests"
+GetPlayerQuests.Parent      = questFolder
 
-local claimQuestEvent       = Instance.new("RemoteEvent")
-claimQuestEvent.Name        = "ClaimQuestRequest"
-claimQuestEvent.Parent      = questFolder
+local ClaimQuestRequest     = Instance.new("RemoteEvent")
+ClaimQuestRequest.Name      = "ClaimQuestRequest"
+ClaimQuestRequest.Parent    = questFolder
 
-local claimResultEvent      = Instance.new("RemoteEvent")
-claimResultEvent.Name       = "QuestClaimResult"
-claimResultEvent.Parent     = questFolder
+local ClaimAllQuestsRequest = Instance.new("RemoteEvent")
+ClaimAllQuestsRequest.Name  = "ClaimAllQuestsRequest"
+ClaimAllQuestsRequest.Parent = questFolder
 
-local claimAllQuestEvent    = Instance.new("RemoteEvent")
-claimAllQuestEvent.Name     = "ClaimAllQuestsRequest"
-claimAllQuestEvent.Parent   = questFolder
+local QuestClaimResult      = Instance.new("RemoteEvent")
+QuestClaimResult.Name       = "QuestClaimResult"
+QuestClaimResult.Parent     = questFolder
 
---// Testdaten (Simuliert)
-local TestQuestData = {
-	Daily = {
-		{ id = 1, title = "Summon 3 Units", description = "Use summon 3x", goal = 3, progress = 3, type = "Summon", rewards = {
-			{ image = "rbxassetid://1234567890", label = "200 Eclipsium" },
-			{ image = "rbxassetid://987654321", label = "1x Scroll" }
-		}},
-		{ id = 2, title = "Win 1 Raid", description = "Complete any raid once", goal = 1, progress = 0, type = "Raid", rewards = {
-			{ image = "rbxassetid://456789123", label = "500 Coins" }
-		}},
-	},
-	Weekly = {
-		{ id = 101, title = "Reach Level 20", description = "Reach account level 20", goal = 20, progress = 17, type = "Level", rewards = {
-			{ image = "rbxassetid://44556677", label = "1x Booster" }
-		}},
-	},
-	Story = {
-		{ id = 201, title = "Finish Chapter 1", description = "Complete the first story mission", goal = 1, progress = 1, type = "Story", rewards = {
-			{ image = "rbxassetid://44556677", label = "XP Boost" }
-		}},
-	},
-	Special = {
-		{ id = 301, title = "Time Limited!", description = "Limited event quest", goal = 5, progress = 5, type = "Event", rewards = {
-			{ image = "rbxassetid://44556677", label = "Special Medal" }
-		}},
-	},
-	Trials = {
-		{ id = 401, title = "Trial Clear", description = "Clear any trial once", goal = 1, progress = 0, type = "Trials", rewards = {
-			{ image = "rbxassetid://44556677", label = "Trial Scroll" }
-		}},
-	},
-	Progress = {
-		{ id = 501, title = "Play 10 Days", description = "Log in on 10 different days", goal = 10, progress = 7, type = "Login", rewards = {
-			{ image = "rbxassetid://44556677", label = "Login Bonus" }
-		}},
-	}
-}
+--// Debug
+local DEBUG = true
+local function log(...)   if DEBUG then print("[📘 QuestServer]", ...) end end
+local function warnf(...) if DEBUG then warn("[❌ QuestServer]", ...) end end
 
---// Hilfsfunktion: Suche Quest per ID in Tab
-local function findQuestById(tabName, questId)
-	local list = TestQuestData[tabName]
-	if not list then return nil end
-	for _, q in ipairs(list) do
-		if q.id == questId then
-			return q
-		end
-	end
-	return nil
+--// 🧠 Helper
+local function isQuestCompleted(profile, quest)
+	if not quest or not quest.type then return false end
+	local playerProgress = profile.Data.QuestProgress[quest.type] or 0
+	return playerProgress >= quest.goal
 end
 
---// Handler: Einzelne Quests abfragen
-getQuestFunction.OnServerInvoke = function(player, tabName)
-	print("[QuestServer] → Anfrage von", player.Name, "für Kategorie:", tabName)
-
-	local data = TestQuestData[tabName]
-	if not data then
-		warn("[QuestServer] ⚠️ Ungültige Kategorie: " .. tostring(tabName))
+--// 🔁 GetPlayerQuests
+GetPlayerQuests.OnServerInvoke = function(player, category)
+	local profile = PlayerDataService:GetProfile(player)
+	if not profile then
+		warnf("Kein Profil für", player.Name)
 		return {}
 	end
 
-	return data
+	local quests = QuestService:GetQuestsByCategory(category)
+	for _, quest in ipairs(quests) do
+		quest.progress = profile.Data.QuestProgress[quest.type] or 0
+	end
+
+	return quests
 end
 
---// Handler: Einzelne Quest claimen
-claimQuestEvent.OnServerEvent:Connect(function(player, questId)
-	print("[QuestServer] → ClaimRequest von", player.Name, "für Quest-ID:", questId)
-
-	-- Für Demo-Zwecke in allen Tabs suchen
-	for tabName, _ in pairs(TestQuestData) do
-		local quest = findQuestById(tabName, questId)
-		if quest and quest.progress >= quest.goal then
-			claimResultEvent:FireClient(player, {
-				title = "Claimed!",
-				rewards = quest.rewards
-			})
-			print("🎁 Quest ", questId, " erfolgreich geclaimt")
-			return
-		end
+--// 🧾 Claim einzelne Quest
+ClaimQuestRequest.OnServerEvent:Connect(function(player, questId)
+	local profile = PlayerDataService:GetProfile(player)
+	if not profile then
+		warnf("Kein Profil für", player.Name)
+		return
 	end
 
-	warn("[QuestServer] ❌ Keine abschließbare Quest mit ID", questId)
+	local quest = QuestService:GetQuestById(questId)
+	if not quest then
+		warnf("Quest nicht gefunden:", questId)
+		return
+	end
+
+	if not isQuestCompleted(profile, quest) then
+		warnf("Quest nicht abgeschlossen:", questId)
+		return
+	end
+
+	-- Bereits geclaimt?
+	profile.Data.ClaimedQuests = profile.Data.ClaimedQuests or {}
+	if profile.Data.ClaimedQuests[questId] then
+		warnf("Bereits geclaimt:", questId)
+		return
+	end
+
+	profile.Data.ClaimedQuests[questId] = true
+
+	RewardService:Give(player, quest.rewards or {})
+	log(player.Name .. " hat Quest-Belohnung erhalten:", questId)
+
+	QuestClaimResult:FireClient(player, {
+		title = "Quest Complete!",
+		rewards = quest.rewards
+	})
 end)
 
---// Handler: Alle abschließbaren Quests claimen
-claimAllQuestEvent.OnServerEvent:Connect(function(player, tabName, questIds)
-	print("[QuestServer] → ClaimAllQuests von", player.Name, "für Tab:", tabName)
+--// 🧾 ClaimAll-Quests
+ClaimAllQuestsRequest.OnServerEvent:Connect(function(player, tabName, idList)
+	local profile = PlayerDataService:GetProfile(player)
+	if not profile then
+		warnf("Kein Profil für", player.Name)
+		return
+	end
 
-	local rewards = {}
+	profile.Data.ClaimedQuests = profile.Data.ClaimedQuests or {}
 
-	for _, questId in ipairs(questIds) do
-		local quest = findQuestById(tabName, questId)
-		if quest and quest.progress >= quest.goal then
+	local totalRewards = {}
+
+	for _, questId in ipairs(idList) do
+		local quest = QuestService:GetQuestById(questId)
+
+		if quest and isQuestCompleted(profile, quest) and not profile.Data.ClaimedQuests[questId] then
+			profile.Data.ClaimedQuests[questId] = true
+
 			for _, reward in ipairs(quest.rewards or {}) do
-				table.insert(rewards, {
-					label = reward.label or "Reward",
-					image = reward.image
-				})
+				table.insert(totalRewards, reward)
 			end
-			print("✅ Quest", questId, "erfolgreich geclaimt")
+
+			log(player.Name .. " hat AutoClaim erhalten:", questId)
+		else
+			warnf("⚠️ Fehler bei AutoClaim für", questId)
 		end
 	end
 
-	if #rewards > 0 then
-		claimResultEvent:FireClient(player, {
-			title = "Claimed Multiple!",
-			rewards = rewards
+	if #totalRewards > 0 then
+		RewardService:Give(player, totalRewards)
+
+		QuestClaimResult:FireClient(player, {
+			title = "Multiple Quests Claimed!",
+			rewards = totalRewards
 		})
-	else
-		warn("[QuestServer] ⚠️ Keine gültigen Quests zum Claim")
 	end
 end)

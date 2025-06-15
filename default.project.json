@@ -24,6 +24,9 @@
       "$className": "ServerScriptService",
       "Server": {
         "$path": "src/ServerScriptService/Server"
+      },
+      "Modules": {
+        "$path": "src/ServerScriptService/Modules"
       }
     },
     "StarterGui": {

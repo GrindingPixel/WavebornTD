@@ -1,113 +1,85 @@
 -- ShopServerHandler.server.lua
 
 --// Services
-local Players             = game:GetService("Players")
-local ReplicatedStorage   = game:GetService("ReplicatedStorage")
-local MarketplaceService  = game:GetService("MarketplaceService")
-local DataStoreService    = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 --// Modules
 local ServerDebounce = require(ReplicatedStorage.Modules.ServerDebounce)
+local RewardService   = require(script.Parent:WaitForChild("RewardService"))
 
 --// Remotes
-local shopEvent              = ReplicatedStorage:WaitForChild("ShopPurchaseRequest")
-local purchaseCompletedEvent = ReplicatedStorage:WaitForChild("ShopPurchaseCompleted")
+local shopFolder = ReplicatedStorage.Remotes:FindFirstChild("Shop") or Instance.new("Folder")
+shopFolder.Name = "Shop"
+shopFolder.Parent = ReplicatedStorage
 
---// DataStore
-local purchasesDataStore = DataStoreService:GetDataStore("PlayerPurchases")
+local purchaseEvent = Instance.new("RemoteEvent")
+purchaseEvent.Name = "ShopPurchaseRequest"
+purchaseEvent.Parent = shopFolder
 
---// State
-local activePurchases = {}
+--// Debug
+local DEBUG = true
+local function log(...) if DEBUG then print("[🛒 ShopServerHandler]", ...) end end
+local function warnf(...) if DEBUG then warn("[❌ ShopServerHandler]", ...) end end
 
---// Init
-local shopHandler = {}
-shopHandler.version = "1.0.3"
-warn("📦 ShopServerHandler geladen (v" .. shopHandler.version .. ")")
+--// Test-Shopdaten
+local ShopItems = {
+	["ScrollPack1"] = {
+		cost = 0, -- 0 = nicht monetär
+		rewards = {
+			{ type = "Item", id = "Scroll_Basic", amount = 3 },
+		},
+	},
 
---// Events
+	["GoldPack1"] = {
+		cost = 100, -- DevProductId (hier als Beispiel)
+		rewards = {
+			{ type = "Gold", amount = 250 },
+		},
+	},
 
--- Cleanup bei Disconnect
-Players.PlayerRemoving:Connect(function(player)
-	activePurchases[player] = nil
-	ServerDebounce:Clear(player)
-end)
-
--- Kaufanfrage vom Client
-shopEvent.OnServerEvent:Connect(function(player, productId, buttonName)
-	if activePurchases[player] then
-		warn("⛔ " .. player.Name .. " hat bereits einen aktiven Kauf!")
-		return
-	end
-
-	if ServerDebounce:Block(player, "Buy_" .. tostring(productId), 1) then
-		warn("🧱 ServerDebounce blockiert Kauf von " .. player.Name)
-		return
-	end
-
-	activePurchases[player] = {
-		ProductId = productId,
-		ButtonName = buttonName
+	["StarterPack"] = {
+		cost = 200, -- DevProductId
+		rewards = {
+			{ type = "Gold", amount = 500 },
+			{ type = "Item", id = "Scroll_Boss", amount = 2 },
+		},
 	}
+}
 
-	print("🛒 " .. player.Name .. " startet Kauf: Produkt " .. tostring(productId) .. " | Button: " .. tostring(buttonName))
-	MarketplaceService:PromptProductPurchase(player, productId)
-end)
+--// DevProduct-Verarbeitung
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+	if not player then return Enum.ProductPurchaseDecision.NotProcessedYet end
 
--- Abschluss des Kaufs (erfolgreich oder abgebrochen)
-MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, purchasedProductId, wasPurchased)
-	local activePurchase = activePurchases[player]
-	activePurchases[player] = nil
-
-	local buttonName = activePurchase and activePurchase.ButtonName or "[unbekannt]"
-	local productId = activePurchase and activePurchase.ProductId or purchasedProductId
-
-	if wasPurchased then
-		print("✅ Kauf abgeschlossen: " .. player.Name .. " | Produkt-ID: " .. tostring(productId))
-
-		local key = "Player_" .. player.UserId
-		local currentData = {}
-
-		local success, result = pcall(function()
-			return purchasesDataStore:GetAsync(key)
-		end)
-		if success and result then
-			currentData = result
-		elseif not success then
-			warn("⚠️ Konnte Kaufdaten für " .. player.Name .. " nicht abrufen.")
+	for itemKey, data in pairs(ShopItems) do
+		if data.cost == receiptInfo.ProductId then
+			log("💳 DevProduct erkannt:", itemKey, "→ Belohnung")
+			RewardService:Give(player, data.rewards)
+			return Enum.ProductPurchaseDecision.PurchaseGranted
 		end
+	end
 
-		table.insert(currentData, productId)
+	warnf("❌ Unbekannter ProductId:", receiptInfo.ProductId)
+	return Enum.ProductPurchaseDecision.NotProcessedYet
+end
 
-		local saveSuccess, err = pcall(function()
-			purchasesDataStore:SetAsync(key, currentData)
-		end)
-		if not saveSuccess then
-			warn("❌ Fehler beim Speichern des Kaufs für " .. player.Name .. ": " .. tostring(err))
-		end
+--// Shop-Kauf-Event
+purchaseEvent.OnServerEvent:Connect(function(player, itemKey)
+	if ServerDebounce:Block(player, "Shop_" .. itemKey, 2) then return end
 
-		-- Beispielbelohnung (Platzhalter)
-		if productId == 12345678 then
-			print("🎁 Beispielbelohnung aktivieren")
-		end
+	local item = ShopItems[itemKey]
+	if not item then
+		warnf("Ungültiger ShopKey:", itemKey)
+		return
+	end
 
-		purchaseCompletedEvent:FireClient(player, productId, buttonName)
-
+	if item.cost > 0 then
+		log("💰 Monetärer Kauf → Starte Kauf für:", itemKey)
+		MarketplaceService:PromptProductPurchase(player, item.cost)
 	else
-		print("❌ Kauf abgebrochen – DEBUG:")
-		print("player:", player and player.Name or "[nil]")
-		print("purchasedProductId:", purchasedProductId)
-		print("activePurchase:", activePurchase and typeof(activePurchase), activePurchase)
-		print("activePurchases[player]:", activePurchases[player])
-
-		local fallbackButtonName = "[unbekannt]"
-		local fallbackProductId  = purchasedProductId
-
-		if activePurchase then
-			fallbackButtonName = tostring(activePurchase.ButtonName or "[kein ButtonName]")
-			fallbackProductId = activePurchase.ProductId or purchasedProductId
-		end
-
-		print("[SHOP] ❌ Abbruch von " .. player.Name .. " | Produkt-ID: " .. tostring(fallbackProductId) .. " | Button: " .. tostring(fallbackButtonName))
-		purchaseCompletedEvent:FireClient(player, fallbackProductId, fallbackButtonName)
+		log("🎁 Kostenloser Shopkauf:", itemKey)
+		RewardService:Give(player, item.rewards)
 	end
 end)

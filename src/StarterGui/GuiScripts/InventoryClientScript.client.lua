@@ -1,152 +1,123 @@
 -- InventoryClientScript.client.lua
 
+task.defer(function()
+
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
+local TweenService      = game:GetService("TweenService")
 
 --// Modules
-local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
-local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
-local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
-local TooltipModule  = require(ReplicatedStorage.Modules.TooltipModule)
+local GuiResolver       = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager      = require(ReplicatedStorage.Modules.PanelManager)
+local PanelDebounce     = require(ReplicatedStorage.Modules.PanelDebounce)
+local TooltipModule     = require(ReplicatedStorage.Modules.TooltipModule)
 
---// Remote
-local inventoryRemote = ReplicatedStorage.Remotes.Inventory:WaitForChild("GetInventoryRequest")
+--// Remotes
+local remotes           = ReplicatedStorage:WaitForChild("Remotes")
+local inventoryFolder   = remotes:WaitForChild("Inventory")
+local getItemsRemote    = inventoryFolder:WaitForChild("GetInventoryItems")
+local addItemEvent      = inventoryFolder:WaitForChild("AddItemRequest")
+local removeItemEvent   = inventoryFolder:WaitForChild("RemoveItemRequest")
 
 --// GUI
-local panel = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
+local panel             = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
 if not panel then return end
 
-local canvas        = panel:WaitForChild("CanvasGroup")
-local scrollFrame   = canvas:WaitForChild("ItemScrollFrame")
-local tabsFrame     = canvas:WaitForChild("TabsFrame")
-local searchBox     = canvas:WaitForChild("SearchBox")
-local template      = scrollFrame:WaitForChild("ItemTemplate")
-local closeButton   = canvas:FindFirstChild("InventoryCloseButton")
-
-local allTab        = tabsFrame:WaitForChild("AllTab")
-local summonTab     = tabsFrame:WaitForChild("SummonTab")
+local canvas            = panel:WaitForChild("CanvasGroup")
+local tabsFrame         = canvas:WaitForChild("TabsFrame")
+local searchBox         = canvas:WaitForChild("SearchBar")
+local gridFrame         = canvas:WaitForChild("InventoryScrollFrame")
+local itemTemplate      = gridFrame:WaitForChild("InventoryItemTemplate")
+local closeButton       = canvas:WaitForChild("InventoryCloseButton")
 
 --// State
-local currentTab    = "All"
-local fullItemList  = {}
+local currentTab   = "All"
+local itemCache    = {}
 
---// Init
+--// Setup
 PanelManager:RegisterPanel(panel)
 
---// Functions
-local function ensureGridLayout()
-	if not scrollFrame:FindFirstChild("GridLayout") then
-		local layout = Instance.new("UIGridLayout")
-		layout.Name = "GridLayout"
-		layout.CellSize = UDim2.new(0, 120, 0, 120)
-		layout.CellPadding = UDim2.new(0, 15, 0, 25)
-		layout.FillDirection = Enum.FillDirection.Horizontal
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-		layout.VerticalAlignment = Enum.VerticalAlignment.Top
-		layout.Parent = scrollFrame
+--// Utility: Filter Items nach Suchtext oder Tab
+local function shouldDisplay(item)
+	if currentTab ~= "All" and item.type ~= currentTab then
+		return false
 	end
+
+	local keyword = searchBox.Text:lower()
+	if keyword ~= "" and not string.find(item.id:lower(), keyword) then
+		return false
+	end
+
+	return true
 end
 
-local function matchesSearch(text, keyword)
-	return string.find(string.lower(text), string.lower(keyword), 1, true)
-end
-
-local function renderItems()
-	for _, child in ipairs(scrollFrame:GetChildren()) do
-		if child:IsA("Frame") and not child:IsA("UIGridLayout") and child.Name ~= "ItemTemplate" then
+--// UI: Inventory neu laden
+local function renderInventory()
+	for _, child in ipairs(gridFrame:GetChildren()) do
+		if child:IsA("Frame") and child.Name ~= itemTemplate.Name then
 			child:Destroy()
 		end
 	end
 
-	local searchTerm = searchBox.Text
-	local visibleItems = {}
+	for _, item in ipairs(itemCache) do
+		if shouldDisplay(item) then
+			local entry = itemTemplate:Clone()
+			entry.Name = "Item_" .. item.id
+			entry.Visible = true
+			entry.Parent = gridFrame
 
-	for _, item in ipairs(fullItemList) do
-		if (currentTab == "All" or item.type == currentTab) and matchesSearch(item.name, searchTerm) then
-			table.insert(visibleItems, item)
+			local icon = entry:FindFirstChild("Icon")
+			local amount = entry:FindFirstChild("AmountLabel")
+
+			if icon then
+				icon.Image = item.image or "rbxassetid://12345678"
+			end
+
+			if amount then
+				amount.Text = tostring(item.amount)
+			end
+
+			TooltipModule:Attach(entry, function()
+				return "[b]" .. item.id .. "\\nAmount: " .. item.amount
+			end)
 		end
-	end
-
-	for _, item in ipairs(visibleItems) do
-		local entry = template:Clone()
-		entry.Name = "Item_" .. item.id
-		entry.Visible = true
-		entry.Parent = scrollFrame
-
-		local slotFrame = entry:FindFirstChild("InventarSlot")
-		local icon      = entry:FindFirstChild("ItemIcon")
-		local label     = entry:FindFirstChild("ItemLabel")
-		local amount    = entry:FindFirstChild("ItemAmount")
-
-		if slotFrame then slotFrame.ImageTransparency = 0 end
-		if icon then icon.Image = item.image; icon.Visible = true end
-		if label then label.Text = item.name; label.Visible = true end
-		if amount then amount.Text = "x" .. tostring(item.quantity); amount.Visible = true end
-
-		local hoverArea = icon or entry
-		TooltipModule:Attach(hoverArea, item.name .. "\n" .. item.type .. " | x" .. item.quantity)
-	end
-
-	-- Leere Platzhalter
-	local layout = scrollFrame:FindFirstChild("GridLayout")
-	local columnsPerRow = 4
-	local remainder = #visibleItems % columnsPerRow
-	local placeholdersToAdd = (remainder > 0) and (columnsPerRow - remainder) or 0
-
-	for i = 1, placeholdersToAdd do
-		local placeholder = template:Clone()
-		placeholder.Name = "Placeholder_" .. i
-		placeholder.Visible = true
-		placeholder.Parent = scrollFrame
-
-		local slotFrame = placeholder:FindFirstChild("InventarSlot")
-		local icon      = placeholder:FindFirstChild("ItemIcon")
-		local label     = placeholder:FindFirstChild("ItemLabel")
-		local amount    = placeholder:FindFirstChild("ItemAmount")
-
-		if slotFrame then slotFrame.ImageTransparency = 0 end
-		if icon then icon.Image = ""; icon.Visible = false end
-		if label then label.Text = ""; label.Visible = false end
-		if amount then amount.Text = ""; amount.Visible = false end
 	end
 end
 
-local function refreshInventory()
+--// Remote: Inventory vom Server holen
+local function loadInventory()
 	local success, data = pcall(function()
-		return inventoryRemote:InvokeServer()
+		return getItemsRemote:InvokeServer()
 	end)
 
 	if success and data then
-		fullItemList = data
-		renderItems()
+		itemCache = data
+		renderInventory()
 	else
-		warn("❌ Inventar konnte nicht geladen werden.")
+		warn("❌ [InventoryClient] Fehler beim Laden des Inventars")
 	end
 end
 
 --// Events
-searchBox:GetPropertyChangedSignal("Text"):Connect(renderItems)
-
-allTab.MouseButton1Click:Connect(function()
-	currentTab = "All"
-	renderItems()
+closeButton.MouseButton1Click:Connect(function()
+	PanelManager:ClosePanel(panel)
 end)
 
-summonTab.MouseButton1Click:Connect(function()
-	currentTab = "Scroll"
-	renderItems()
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	renderInventory()
 end)
 
-if closeButton then
-	closeButton.MouseButton1Click:Connect(function()
-		PanelManager:ClosePanel(panel)
-	end)
+for _, tab in ipairs(tabsFrame:GetChildren()) do
+	if tab:IsA("ImageButton") then
+		tab.MouseButton1Click:Connect(function()
+			currentTab = tab.Name
+			renderInventory()
+		end)
+	end
 end
 
---// Startup
-task.defer(function()
-	ensureGridLayout()
-	refreshInventory()
+--// Init
+loadInventory()
+
 end)
