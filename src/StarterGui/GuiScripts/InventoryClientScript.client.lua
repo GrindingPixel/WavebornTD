@@ -1,123 +1,115 @@
--- InventoryClientScript.client.lua
-
-task.defer(function()
-
 --// Services
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
-local TweenService      = game:GetService("TweenService")
-
---// Modules
-local GuiResolver       = require(ReplicatedStorage.Modules.GuiResolver)
-local PanelManager      = require(ReplicatedStorage.Modules.PanelManager)
-local PanelDebounce     = require(ReplicatedStorage.Modules.PanelDebounce)
-local TooltipModule     = require(ReplicatedStorage.Modules.TooltipModule)
 
 --// Remotes
-local remotes           = ReplicatedStorage:WaitForChild("Remotes")
-local inventoryFolder   = remotes:WaitForChild("Inventory")
-local getItemsRemote    = inventoryFolder:WaitForChild("GetInventoryItems")
-local addItemEvent      = inventoryFolder:WaitForChild("AddItemRequest")
-local removeItemEvent   = inventoryFolder:WaitForChild("RemoveItemRequest")
+local GetInventoryData = ReplicatedStorage.Remotes:WaitForChild("Inventory"):WaitForChild("GetInventoryData")
 
 --// GUI
-local panel             = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
-if not panel then return end
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local inventoryGui = playerGui:WaitForChild("InventoryGui")
+local panel = inventoryGui:WaitForChild("InventoryPanel")
+local itemTemplate = panel:WaitForChild("ItemTemplate")
+local itemGrid = panel:WaitForChild("ItemGrid")
+local tabFrame = panel:WaitForChild("Tabs")
+local searchBar = panel:WaitForChild("SearchBar")
 
-local canvas            = panel:WaitForChild("CanvasGroup")
-local tabsFrame         = canvas:WaitForChild("TabsFrame")
-local searchBox         = canvas:WaitForChild("SearchBar")
-local gridFrame         = canvas:WaitForChild("InventoryScrollFrame")
-local itemTemplate      = gridFrame:WaitForChild("InventoryItemTemplate")
-local closeButton       = canvas:WaitForChild("InventoryCloseButton")
+--// Debug
+local DEBUG = true
+local function log(...) if DEBUG then print("[📦 InventoryClient]", ...) end end
+local function warnf(...) if DEBUG then warn("[📦 InventoryClient]", ...) end end
 
 --// State
-local currentTab   = "All"
-local itemCache    = {}
+local currentTab = "All"
+local inventoryData = {}
 
---// Setup
-PanelManager:RegisterPanel(panel)
+--// Kategorien-Logik
+local categoryMapping = {
+	All = { "*" },
+	Summon = { "Scroll", "Ticket" },
+	Evo = { "Evo", "StarPiece", "Crystal" },
+	Cosmetic = { "Skin", "Costume" },
+}
 
---// Utility: Filter Items nach Suchtext oder Tab
-local function shouldDisplay(item)
-	if currentTab ~= "All" and item.type ~= currentTab then
-		return false
-	end
-
-	local keyword = searchBox.Text:lower()
-	if keyword ~= "" and not string.find(item.id:lower(), keyword) then
-		return false
-	end
-
-	return true
-end
-
---// UI: Inventory neu laden
-local function renderInventory()
-	for _, child in ipairs(gridFrame:GetChildren()) do
-		if child:IsA("Frame") and child.Name ~= itemTemplate.Name then
+--// Funktionen
+local function clearItems()
+	for _, child in ipairs(itemGrid:GetChildren()) do
+		if child:IsA("Frame") and child.Name ~= "ItemTemplate" then
 			child:Destroy()
 		end
 	end
+end
 
-	for _, item in ipairs(itemCache) do
-		if shouldDisplay(item) then
-			local entry = itemTemplate:Clone()
-			entry.Name = "Item_" .. item.id
-			entry.Visible = true
-			entry.Parent = gridFrame
+local function belongsToCategory(itemId, category)
+	if category == "All" then return true end
+	local keywords = categoryMapping[category]
+	if not keywords then return false end
+	for _, keyword in ipairs(keywords) do
+		if string.find(itemId, keyword) then
+			return true
+		end
+	end
+	return false
+end
 
-			local icon = entry:FindFirstChild("Icon")
-			local amount = entry:FindFirstChild("AmountLabel")
+local function matchesSearch(itemId)
+	local text = searchBar.Text:lower()
+	if text == "" then return true end
+	return string.find(itemId:lower(), text) ~= nil
+end
 
-			if icon then
-				icon.Image = item.image or "rbxassetid://12345678"
-			end
+local function renderInventory()
+	clearItems()
+	for _, item in ipairs(inventoryData) do
+		if belongsToCategory(item.id, currentTab) and matchesSearch(item.id) then
+			local newItem = itemTemplate:Clone()
+			newItem.Name = item.id
+			newItem.Visible = true
+			newItem.Parent = itemGrid
 
-			if amount then
-				amount.Text = tostring(item.amount)
-			end
+			newItem.ItemName.Text = item.name or item.id
+			newItem.ItemAmount.Text = "x" .. tostring(item.amount)
 
-			TooltipModule:Attach(entry, function()
-				return "[b]" .. item.id .. "\\nAmount: " .. item.amount
-			end)
+			newItem:SetAttribute("TooltipId", item.id)
 		end
 	end
 end
 
---// Remote: Inventory vom Server holen
-local function loadInventory()
-	local success, data = pcall(function()
-		return getItemsRemote:InvokeServer()
-	end)
-
-	if success and data then
-		itemCache = data
-		renderInventory()
-	else
-		warn("❌ [InventoryClient] Fehler beim Laden des Inventars")
-	end
+local function setTab(tabName)
+	currentTab = tabName
+	log("Tab gesetzt:", currentTab)
+	renderInventory()
 end
 
---// Events
-closeButton.MouseButton1Click:Connect(function()
-	PanelManager:ClosePanel(panel)
-end)
-
-searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-	renderInventory()
-end)
-
-for _, tab in ipairs(tabsFrame:GetChildren()) do
-	if tab:IsA("ImageButton") then
-		tab.MouseButton1Click:Connect(function()
-			currentTab = tab.Name
-			renderInventory()
+--// Tab-Auswahl verbinden
+for _, tabButton in ipairs(tabFrame:GetChildren()) do
+	if tabButton:IsA("ImageButton") then
+		tabButton.MouseButton1Click:Connect(function()
+			setTab(tabButton.Name)
 		end)
 	end
 end
 
---// Init
-loadInventory()
+--// Suchleiste vorbereiten
+searchBar.PlaceholderText = "Search Items..."
+searchBar:GetPropertyChangedSignal("Text"):Connect(function()
+	renderInventory()
+end)
 
+--// Init
+task.defer(function()
+	log("Lade Inventar...")
+	local success, result = pcall(function()
+		return GetInventoryData:InvokeServer()
+	end)
+
+	if success and typeof(result) == "table" then
+		inventoryData = result
+		log("Erfolgreich geladen. Items:", #inventoryData)
+	else
+		warnf("Fehler beim Laden der Inventardaten:", result)
+	end
+
+	renderInventory()
 end)

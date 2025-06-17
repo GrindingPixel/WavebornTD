@@ -1,71 +1,70 @@
--- RewardService.lua
-
 --// Services
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local PlayerDataService = require(script.Parent:WaitForChild("PlayerDataService"))
-local InventoryService  = require(script.Parent:WaitForChild("InventoryService"))
-local UnitService       = require(script.Parent:WaitForChild("UnitService"))
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
+local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
+
+local ItemData = require(ReplicatedStorage.Modules.ItemDataModule)
 
 --// Debug
 local DEBUG = true
-local function log(...)   if DEBUG then print("[🎁 RewardService]", ...) end end
-local function warnf(...) if DEBUG then warn("[❌ RewardService]", ...) end end
+local function log(...) if DEBUG then print("[🎁 RewardService]", ...) end end
+local function warnf(...) if DEBUG then warn("[🎁 RewardService]", ...) end end
 
---// Public API
+--// RewardService-API
 local RewardService = {}
 
--- Unterstützte Typen: "Gold", "Gems", "Item", "Unit"
-function RewardService:Give(player, rewardList)
-	if not player or not rewardList then return end
+-- Neue einheitliche API: GrantRewards
+function RewardService.GrantRewards(player: Player, rewards: { [number]: { id: string, amount: number, type: string? } })
+	local profile = PlayerDataService:GetProfile(player)
+	if not profile then
+		warnf("Kein Profil für", player.Name)
+		return false
+	end
 
-	for _, reward in ipairs(rewardList) do
-		local rType = reward.type
-		if not rType then
-			warnf("Unbekannter Reward-Eintrag (Kein Typ):", reward)
+	local inventory = profile.Data.Inventory
+	local grantedCount = 0
+
+	for _, reward in ipairs(rewards) do
+		if typeof(reward) ~= "table" or typeof(reward.id) ~= "string" or typeof(reward.amount) ~= "number" then
+			warnf("Ungültiges Reward-Format:", reward)
 			continue
 		end
 
-		if rType == "Gold" then
-			local profile = PlayerDataService:GetProfile(player)
-			if profile then
-				profile.Data.Gold = (profile.Data.Gold or 0) + (reward.amount or 0)
-				log(player.Name, "erhält", reward.amount, "Gold")
+		local rewardType = reward.type or "Item"
+		if rewardType == "Item" then
+			local meta = ItemData.GetMeta(reward.id)
+			if not meta then
+				warnf("Ungültige ItemID beim Grant:", reward.id)
+				continue
 			end
 
-		elseif rType == "Gems" then
-			local profile = PlayerDataService:GetProfile(player)
-			if profile then
-				profile.Data.Gems = (profile.Data.Gems or 0) + (reward.amount or 0)
-				log(player.Name, "erhält", reward.amount, "Gems")
-			end
-
-		elseif rType == "Item" then
-			if reward.id and reward.amount then
-				InventoryService:AddItem(player, reward.id, reward.amount)
-				log(player.Name, "erhält Item:", reward.amount, "x", reward.id)
-			else
-				warnf("Ungültiger Item-Reward:", reward)
-			end
-
-		elseif rType == "Unit" then
-			if reward.id then
-				local level = reward.level or 1
-				local success = UnitService:AddUnit(player, reward.id, level)
-				if success then
-					log(player.Name, "erhält Unit:", reward.id, "(Level", level .. ")")
-				else
-					warnf("Fehler beim Hinzufügen der Unit:", reward.id)
+			local found = false
+			for _, entry in ipairs(inventory) do
+				if entry.id == reward.id then
+					entry.amount += reward.amount
+					found = true
+					break
 				end
-			else
-				warnf("Ungültiger Unit-Reward:", reward)
 			end
 
+			if not found then
+				table.insert(inventory, {
+					id = reward.id,
+					amount = reward.amount,
+				})
+			end
+
+			log("Item vergeben:", reward.id, "x" .. reward.amount, "an", player.Name)
+			grantedCount += 1
 		else
-			warnf("Nicht unterstützter Reward-Typ:", rType)
+			warnf("Unsupported reward type:", rewardType)
 		end
 	end
+
+	return grantedCount > 0
 end
 
 return RewardService

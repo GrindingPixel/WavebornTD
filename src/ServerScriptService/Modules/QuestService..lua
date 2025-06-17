@@ -1,7 +1,15 @@
 -- QuestService.lua
 
+
+--// Services
+local ServerScriptService = game:GetService("ServerScriptService")
+local Modules = ServerScriptService:WaitForChild("Modules")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+
 --// Modules
-local QuestDataModule = require(script.Parent:WaitForChild("QuestDataModule"))
+local QuestDataModule = require(Modules:WaitForChild("QuestDataModule"))
+
 
 --// Debug
 local DEBUG = true

@@ -1,10 +1,17 @@
--- InventoryService.lua
+-- InventoryService.server.lua
+
+--// Services
+local ServerScriptService = game:GetService("ServerScriptService")
+local Modules = ServerScriptService:WaitForChild("Modules")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local PlayerDataService = require(script.Parent:WaitForChild("PlayerDataService"))
+local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
 
 --// Service-Tabelle
 local InventoryService = {}
+
+--// Methoden
 
 -- 🔍 Holt das Inventory-Table
 function InventoryService:GetItems(player)
@@ -47,7 +54,6 @@ function InventoryService:RemoveItem(player, itemId, amount)
 
 	profile.Inventory[itemId] = current - amount
 
-	-- Optional: Entferne Eintrag, wenn leer
 	if profile.Inventory[itemId] <= 0 then
 		profile.Inventory[itemId] = nil
 	end
@@ -55,4 +61,5 @@ function InventoryService:RemoveItem(player, itemId, amount)
 	return true
 end
 
+--// Return
 return InventoryService

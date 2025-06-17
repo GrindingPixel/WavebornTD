@@ -1,4 +1,5 @@
 -- ShopClientScript.client.lua
+--// Type: LocalScript
 
 --// Services
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
@@ -6,13 +7,13 @@ local Players             = game:GetService("Players")
 local MarketplaceService  = game:GetService("MarketplaceService")
 
 --// Modules
-local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
-local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
-local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
+local GuiResolver    = require(ReplicatedStorage.Modules:WaitForChild("GuiResolver"))
+local PanelManager   = require(ReplicatedStorage.Modules:WaitForChild("PanelManager"))
+local PanelDebounce  = require(ReplicatedStorage.Modules:WaitForChild("PanelDebounce"))
 
 --// Remotes
-local shopEvent               = ReplicatedStorage:WaitForChild("ShopPurchaseRequest")
-local purchaseCompletedEvent  = ReplicatedStorage:WaitForChild("ShopPurchaseCompleted")
+local shopEvent               = ReplicatedStorage.Remotes:WaitForChild("ShopPurchaseRequest")
+local purchaseCompletedEvent  = ReplicatedStorage.Remotes:WaitForChild("ShopPurchaseCompleted")
 
 --// GUI
 local panel         = GuiResolver:GetPanel("ShopGui", "ShopPanel")

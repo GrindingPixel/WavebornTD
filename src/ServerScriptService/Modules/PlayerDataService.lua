@@ -4,9 +4,11 @@
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 
 --// Modules
-local ProfileService = require(script:WaitForChild("ProfileService")) -- Lokale Kopie
+local ProfileService = require(ReplicatedStorage:WaitForChild("ProfileService"))
 local DefaultData = require(script:WaitForChild("PlayerDataTemplate"))
 
 --// Setup
