@@ -35,6 +35,9 @@ local progressLabel    = infoFrame:WaitForChild("ProgressLabel")
 local rewardIconsFrame = infoFrame:WaitForChild("RewardIconsFrame")
 local claimButton      = infoFrame:WaitForChild("ClaimButton")
 
+--// Init
+PanelManager:RegisterPanel(panel)
+
 --// Debug
 local DEBUG = true
 local function log(...)   if DEBUG then print("[📘 QuestClient]", ...) end end

@@ -3,8 +3,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
-local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
+local PlayerDataService = require(script.Parent:WaitForChild("PlayerDataService"))
+local InventoryService  = require(script.Parent:WaitForChild("InventoryService"))
+local UnitService       = require(script.Parent:WaitForChild("UnitService"))
 
 local ItemData = require(ReplicatedStorage.Modules.ItemDataModule)
 

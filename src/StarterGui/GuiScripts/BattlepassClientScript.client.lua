@@ -1,25 +1,34 @@
--- BattlepassGuiScript.client.lua
+-- BattlepassClientScript.client.lua
+-- Typ: LocalScript
 
 --// Services
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 --// Remotes
-local GetBattlepassInfo = ReplicatedStorage.Remotes:WaitForChild("Battlepass"):WaitForChild("GetBattlepassInfo")
-local ClaimBattlepassLevel = ReplicatedStorage.Remotes:WaitForChild("Battlepass"):WaitForChild("ClaimBattlepassLevel")
+local GetBattlepassInfo = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
+local ClaimBattlepassLevel = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
 
 --// Modules
-local BattlepassModule = require(ReplicatedStorage.Modules.BattlepassModule)
+local GuiResolver      = require(ReplicatedStorage.Modules:WaitForChild("GuiResolver"))
+local PanelManager     = require(ReplicatedStorage.Modules:WaitForChild("PanelManager"))
+local BattlepassModule = require(ReplicatedStorage.Modules:WaitForChild("BattlepassModule"))
+local PanelDebounce    = require(ReplicatedStorage.Modules:WaitForChild("PanelDebounce"))
 
 --// GUI
-local player = Players.LocalPlayer
-local gui = player:WaitForChild("PlayerGui"):WaitForChild("BattlepassGui")
-local panel = gui:WaitForChild("BattlepassPanel")
-local template = panel:WaitForChild("BattlepassScrollFrame"):WaitForChild("LevelTemplate")
-local grid = panel:WaitForChild("BattlepassScrollFrame")
+local panel = GuiResolver:GetPanel("BattlepassGui", "BattlepassPanel")
+if not panel then return end
 
---// Init
+local canvas        = panel:WaitForChild("CanvasGroup")
+local scrollFrame   = canvas:WaitForChild("BattlepassScrollFrame")
+local headerFrame   = canvas:WaitForChild("HeaderFrame")
+local closeButton   = canvas:FindFirstChild("BattlepassCloseButton", true)
+local levelTemplate = scrollFrame:WaitForChild("LevelTemplate")
+
+--// Setup
+PanelManager:RegisterPanel(panel)
+
+--// Main Init
 task.defer(function()
 	local info = GetBattlepassInfo:InvokeServer()
 	if not info then return end
@@ -33,10 +42,10 @@ task.defer(function()
 	for i = 1, 100 do
 		local entry = BattlepassModule.Data[i]
 		if entry then
-			local card = template:Clone()
+			local card = levelTemplate:Clone()
 			card.Name = "Level_" .. i
 			card.Visible = true
-			card.Parent = grid
+			card.Parent = scrollFrame
 
 			card.LevelNumber.Text = "Level " .. i
 
@@ -90,3 +99,10 @@ task.defer(function()
 		end
 	end
 end)
+
+--// Events
+if closeButton then
+	closeButton.MouseButton1Click:Connect(function()
+		PanelManager:ClosePanel(panel)
+	end)
+end

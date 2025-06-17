@@ -3,37 +3,18 @@
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
-local QuestService = require(Modules:WaitForChild("QuestService"))
-local PlayerDataService = require(script.Parent:WaitForChild("PlayerDataService"))
-local RewardService = require(script.Parent:WaitForChild("RewardService"))
+local QuestService       = require(Modules:WaitForChild("QuestService"))
+local PlayerDataService  = require(Modules:WaitForChild("PlayerDataService"))
+local RewardService      = require(Modules:WaitForChild("RewardService"))
 
 --// Remotes
-local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder")
-remoteFolder.Name = "Remotes"
-remoteFolder.Parent = ReplicatedStorage
-
-local questFolder = remoteFolder:FindFirstChild("Quests") or Instance.new("Folder")
-questFolder.Name = "Quests"
-questFolder.Parent = remoteFolder
-
-local GetPlayerQuests = Instance.new("RemoteFunction")
-GetPlayerQuests.Name = "GetPlayerQuests"
-GetPlayerQuests.Parent = questFolder
-
-local ClaimQuestRequest = Instance.new("RemoteEvent")
-ClaimQuestRequest.Name = "ClaimQuestRequest"
-ClaimQuestRequest.Parent = questFolder
-
-local ClaimAllQuestsRequest = Instance.new("RemoteEvent")
-ClaimAllQuestsRequest.Name = "ClaimAllQuestsRequest"
-ClaimAllQuestsRequest.Parent = questFolder
-
-local QuestClaimResult = Instance.new("RemoteEvent")
-QuestClaimResult.Name = "QuestClaimResult"
-QuestClaimResult.Parent = questFolder
+local GetPlayerQuests = ReplicatedStorage.Remotes.Quests:WaitForChild("GetPlayerQuests")
+local ClaimQuestRequest = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimQuestRequest")
+local ClaimAllQuestsRequest = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimAllQuestsRequest")
+local QuestClaimResult = ReplicatedStorage.Remotes.Quests:WaitForChild("QuestClaimResult")
 
 --// Debug
 local DEBUG = true

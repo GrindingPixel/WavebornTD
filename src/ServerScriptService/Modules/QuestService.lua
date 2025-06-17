@@ -2,10 +2,8 @@
 
 
 --// Services
-local ServerScriptService = game:GetService("ServerScriptService")
-local Modules = ServerScriptService:WaitForChild("Modules")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 
 --// Modules
 local QuestDataModule = require(Modules:WaitForChild("QuestDataModule"))

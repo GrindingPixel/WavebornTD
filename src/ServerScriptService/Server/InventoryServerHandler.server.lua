@@ -1,25 +1,17 @@
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
 
+local InventoryService  = require(ReplicatedStorage.Modules.InventoryService)
+local ServerDebounce    = require(ReplicatedStorage.Modules.ServerDebounce)
 local ItemData = require(ReplicatedStorage.Modules.ItemDataModule)
 
---// RemoteFolder vorbereiten
-local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes")
-if not remoteFolder then
-	remoteFolder = Instance.new("Folder")
-	remoteFolder.Name = "Remotes"
-	remoteFolder.Parent = ReplicatedStorage
-end
-
---// RemoteFunction erstellen
-local getInventoryFunction = Instance.new("RemoteFunction")
-getInventoryFunction.Name = "GetInventoryData"
-getInventoryFunction.Parent = remoteFolder
+--// Remotes
+local getInventoryFunction = ReplicatedStorage.Remotes.Inventory:WaitForChild("GetInventoryData")
 
 --// Debug
 local DEBUG = true

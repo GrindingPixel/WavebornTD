@@ -1,12 +1,12 @@
 -- CodesServerHandler.server.lua
 
 --// Services
-local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService    = game:GetService("DataStoreService")
 
 --// Remotes
-local redeemCodeEvent     = ReplicatedStorage:WaitForChild("RedeemCodeRequest")
-local codeResultEvent     = ReplicatedStorage:WaitForChild("RedeemCodeResult")
+local redeemCodeEvent     = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCodeRequest")
+local codeResultEvent     = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCodeResult")
 
 --// Config
 local validCodes = {

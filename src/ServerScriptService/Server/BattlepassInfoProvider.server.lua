@@ -2,24 +2,18 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players           = game:GetService("Players")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
+local RewardService = require(Modules:WaitForChild("RewardService"))
+
 
 local BattlepassModule = require(ReplicatedStorage.Modules.BattlepassModule)
 
 --// Remote Setup
-local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes")
-if not remoteFolder then
-	remoteFolder = Instance.new("Folder")
-	remoteFolder.Name = "Remotes"
-	remoteFolder.Parent = ReplicatedStorage
-end
-
-local battlepassInfoRemote = Instance.new("RemoteFunction")
-battlepassInfoRemote.Name = "GetBattlepassInfo"
-battlepassInfoRemote.Parent = remoteFolder
+local battlepassInfoRemote = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
 
 --// Handler
 battlepassInfoRemote.OnServerInvoke = function(player)

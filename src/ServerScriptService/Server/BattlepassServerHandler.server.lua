@@ -1,22 +1,18 @@
 -- BattlepassServerHandler.server.lua
 
 --// Services
-local ServerScriptService = game:GetService("ServerScriptService")
-local Modules = ServerScriptService:WaitForChild("Modules")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-
-
 
 --// Modules
 local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
 local RewardService = require(Modules:WaitForChild("RewardService"))
 
+
 local BattlepassModule = require(ReplicatedStorage.Modules:WaitForChild("BattlepassModule"))
 
 --// Remote Setup
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local claimRemote = Remotes:WaitForChild("Battlepass"):WaitForChild("ClaimBattlepassLevel")
+local claimRemote = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
 
 --// Debug
 local DEBUG = true

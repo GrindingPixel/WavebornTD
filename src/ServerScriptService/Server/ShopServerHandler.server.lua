@@ -4,10 +4,9 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
-
 --// Modules
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ServerDebounce = require(ReplicatedStorage.Modules.ServerDebounce)
+local RewardService   = require(Modules:WaitForChild("RewardService"))
 
 
 --// Debug

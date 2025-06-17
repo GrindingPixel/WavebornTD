@@ -30,6 +30,9 @@ local closeButton   = canvas:WaitForChild("UnitCloseButton")
 local equipButton   = infoPanel:WaitForChild("EquipButton")
 local unequipButton = infoPanel:WaitForChild("UnEquipButton")
 
+--// Init
+PanelManager:RegisterPanel(panel)
+
 --// State
 local unitList = {}
 local currentSelectedUnit = nil

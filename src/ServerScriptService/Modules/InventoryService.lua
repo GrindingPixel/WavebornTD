@@ -1,12 +1,7 @@
 -- InventoryService.server.lua
 
---// Services
-local ServerScriptService = game:GetService("ServerScriptService")
-local Modules = ServerScriptService:WaitForChild("Modules")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 --// Modules
-local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
+local PlayerDataService = require(script.Parent:WaitForChild("PlayerDataService"))
 
 --// Service-Tabelle
 local InventoryService = {}
