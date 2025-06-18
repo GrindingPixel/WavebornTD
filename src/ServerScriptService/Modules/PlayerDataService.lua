@@ -1,110 +1,109 @@
--- PlayerDataService.lua
+-- PlayerDataService.server.lua
+-- Produktionstauglich, mit ProfileStore und vollständiger OOP-API
 
 --// Services
 local Players = game:GetService("Players")
-local DataStoreService = game:GetService("DataStoreService")
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
+local RunService = game:GetService("RunService")
 
 --// Modules
-local ProfileService = require(script:WaitForChild("ProfileService"))
-local DefaultData = require(script:WaitForChild("PlayerDataTemplate"))
+local ProfileStore = require(ReplicatedStorage.Libs:WaitForChild("ProfileStore"))
+local PlayerDataTemplate = require(script:WaitForChild("PlayerDataTemplate"))
 
---// Setup
-local debugEnabled = true
-local DataStoreName = "PlayerDataWaveborn"
-local AutoSaveInterval = 120 -- Sekunden
+--// Einstellungen
+local DATASTORE_NAME = "WavebornTDPlayerData"
+local AUTOSAVE_INTERVAL = 120
 
-local ProfileStore = ProfileService.GetProfileStore(DataStoreName, DefaultData)
-local activeProfiles = {}
+--// Variablen
+local activeProfiles = {} -- [player] = profile
+local store = ProfileStore.new(DATASTORE_NAME, PlayerDataTemplate)
 
---// Hilfsfunktionen
-local function logInfo(...)
-	if debugEnabled then print("[PlayerData]", ...) end
+--// Logging
+local DEBUG = true
+local function log(...)
+	if DEBUG then print("[PlayerDataService]", ...) end
+end
+local function warnf(...)
+	if DEBUG then warn("[PlayerDataService]", ...) end
 end
 
-local function logWarn(...)
-	if debugEnabled then warn("[PlayerData]", ...) end
-end
-
---// Public Interface
+--// Methoden
 local PlayerDataService = {}
 
 function PlayerDataService:GetProfile(player)
+	return activeProfiles[player]
+end
+
+function PlayerDataService:GetData(player)
 	local profile = activeProfiles[player]
 	return profile and profile.Data or nil
 end
 
-function PlayerDataService:Set(player, key, value)
+function PlayerDataService:ReleaseProfile(player)
 	local profile = activeProfiles[player]
-	if profile and profile.Data then
-		profile.Data[key] = value
+	if profile then
+		profile:Release()
+		activeProfiles[player] = nil
+		log("Profil für", player.Name, "freigegeben")
 	end
 end
 
-function PlayerDataService:Add(player, key, amount)
-	local profile = activeProfiles[player]
-	if profile and profile.Data then
-		local old = tonumber(profile.Data[key]) or 0
-		profile.Data[key] = old + amount
+function PlayerDataService:ModifyGold(player, amount)
+	local profile = self:GetProfile(player)
+	if not profile then return false end
+	profile.Data.Gold = (profile.Data.Gold or 0) + amount
+	return true
+end
+
+function PlayerDataService:AutoSaveAll()
+	for player, profile in pairs(activeProfiles) do
+		if profile and profile:IsActive() then
+			profile:Save()
+			log("Profil für", player.Name, "automatisch gespeichert")
+		end
 	end
 end
 
---// Player Join
+--// Spielerhandling
 local function onPlayerAdded(player)
 	local userId = "Player_" .. player.UserId
-
-	local profile = ProfileStore:LoadProfileAsync(userId, "ForceLoad")
+	local profile = store:LoadProfile(userId, "ForceLoad")
 	if profile then
-		profile:AddUserId(player.UserId)
-		profile:Reconcile() -- Ergänzt fehlende Felder aus Default
-
+		profile:Reconcile()
 		activeProfiles[player] = profile
 
 		profile:ListenToRelease(function()
 			activeProfiles[player] = nil
-			player:Kick("⚠️ Daten wurden anderweitig geladen oder Session beendet.")
+			if player:IsDescendantOf(Players) then
+				player:Kick("Dein Profil wurde woanders geladen oder ist ungültig.")
+			end
 		end)
 
-		if not player:IsDescendantOf(Players) then
-			profile:Release()
-			return
-		end
-
-		logInfo("✅ Profil geladen für", player.Name)
-		logInfo("📦 Initiale Daten:", profile.Data)
-
+		log("Profil geladen für", player.Name)
 	else
-		logWarn("❌ Profil konnte nicht geladen werden:", player.Name)
-		player:Kick("⚠️ Deine Daten konnten nicht geladen werden.")
+		warnf("Konnte Profil nicht laden für", player.Name)
+		player:Kick("Profil konnte nicht geladen werden.")
 	end
 end
 
---// Player Leave
 local function onPlayerRemoving(player)
-	local profile = activeProfiles[player]
-	if profile then
-		profile:Release()
-		logInfo("💾 Daten gespeichert für", player.Name)
-	end
+	PlayerDataService:ReleaseProfile(player)
 end
 
---// AutoSave
-task.spawn(function()
-	while true do
-		task.wait(AutoSaveInterval)
-		for player, profile in pairs(activeProfiles) do
-			if profile:IsActive() then
-				profile:Save()
-				logInfo("💾 AutoSave für", player.Name)
-			end
-		end
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+game:BindToClose(function()
+	for _, player in ipairs(Players:GetPlayers()) do
+		PlayerDataService:ReleaseProfile(player)
 	end
 end)
 
---// Init
-Players.PlayerAdded:Connect(onPlayerAdded)
-Players.PlayerRemoving:Connect(onPlayerRemoving)
+task.spawn(function()
+	while true do
+		task.wait(AUTOSAVE_INTERVAL)
+		PlayerDataService:AutoSaveAll()
+	end
+end)
 
 return PlayerDataService

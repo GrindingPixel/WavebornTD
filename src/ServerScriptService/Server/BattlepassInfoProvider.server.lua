@@ -1,50 +1,42 @@
 -- BattlepassInfoProvider.server.lua
+-- Typ: Script (ServerScript)
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
+local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local BattlepassData = require(ReplicatedStorage.Modules:WaitForChild("BattlepassModule"))
 
+--// Debug
+local DEBUG = true
+local function log(...)
+	if DEBUG then print("[BattlepassInfoProvider]", ...) end
+end
+local function warnf(...)
+	if DEBUG then warn("[BattlepassInfoProvider]", ...) end
+end
 
-local BattlepassModule = require(ReplicatedStorage.Modules.BattlepassModule)
+--// Remotes
+local getBattlepassInfo = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
 
---// Remote Setup
-local battlepassInfoRemote = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
-
---// Handler
-battlepassInfoRemote.OnServerInvoke = function(player)
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile then
-		return nil
+getBattlepassInfo.OnServerInvoke = function(player)
+	if not ProfileWrapper:IsLoaded(player) then
+		warnf("GetBattlepassInfo abgelehnt für", player and player.Name)
+		return {}
 	end
 
-	local bp = profile.Data.Battlepass or {}
-
-	local level = bp.Level or 1
-	local exp = bp.EXP or 0
-	local claimed = bp.Claimed or {}
-	local hasPremium = bp.HasPremium or false
-
-	local maxEXP = 0
-	local infinity = false
-
-	if BattlepassModule.Data[level] then
-		maxEXP = BattlepassModule.Data[level].expRequired
-	else
-		infinity = true
-		maxEXP = 500 -- kann später aus InfinityLogik kommen
-	end
-
-	return {
-		Level = level,
-		EXP = exp,
-		MaxEXP = maxEXP,
-		Claimed = claimed,
-		HasPremium = hasPremium,
-		InfinityActive = infinity,
+	local bp = ProfileWrapper:GetBattlepass(player)
+	local data = {
+		Level = bp.Level or 1,
+		EXP = bp.EXP or 0,
+		Claimed = bp.Claimed or {},
+		FreeRewards = BattlepassData.FreeRewards,
+		PremiumRewards = BattlepassData.PremiumRewards,
+		HasPremium = bp.HasPremium or false, -- falls PremiumStatus serverseitig gespeichert wird
 	}
+	log("BattlepassInfo an", player.Name, "gesendet (Level:", data.Level, "EXP:", data.EXP, ")")
+	return data
 end

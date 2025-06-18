@@ -12,6 +12,9 @@
       },
       "Configs": {
         "$path": "src/ReplicatedStorage/Configs"
+      },
+      "Libs": {
+        "$path": "src/ReplicatedStorage/Libs"
       }
     },
     "StarterPlayer": {

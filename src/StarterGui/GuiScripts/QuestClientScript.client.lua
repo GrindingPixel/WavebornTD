@@ -13,8 +13,8 @@ local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 --// Remotes
 local remotes               = ReplicatedStorage.Remotes.Quests
 local GetPlayerQuests       = remotes:WaitForChild("GetPlayerQuests")
-local ClaimQuestRequest     = remotes:WaitForChild("ClaimQuestRequest")
-local ClaimAllQuestsRequest = remotes:WaitForChild("ClaimAllQuestsRequest")
+local ClaimQuest            = remotes:WaitForChild("ClaimQuest")
+local ClaimAllQuests        = remotes:WaitForChild("ClaimAllQuests")
 local QuestClaimResult      = remotes:WaitForChild("QuestClaimResult")
 
 --// GUI
@@ -69,7 +69,7 @@ local function getClaimableQuests()
 	if not success or not questList then return {} end
 
 	for _, quest in ipairs(questList) do
-		if quest.progress and quest.goal and quest.progress >= quest.goal then
+		if quest.progress and quest.goal and quest.progress >= quest.goal and not quest.claimed then
 			table.insert(ids, quest.id)
 		end
 	end
@@ -108,7 +108,7 @@ local function updateTabIndicators()
 			if success and questList then
 				local anyClaimable = false
 				for _, q in ipairs(questList) do
-					if q.progress and q.goal and q.progress >= q.goal then
+					if q.progress and q.goal and q.progress >= q.goal and not q.claimed then
 						anyClaimable = true
 						break
 					end
@@ -149,7 +149,7 @@ local function showQuestInfo(quest)
 		icon.Parent = rewardIconsFrame
 	end
 
-	claimButton.Visible = quest.progress >= quest.goal
+	claimButton.Visible = (quest.progress or 0) >= (quest.goal or 1) and not quest.claimed
 end
 
 local function applyQuestHoverEffect(entry, color)
@@ -214,7 +214,7 @@ end
 --// Events
 claimButton.MouseButton1Click:Connect(function()
 	if currentQuest then
-		ClaimQuestRequest:FireServer(currentQuest.id)
+		ClaimQuest:FireServer(currentTab, currentQuest.id)
 		claimButton.Visible = false
 		updateTabIndicators()
 	end
@@ -222,19 +222,11 @@ end)
 
 claimAllButton.MouseButton1Click:Connect(function()
 	if PanelDebounce:Block("ClaimAllQuests", 0.5) then return end
-
-	local ids = getClaimableQuests()
-	if #ids == 0 then
-		log("⚠️ Keine abschließbaren Quests")
-		return
-	end
-
-	log("🎁 ClaimAll – Sende", #ids, "Quests an Server")
-	ClaimAllQuestsRequest:FireServer(currentTab, ids)
+	ClaimAllQuests:FireServer(currentTab)
 end)
 
 QuestClaimResult.OnClientEvent:Connect(function(data)
-	-- TODO: Ersetzen durch RewardPopupGui später
+	-- TODO: RewardPopupGui später
 	local popup = Instance.new("TextLabel")
 	popup.Size = UDim2.new(0, 300, 0, 50)
 	popup.Position = UDim2.new(0.5, -150, 0.4, 0)
@@ -242,7 +234,7 @@ QuestClaimResult.OnClientEvent:Connect(function(data)
 	popup.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	popup.TextColor3 = Color3.fromRGB(0, 255, 180)
 	popup.TextStrokeTransparency = 0.5
-	popup.Text = "You received: " .. (data.rewards[1] and data.rewards[1].label or "Reward")
+	popup.Text = "You received: " .. (data.rewards and data.rewards[1] and data.rewards[1].label or "Reward")
 	popup.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	task.delay(2.5, function() popup:Destroy() end)
 end)

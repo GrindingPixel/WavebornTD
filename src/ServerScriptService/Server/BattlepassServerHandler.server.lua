@@ -1,80 +1,88 @@
 -- BattlepassServerHandler.server.lua
+-- Typ: Script (ServerScript)
 
 --// Services
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local PlayerDataService = require(Modules:WaitForChild("PlayerDataService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
-
-
-local BattlepassModule = require(ReplicatedStorage.Modules:WaitForChild("BattlepassModule"))
-
---// Remote Setup
-local claimRemote = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
+local BattlepassData = require(ReplicatedStorage.Modules:WaitForChild("BattlepassModule"))
 
 --// Debug
 local DEBUG = true
-local function log(...) if DEBUG then print("[🔥 BattlepassServer]", ...) end end
-local function warnf(...) if DEBUG then warn("[🔥 BattlepassServer]", ...) end end
+local function log(...)
+	if DEBUG then print("[BattlepassServerHandler]", ...) end
+end
+local function warnf(...)
+	if DEBUG then warn("[BattlepassServerHandler]", ...) end
+end
 
---// Remote Verarbeitung
-claimRemote.OnServerEvent:Connect(function(player, level, rewardType)
-	if typeof(level) ~= "number" or (rewardType ~= "free" and rewardType ~= "premium") then
-		warnf("Ungültiger Claim-Request:", level, rewardType)
+--// Remotes
+local claimBattlepassEvent = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
+local getBattlepassInfo = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
+
+--// Level-Claim
+claimBattlepassEvent.OnServerEvent:Connect(function(player, level, typeStr)
+	if not ProfileWrapper:IsLoaded(player) then
+		warnf("ClaimBattlepassLevel abgelehnt (Profil nicht geladen) für", player and player.Name)
+		return
+	end
+	if type(level) ~= "number" or type(typeStr) ~= "string" then
+		warnf("Ungültige Parameter für ClaimBattlepassLevel von", player.Name)
+		return
+	end
+	if ServerDebounce:Block(player, "ClaimBattlepass_" .. tostring(level) .. "_" .. typeStr, 1.5) then
+		warnf("Debounce Block ClaimBattlepass für", player.Name)
 		return
 	end
 
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile then
-		warnf("Kein Profil für", player.Name)
+	local bp = ProfileWrapper:GetBattlepass(player)
+	if not bp or (bp.Level or 0) < level then
+		warnf("Level zu niedrig für BP-Claim", level, player.Name)
 		return
 	end
 
-	local bp = profile.Data.Battlepass
-	local entry = BattlepassModule.Data[level]
-
-	if not entry then
-		warnf("Unbekanntes Battlepass-Level:", level)
+	-- Reward schon geclaimt?
+	if bp.Claimed and bp.Claimed[level .. "_" .. typeStr] then
+		warnf("Battlepass-Reward bereits geclaimt", level, typeStr, player.Name)
 		return
 	end
 
-	local alreadyClaimed = bp.Claimed[level] and bp.Claimed[level][rewardType]
-	if alreadyClaimed then
-		warnf("Level bereits beansprucht:", level, rewardType)
+	-- Reward-Typ validieren
+	local rewardTable = nil
+	if typeStr == "free" then
+		rewardTable = BattlepassData.FreeRewards and BattlepassData.FreeRewards[level]
+	elseif typeStr == "premium" then
+		rewardTable = BattlepassData.PremiumRewards and BattlepassData.PremiumRewards[level]
+	end
+	if not rewardTable then
+		warnf("Kein BP-Reward für", level, typeStr, "bei", player.Name)
 		return
 	end
 
-	local hasPremium = bp.HasPremium
-	local exp = bp.EXP or 0
-	local required = entry.expRequired or 0
-
-	if exp < required then
-		warnf("Nicht genug EXP für Level", level)
-		return
+	-- Beispiel: Reward geben (nur 1 Item pro Slot!)
+	if rewardTable.itemId and rewardTable.amount then
+		ProfileWrapper:AddItem(player, rewardTable.itemId, rewardTable.amount)
+	elseif rewardTable.gold then
+		ProfileWrapper:AddGold(player, rewardTable.gold)
+	elseif rewardTable.gems then
+		ProfileWrapper:AddGems(player, rewardTable.gems)
 	end
 
-	if rewardType == "premium" and not hasPremium then
-		warnf("Kein Premium-Zugriff:", player.Name)
-		return
-	end
-
-	local rewards = entry[rewardType]
-	if not rewards or #rewards == 0 then
-		warnf("Keine Rewards definiert für", level, rewardType)
-		return
-	end
-
-	local success = RewardService.GrantRewards(player, rewards)
-	if not success then
-		warnf("Reward fehlgeschlagen für", player.Name, level)
-		return
-	end
-
-	-- ✅ Eintragen als beansprucht
-	bp.Claimed[level] = bp.Claimed[level] or {}
-	bp.Claimed[level][rewardType] = true
-
-	log("Battlepass-Reward vergeben:", player.Name, level, rewardType)
+	ProfileWrapper:ClaimBattlepassReward(player, level, typeStr)
+	log("BattlepassReward geclaimt:", level, typeStr, "für", player.Name)
 end)
+
+--// Battlepass-Daten für Client abrufen
+getBattlepassInfo.OnServerInvoke = function(player)
+	if not ProfileWrapper:IsLoaded(player) then
+		warnf("GetBattlepassInfo abgelehnt für", player and player.Name)
+		return {}
+	end
+	local bp = ProfileWrapper:GetBattlepass(player)
+	log("BattlepassInfo für", player.Name, "abgerufen")
+	return bp
+end

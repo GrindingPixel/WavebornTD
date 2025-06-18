@@ -10,8 +10,8 @@ local PanelManager  = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce = require(ReplicatedStorage.Modules.PanelDebounce)
 
 --// Remotes
-local redeemCodeEvent  = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCodeRequest")
-local codeResultEvent  = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCodeResult")
+local redeemCodeEvent  = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode")
+local codeResultEvent  = ReplicatedStorage.Remotes.Codes:WaitForChild("CodeResultEvent")
 
 --// GUI
 local panel        = GuiResolver:GetPanel("CodesGui", "CodesPanel")

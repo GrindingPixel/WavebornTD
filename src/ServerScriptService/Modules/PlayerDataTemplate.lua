@@ -52,6 +52,7 @@ local DefaultPlayerData = {
 		Level = 1,
 		EXP = 0,
 		Claimed = {},
+		HasPremium = false,
 	}
 }
 
