@@ -5,10 +5,12 @@
 *.png
 *.jpg
 *.psd
+*.zip
+*.rar
 .DS_Store
 Thumbs.db
 node_modules/
 .vscode/
 rojo.toml
-*.zip
+
 
