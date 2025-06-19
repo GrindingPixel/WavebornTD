@@ -11,6 +11,7 @@ local ProfileStore = require(ReplicatedStorage.Libs:WaitForChild("ProfileStore")
 local PlayerDataTemplate = require(Modules:WaitForChild("PlayerDataTemplate"))
 local QuestDataModule = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
 local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
+local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
@@ -98,22 +99,33 @@ function ProfileWrapper:GetQuestProgress(player, questType)
 	return profile.Data.QuestProgress[questType]
 end
 
-function ProfileWrapper:IncrementQuest(player, questType, questId, amount)
+function ProfileWrapper:IncrementQuest(player, questType, questId, amount, autoSync)
 	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
 	assert(type(questId) == "string" and questId ~= "", "QuestId ungültig!")
 	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
+
 	local profile = getProfile(player)
 	if not profile then
 		warnf("Kein Profil gefunden für", player.Name)
 		return false
 	end
+
+	-- Fortschritt erhöhen
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
 	profile.Data.QuestProgress[questType] = profile.Data.QuestProgress[questType] or {}
 	local qTab = profile.Data.QuestProgress[questType]
 	qTab[questId] = (qTab[questId] or 0) + amount
+
 	log("✅ QuestProgress geschrieben:", questType, questId, "+", amount, "→", qTab[questId], "für", player.Name)
+
+	-- Optionaler Live-Sync
+	if autoSync then
+		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
+	end
+
 	return true
 end
+
 
 function ProfileWrapper:ClaimQuest(player, questType, questId)
 	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
@@ -409,6 +421,10 @@ game:BindToClose(function()
 		ProfileWrapper:ReleaseProfile(player)
 	end
 end)
+
+function ProfileWrapper:GetProfile(player)
+	return getProfile(player)
+end
 
 task.spawn(function()
 	while true do

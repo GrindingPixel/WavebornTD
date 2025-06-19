@@ -10,16 +10,19 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local QuestData = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
+local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 
 --// Debug
 local DEBUG = true
-local function log(...) if DEBUG then print("[QuestServerHandler]", ...) end end
+local function log(...)   if DEBUG then print("[QuestServerHandler]", ...) end end
 local function warnf(...) if DEBUG then warn("[QuestServerHandler]", ...) end end
 
 --// Remotes
-local claimQuestEvent      = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimQuest")
-local getQuestsFunction    = ReplicatedStorage.Remotes.Quests:WaitForChild("GetPlayerQuests")
-local claimAllQuestsEvent  = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimAllQuests")
+local claimQuestEvent     = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimQuest")
+local getQuestsFunction   = ReplicatedStorage.Remotes.Quests:WaitForChild("GetPlayerQuests")
+local claimAllQuestsEvent = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimAllQuests")
+local questClaimResult    = ReplicatedStorage.Remotes.Quests:WaitForChild("QuestClaimResult")
+local tabUpdateRequest    = ReplicatedStorage.Remotes.Quests:WaitForChild("UpdateTabIndicators")
 
 log("QuestDataModule Keys:", table.concat((function()
 	local t = {}
@@ -33,7 +36,7 @@ claimQuestEvent.OnServerEvent:Connect(function(player, questData)
 	if type(questData) ~= "table" then return end
 
 	local questType = questData.tab
-	local questId   = questData.id
+	local questId = questData.id
 
 	if type(questType) ~= "string" or type(questId) ~= "string" then return end
 	if ServerDebounce:Block(player, "ClaimQuest_" .. questId, 1.5) then return end
@@ -45,17 +48,22 @@ claimQuestEvent.OnServerEvent:Connect(function(player, questData)
 	if not questList then return end
 
 	local quest = nil
-	for _, q in pairs(questList) do
+	for _, q in ipairs(questList) do
 		if q.id == questId then quest = q break end
 	end
 	if not quest then return end
 
 	if (progress[questId] or 0) < (quest.goal or 1) then return end
 
-	for _, reward in ipairs(quest.rewards or {}) do
-		ProfileWrapper:GrantRewards(player, {reward}, true)
-	end
+	ProfileWrapper:GrantRewards(player, quest.rewards or {}, true)
 	ProfileWrapper:ClaimQuest(player, questType, questId)
+
+	local profile = ProfileWrapper:GetProfile(player)
+	if profile then
+		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
+	end
+
+	tabUpdateRequest:FireClient(player)
 	log("Claimed quest:", questType, questId, "für", player.Name)
 end)
 
@@ -72,17 +80,29 @@ claimAllQuestsEvent.OnServerEvent:Connect(function(player, data)
 	local questList = QuestData[questType]
 	if not questList then return end
 
+	local claimedList = {}
 	for _, quest in ipairs(questList) do
 		local id = quest.id
 		if not progress[id .. "_claimed"] and (progress[id] or 0) >= (quest.goal or 1) then
-			for _, reward in ipairs(quest.rewards or {}) do
-				ProfileWrapper:GrantReward(player, reward)
-			end
+			ProfileWrapper:GrantRewards(player, quest.rewards or {}, true)
 			ProfileWrapper:ClaimQuest(player, questType, id)
 			claimedCount += 1
+			table.insert(claimedList, {
+				Id = id,
+				Reward = quest.rewards,
+				Tab = questType,
+			})
 		end
 	end
 
+	questClaimResult:FireClient(player, claimedList)
+
+	local profile = ProfileWrapper:GetProfile(player)
+	if profile then
+		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
+	end
+
+	tabUpdateRequest:FireClient(player)
 	log("ClaimAllQuests:", questType, claimedCount, "für", player.Name)
 end)
 
