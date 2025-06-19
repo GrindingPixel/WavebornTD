@@ -1,17 +1,21 @@
-📋 Waveborn TD – TaskBoard (Stand: 2025-06-18)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-19)
 
-🧱 1. Projektstruktur & Rojo Setup
+---
+
+## 🧱 1. Projektstruktur & Rojo Setup
 
 | Element                      | Status | Beschreibung                                     |
 | ---------------------------- | ------ | ------------------------------------------------ |
-| default.project.json         | ✅      | Mit \$className: "Script" korrekt konfiguriert   |
+| default.project.json         | ✅      | Mit $className: "Script" korrekt konfiguriert   |
 | Rojo src/-Struktur           | ✅      | Modules, GuiScripts, Server sauber getrennt      |
 | .lua UTF-8 Format            | ✅      | Alle Dateien UTF-8 ohne BOM                      |
 | ModuleScript Struktur        | ✅      | Einheitlich unter ReplicatedStorage/Modules      |
 | GUI-ScreenGuis (Rojo/Studio) | ✅      | Registriert via GuiInitScript                    |
 | Scriptstruktur (neu)         | ✅      | Einheitliche Blöcke: Services, Modules, GUI etc. |
 
-🧾 2. Technische Kernsysteme
+---
+
+## 🧾 2. Technische Kernsysteme
 
 | System          | Status | Beschreibung                                             |
 | --------------- | ------ | -------------------------------------------------------- |
@@ -22,7 +26,9 @@
 | TooltipModule   | ✅      | Finalisiert – mit Markup, Images, Funktionsunterstützung |
 | Logging & Debug | ✅      | Alle Scripts mit print() / warn() versehen               |
 
-🖼️ 3. GUI-Panelsystem (Client)
+---
+
+## 🖼️ 3. GUI-Panelsystem (Client)
 
 | Panel/GUI                       | Status | Besonderheiten                                            |
 | ------------------------------- | ------ | --------------------------------------------------------- |
@@ -38,9 +44,11 @@
 | UnitInventoryGui                | ✅      | UnitGridFrame, InfoPanel, EquipSystem, SlotBar            |
 | MapTeleportGui                  | ✅      | Welten- und Stage-Auswahl, RewardInfo, Teleport + Timeout |
 | FastTravelGui                   | ✅      | Panel mit Story/Raid/Summon-Zielbuttons, teleportfähig    |
-| Weitere (z. B. Trade/SkillTree) | 🔜     | Noch nicht begonnen                                       |
+| Weitere (z. B. Trade/SkillTree) | 🔜     | Noch nicht begonnen                                       |
 
-📐 GUI-Standardgrößen
+---
+
+## 📐 GUI-Standardgrößen
 
 | Typ           | Größe (Size)       | Position           |
 | ------------- | ------------------ | ------------------ |
@@ -48,7 +56,9 @@
 | MidSizePanel  | {0, 450}, {0, 585} | {0, 660}, {0, 150} |
 | SmallPanel    | {0, 500}, {0, 350} | {0, 620}, {0, 250} |
 
-🔧 4. Serverseitige Systeme
+---
+
+## 🔧 4. Serverseitige Systeme
 
 | System                   | Status | Beschreibung                                           |
 | ------------------------ | ------ | ------------------------------------------------------ |
@@ -61,7 +71,9 @@
 | TeleportLobbyHandler     | ✅      | Empfängt Zielname → Positionswechsel                   |
 | RemoteEvents / Functions | ✅      | Einheitlich in ReplicatedStorage.Remotes vorhanden     |
 
-🧩 5. Battlepass-System
+---
+
+## 🧩 5. Battlepass-System
 
 | Element                    | Status | Beschreibung                        |
 | -------------------------- | ------ | ----------------------------------- |
@@ -71,7 +83,9 @@
 | Claim-System               | ✅      | Belohnung per Event + RewardService |
 | Infinity Mode              | ❌      | Noch nicht implementiert            |
 
-📋 6. Quest-System
+---
+
+## 📋 6. Quest-System
 
 | Element              | Status | Beschreibung                                                |
 | -------------------- | ------ | ----------------------------------------------------------- |
@@ -82,7 +96,9 @@
 | QuestClaimResult     | ✅      | Sendet Popup-Daten bei Erfolg                               |
 | ClaimAllButton       | ✅      | Funktioniert, Debounce + Eventanbindung                     |
 
-📦 7. Units-System
+---
+
+## 📦 7. Units-System
 
 | Element                           | Status | Beschreibung                                           |
 | --------------------------------- | ------ | ------------------------------------------------------ |
@@ -99,7 +115,9 @@
 | AbilityPage                       | ✅      | UIListLayout, Auto-Inhalt via AbilitiesModule          |
 | Dropdown-Menü (Feed, Evolve etc.) | ✅      | Animiertes Menü mit Hover + Outside-Klick-Schließen    |
 
-📍 8. Teleport-System
+---
+
+## 📍 8. Teleport-System
 
 | Element                    | Status | Beschreibung                                           |
 | -------------------------- | ------ | ------------------------------------------------------ |
@@ -116,7 +134,9 @@
 | StageInfo                  | ✅      | Rewards mit Tooltip, ImageLabel + Text                 |
 | Initialzustand             | ✅      | Keine Stage/Info sichtbar bis Auswahl                  |
 
-🧭 9. FastTravel-System
+---
+
+## 🧭 9. FastTravel-System
 
 | Element               | Status | Beschreibung                                      |
 | --------------------- | ------ | ------------------------------------------------- |
@@ -126,42 +146,45 @@
 | Teleportziele         | ✅      | Story, Raid, Summon, Utils (Trade folgt später)   |
 | Buttonstruktur        | ✅      | ImageButtons mit Beschriftung, Hover über Tooltip |
 
-🧪 10. Refactoring & Codepflege
+---
+
+## 🧪 10. Refactoring & Codepflege
 
 | Bereich                        | Status | Beschreibung                                             |
 | ------------------------------ | ------ | -------------------------------------------------------- |
 | PanelManager-Vereinheitlichung | ✅      | Standardisiert (Open/Close)                              |
 | Scriptformatierung             | ✅      | Alle Scripts refactort (Formatblöcke, Struktur)          |
-| TooltipModule                  | ✅      | Final – mit \[b], \n, \[img\:id], Attach per Function    |
+| TooltipModule                  | ✅      | Final – mit \[b], \n, \[img:id], Attach per Function     |
 | Debounce-System                | ✅      | PanelDebounce, ServerDebounce systemweit im Einsatz      |
 | MapDataUtils                   | ✅      | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet |
 
-🔒 11. Persistent PlayerData (ProfileService → ProfileStore)
+---
+
+## 🔒 11. Persistent PlayerData (ProfileService → ProfileStore)
 
 | Element                                | Status | Beschreibung                                  |
 | -------------------------------------- | ------ | --------------------------------------------- |
 | ProfileStoreWrapper                    | ✅      | Zentrales Interface für alle Data-Operationen |
-| ProfileService entfernt                | 🔜     | Alte Implementierung deaktiveren              |
+| ProfileService entfernt                | 🔜     | Alte Implementierung deaktivieren             |
 | PlayerDataTemplate                     | ✅      | DataTemplate inkl. Battlepass.HasPremium      |
 | AutoSave & Release                     | ✅      | Implementiert im Wrapper                      |
 | LegacyServices (InventoryService etc.) | 🔜     | Werden durch Wrapper ersetzt                  |
 
-🔜 12. Nächste Schritte
+---
 
-* 🛠 Migrate DataSystem: Implement ProfileStoreWrapper & deprecate ProfileService
-* 🔄 Refactor InventoryServerHandler zu ProfileStoreWrapper
-* 🔄 Refactor ShopServerHandler zu ProfileStoreWrapper
+## 🔜 12. Nächste Schritte
+
+* 🔄 Refactor InventoryServerHandler → ProfileStoreWrapper
+* 🔄 Refactor ShopServerHandler → ProfileStoreWrapper
 * 🔄 Refactor QuestServerHandler inkl. ClaimAll
 * 🔄 Refactor BattlepassServerHandler & BattlepassInfoProvider
-* 🔄 Refactor UnitServerHandler zu ProfileStoreWrapper
-* ➕ Neues Script: UpgradeServerHandler & Remotes
+* 🔄 Refactor UnitServerHandler → ProfileStoreWrapper (läuft gerade)
+* ➕ Neues Script: UpgradeServerHandler + RemoteEvents
 * ➕ Neues ModuleScript: ProgressTrackerService
 * ➕ Neues ModuleScript: CodeDataModule & Config
 * 🔄 Refactor CodeRedeemHandler inkl. CodeResultEvent
-* 🔄 Adjust QuestClientScript an neue Remotes
-* 🔄 Add Wrapper-Methode SetBattlepassPremium
 * 🔧 Implement RewardPopupGui für Quest & Battlepass
-* 💬 TradeSystem: später geplant
-* 🧪 PvP-Arena: als langfristige Erweiterung vorgemerkt
+* 🔄 Add Wrapper-Methode: SetBattlepassPremium(player, value)
+* 💬 TradeSystem: geplant für später
+* 🧪 PvP-Arena: langfristige Erweiterung
 
-✅ Roadmap komplett an aktuelles Projekt angepasst – alle Tasks für Migration und Weiterentwicklung eingetragen.
