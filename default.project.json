@@ -30,6 +30,9 @@
       },
       "Modules": {
         "$path": "src/ServerScriptService/Modules"
+      },
+      "Debug": {
+        "$path": "src/ServerScriptService/Debug"
       }
     },
     "StarterGui": {

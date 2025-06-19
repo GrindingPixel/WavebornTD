@@ -53,7 +53,7 @@ claimQuestEvent.OnServerEvent:Connect(function(player, questData)
 	if (progress[questId] or 0) < (quest.goal or 1) then return end
 
 	for _, reward in ipairs(quest.rewards or {}) do
-		ProfileWrapper:GrantReward(player, reward)
+		ProfileWrapper:GrantRewards(player, {reward}, true)
 	end
 	ProfileWrapper:ClaimQuest(player, questType, questId)
 	log("Claimed quest:", questType, questId, "für", player.Name)
