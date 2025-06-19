@@ -390,12 +390,23 @@ local function onPlayerAdded(player)
 		player:Kick("Profil konnte nicht geladen werden.")
 		return
 	end
+
 	log("[DEBUG] onPlayerAdded ausgeführt für", player.Name)
 	profile:Reconcile()
+
+	-- Quests initialisieren
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
 	for tabName in pairs(QuestDataModule) do
 		profile.Data.QuestProgress[tabName] = profile.Data.QuestProgress[tabName] or {}
 	end
+
+	-- Battlepass initialisieren
+	profile.Data.Battlepass = profile.Data.Battlepass or {}
+	profile.Data.Battlepass.Level = profile.Data.Battlepass.Level or 1
+	profile.Data.Battlepass.EXP = profile.Data.Battlepass.EXP or 0
+	profile.Data.Battlepass.Claimed = profile.Data.Battlepass.Claimed or {}
+	profile.Data.Battlepass.HasPremium = profile.Data.Battlepass.HasPremium or false
+
 	activeProfiles[userId] = profile
 	ProfileLoadedEvent:FireClient(player)
 
@@ -408,6 +419,7 @@ local function onPlayerAdded(player)
 
 	log("Profil geladen für", player.Name)
 end
+
 
 local function onPlayerRemoving(player)
 	ProfileWrapper:ReleaseProfile(player)
