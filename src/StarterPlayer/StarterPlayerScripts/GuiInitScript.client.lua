@@ -2,11 +2,13 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 
 --// Modules
 local GuiResolver   = require(ReplicatedStorage.Modules.GuiResolver)
 local PanelManager  = require(ReplicatedStorage.Modules.PanelManager)
 
+ProfileLoadedEvent.OnClientEvent:Wait()
 --// Panels
 local panelMap = {
 	{ gui = "BattlepassGui",  panel = "BattlepassPanel" },

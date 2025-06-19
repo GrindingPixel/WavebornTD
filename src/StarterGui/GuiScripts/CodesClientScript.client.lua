@@ -56,7 +56,7 @@ local function redeemCode()
 	end
 
 	print("Sende Code zur Einlösung:", codeText)
-	redeemCodeEvent:FireServer(codeText)
+	redeemCodeEvent:FireServer({ code = codeText })
 	codeInput.Text = ""
 end
 

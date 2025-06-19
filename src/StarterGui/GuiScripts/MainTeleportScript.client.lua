@@ -156,7 +156,10 @@ for i = 1, 6 do
 			local tpButton = clone:FindFirstChild("TeleportButton")
 			if tpButton and tpButton:IsA("ImageButton") then
 				tpButton.MouseButton1Click:Connect(function()
-					teleportRemote:FireServer(currentWorld, stageData.StageId)
+					teleportRemote:FireServer({
+						world = currentWorld,
+						stage = stageData.StageId
+						})
 				end)
 			end
 
@@ -168,5 +171,5 @@ end
 -- Panel schließen + Rückteleport
 closeBtn.MouseButton1Click:Connect(function()
 	PanelManager:ClosePanel(panel)
-	timeoutRemote:FireServer("ReturnToLobby")
+	timeoutRemote:FireServer({ action = "ReturnToLobby" })
 end)

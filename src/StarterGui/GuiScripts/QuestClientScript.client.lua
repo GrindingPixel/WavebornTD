@@ -11,6 +11,7 @@ local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 
 --// Remotes
+local ProfileLoadedEvent  	= ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local remotes               = ReplicatedStorage.Remotes.Quests
 local GetPlayerQuests       = remotes:WaitForChild("GetPlayerQuests")
 local ClaimQuest            = remotes:WaitForChild("ClaimQuest")
@@ -37,6 +38,7 @@ local claimButton      = infoFrame:WaitForChild("ClaimButton")
 
 --// Init
 PanelManager:RegisterPanel(panel)
+ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// Debug
 local DEBUG = true
@@ -57,16 +59,11 @@ local TAB_COLORS = {
 	Progress = Color3.fromRGB(200, 200, 200),
 }
 
---// Setup
-PanelManager:RegisterPanel(panel)
-
 --// Funktionen
 local function getClaimableQuests()
 	local ids = {}
-	local success, questList = pcall(function()
-		return GetPlayerQuests:InvokeServer(currentTab)
-	end)
-	if not success or not questList then return {} end
+	local questList = GetPlayerQuests:InvokeServer(currentTab)
+	if not questList then return {} end
 
 	for _, quest in ipairs(questList) do
 		if quest.progress and quest.goal and quest.progress >= quest.goal and not quest.claimed then
@@ -97,18 +94,15 @@ end
 local function updateTabIndicators()
 	for _, tab in ipairs(tabs:GetChildren()) do
 		if tab:IsA("ImageButton") then
-			local cleanTabName = tab.Name:gsub("Tab$", "")
+			local tabKey = tab.Name:gsub("Tab$", "")
 			local indicator = tab:FindFirstChild("Indicator")
 			if not indicator then continue end
 
-			local success, questList = pcall(function()
-				return GetPlayerQuests:InvokeServer(cleanTabName)
-			end)
-
-			if success and questList then
+			local questList = GetPlayerQuests:InvokeServer(tabKey)
+			if questList then
 				local anyClaimable = false
 				for _, q in ipairs(questList) do
-					if q.progress and q.goal and q.progress >= q.goal and not q.claimed then
+					if q.Progress and q.Quest.goal and q.Progress >= q.Quest.goal and not q.Claimed then
 						anyClaimable = true
 						break
 					end
@@ -136,12 +130,12 @@ end
 local function showQuestInfo(quest)
 	currentQuest = quest
 	infoFrame.Visible = true
-	titleLabel.Text = quest.title
-	descriptionLabel.Text = quest.description
-	progressLabel.Text = string.format("%d / %d", quest.progress or 0, quest.goal or 1)
+	titleLabel.Text = quest.Quest.title
+	descriptionLabel.Text = quest.Quest.description
+	progressLabel.Text = string.format("%d / %d", quest.Progress or 0, quest.Quest.goal or 1)
 
 	clearRewards()
-	for _, reward in ipairs(quest.rewards or {}) do
+	for _, reward in ipairs(quest.Quest.rewards or {}) do
 		local icon = Instance.new("ImageLabel")
 		icon.Size = UDim2.new(0, 40, 0, 40)
 		icon.BackgroundTransparency = 1
@@ -149,7 +143,7 @@ local function showQuestInfo(quest)
 		icon.Parent = rewardIconsFrame
 	end
 
-	claimButton.Visible = (quest.progress or 0) >= (quest.goal or 1) and not quest.claimed
+	claimButton.Visible = (quest.Progress or 0) >= (quest.Quest.goal or 1) and not quest.Claimed
 end
 
 local function applyQuestHoverEffect(entry, color)
@@ -172,20 +166,28 @@ local function applyQuestHoverEffect(entry, color)
 end
 
 local function loadQuests(tabName)
+	if not tabName or typeof(tabName) ~= "string" then
+		warnf("loadQuests: Ungültiger tabName", tabName)
+		return
+	end
+
 	currentTab = tabName
 	clearList()
 	clearRewards()
 	infoFrame.Visible = false
 	claimButton.Visible = false
 
-	local success, questList = pcall(function()
-		return GetPlayerQuests:InvokeServer(tabName)
-	end)
-	if not success or not questList then warnf("Konnte Quests nicht laden") return end
+	local questList = GetPlayerQuests:InvokeServer(currentTab)
+	if not questList then
+		warnf("Konnte Quests nicht laden")
+		return
+	end
+
+	log("Quests erhalten für Tab:", currentTab)
 
 	for _, quest in ipairs(questList) do
 		local entry = template:Clone()
-		entry.Name = "Quest_" .. quest.id
+		entry.Name = "Quest_" .. quest.Id
 		entry.Visible = true
 		entry.Parent = listFrame
 
@@ -194,9 +196,9 @@ local function loadQuests(tabName)
 		local prog      = entry:FindFirstChild("Progress")
 		local clickZone = entry:FindFirstChild("ClickZone")
 
-		if title then title.Text = quest.title end
-		if desc then desc.Text = quest.description end
-		if prog then prog.Text = string.format("%d / %d", quest.progress or 0, quest.goal or 1) end
+		if title then title.Text = quest.Quest.title end
+		if desc then desc.Text = quest.Quest.description end
+		if prog then prog.Text = string.format("%d / %d", quest.Progress or 0, quest.Quest.goal or 1) end
 
 		if clickZone and clickZone:IsA("ImageButton") then
 			clickZone.MouseButton1Click:Connect(function()
@@ -214,7 +216,7 @@ end
 --// Events
 claimButton.MouseButton1Click:Connect(function()
 	if currentQuest then
-		ClaimQuest:FireServer(currentTab, currentQuest.id)
+		ClaimQuest:FireServer({ tab = currentTab, id = currentQuest.Id })
 		claimButton.Visible = false
 		updateTabIndicators()
 	end
@@ -222,11 +224,10 @@ end)
 
 claimAllButton.MouseButton1Click:Connect(function()
 	if PanelDebounce:Block("ClaimAllQuests", 0.5) then return end
-	ClaimAllQuests:FireServer(currentTab)
+	ClaimAllQuests:FireServer({ tab = currentTab })
 end)
 
 QuestClaimResult.OnClientEvent:Connect(function(data)
-	-- TODO: RewardPopupGui später
 	local popup = Instance.new("TextLabel")
 	popup.Size = UDim2.new(0, 300, 0, 50)
 	popup.Position = UDim2.new(0.5, -150, 0.4, 0)
@@ -262,5 +263,7 @@ if closeButton then
 	end)
 end
 
---// Init
-loadQuests(currentTab)
+-- Init
+task.defer(function()
+	loadQuests(currentTab)
+end)

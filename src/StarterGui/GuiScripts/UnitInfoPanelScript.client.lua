@@ -10,6 +10,7 @@ local UserInputService    = game:GetService("UserInputService")
 local GuiResolver         = require(ReplicatedStorage.Modules.GuiResolver)
 local UnitStats           = require(ReplicatedStorage.Modules.UnitStatsModule)
 local UnitAbilities       = require(ReplicatedStorage.Modules.UnitAbilitiesModule)
+local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 
 --// GUI
 local gui         = GuiResolver:Get("UnitInventoryGui")
@@ -56,6 +57,8 @@ local rarityLabel  = panel:FindFirstChild("RarityLabel")
 -- Navigation
 local pageLeft  = panel:FindFirstChild("PageLeftButton")
 local pageRight = panel:FindFirstChild("PageRightButton")
+
+ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// State
 local currentPage = 1

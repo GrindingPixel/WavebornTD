@@ -4,10 +4,16 @@
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
 local ProfileStore = require(ReplicatedStorage.Libs:WaitForChild("ProfileStore"))
-local PlayerDataTemplate = require(script:WaitForChild("PlayerDataTemplate"))
+local PlayerDataTemplate = require(Modules:WaitForChild("PlayerDataTemplate"))
+local QuestDataModule = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
+local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
+
+--// Remotes
+local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 
 --// Einstellungen
 local DATASTORE_NAME = "WavebornTDPlayerData"
@@ -15,8 +21,8 @@ local AUTOSAVE_INTERVAL = 120
 local DEBUG = true
 
 --// ProfileStore-Instanz
-local store = ProfileStore.new(DATASTORE_NAME, PlayerDataTemplate)
-local activeProfiles = {}
+local store = ProfileStore.New(DATASTORE_NAME, PlayerDataTemplate)
+local activeProfiles = {} -- [userId] = profile
 
 local function log(...)
 	if DEBUG then print("[ProfileStoreWrapper]", ...) end
@@ -29,7 +35,16 @@ local ProfileWrapper = {}
 
 -- Helper: internes Profil holen
 local function getProfile(player)
-	return activeProfiles[player]
+	return activeProfiles[player.UserId]
+end
+
+function ProfileWrapper:GetAllLoadedPlayers()
+	local result = {}
+	for userId, _ in pairs(activeProfiles) do
+		local player = Players:GetPlayerByUserId(userId)
+		if player then table.insert(result, player.Name) end
+	end
+	return result
 end
 
 -- ===================================
@@ -39,7 +54,6 @@ end
 function ProfileWrapper:GetInventory(player)
 	local profile = getProfile(player)
 	if not profile then return {} end
-	-- Kopie für Read-Only
 	local copy = {}
 	for k, v in pairs(profile.Data.Inventory) do copy[k] = v end
 	return copy
@@ -52,7 +66,6 @@ function ProfileWrapper:AddItem(player, itemId, amount)
 	if not profile then return false end
 	local inv = profile.Data.Inventory
 	inv[itemId] = (inv[itemId] or 0) + amount
-	-- Optional: MaxStack-Limitierung
 	log("Item", itemId, "x", amount, "an", player.Name, "gegeben")
 	return true
 end
@@ -70,6 +83,46 @@ function ProfileWrapper:RemoveItem(player, itemId, amount)
 	inv[itemId] = inv[itemId] - amount
 	if inv[itemId] <= 0 then inv[itemId] = nil end
 	log("Item", itemId, "x", amount, "von", player.Name, "entfernt")
+	return true
+end
+
+-- ===================================
+-- QUESTS
+-- ===================================
+
+function ProfileWrapper:GetQuestProgress(player, questType)
+	local profile = getProfile(player)
+	if not profile then return {} end
+	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
+	profile.Data.QuestProgress[questType] = profile.Data.QuestProgress[questType] or {}
+	return profile.Data.QuestProgress[questType]
+end
+
+function ProfileWrapper:IncrementQuest(player, questType, questId, amount)
+	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
+	assert(type(questId) == "string" and questId ~= "", "QuestId ungültig!")
+	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
+	local profile = getProfile(player)
+	if not profile then
+		warnf("Kein Profil gefunden für", player.Name)
+		return false
+	end
+	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
+	profile.Data.QuestProgress[questType] = profile.Data.QuestProgress[questType] or {}
+	local qTab = profile.Data.QuestProgress[questType]
+	qTab[questId] = (qTab[questId] or 0) + amount
+	log("✅ QuestProgress geschrieben:", questType, questId, "+", amount, "→", qTab[questId], "für", player.Name)
+	return true
+end
+
+function ProfileWrapper:ClaimQuest(player, questType, questId)
+	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
+	assert(type(questId) == "string" and questId ~= "", "QuestId ungültig!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	local qTab = self:GetQuestProgress(player, questType)
+	qTab[questId .. "_claimed"] = true
+	log("Quest", questType, questId, "als claimed für", player.Name)
 	return true
 end
 
@@ -110,7 +163,7 @@ function ProfileWrapper:LevelUpUnit(player, unitId)
 end
 
 function ProfileWrapper:EquipUnit(player, slot, unitId)
-	assert(type(slot) == "number" and slot >= 1 and slot <= 6, "Slot muss 1-6 sein")
+	assert(type(slot) == "number" and slot >= 1 and slot <= 6, "Slot muss 1–6 sein")
 	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
 	local profile = getProfile(player)
 	if not profile then return false end
@@ -125,41 +178,6 @@ function ProfileWrapper:GetEquippedUnits(player)
 	local copy = {}
 	for i, v in ipairs(profile.Data.EquippedUnits) do copy[i] = v end
 	return copy
-end
-
--- ===================================
--- QUESTS
--- ===================================
-
-function ProfileWrapper:GetQuestProgress(player, questType)
-	local profile = getProfile(player)
-	if not profile then return {} end
-	return profile.Data.QuestProgress[questType] or {}
-end
-
-function ProfileWrapper:IncrementQuest(player, questType, questId, amount)
-	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
-	assert(type(questId) == "string" and questId ~= "", "QuestId ungültig!")
-	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
-	local profile = getProfile(player)
-	if not profile then return false end
-	local qTab = profile.Data.QuestProgress[questType]
-	if not qTab then warnf("QuestType nicht gefunden:", questType); return false end
-	qTab[questId] = (qTab[questId] or 0) + amount
-	log("QuestProgress", questType, questId, "+", amount, "für", player.Name)
-	return true
-end
-
-function ProfileWrapper:ClaimQuest(player, questType, questId)
-	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
-	assert(type(questId) == "string" and questId ~= "", "QuestId ungültig!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	local qTab = profile.Data.QuestProgress[questType]
-	if not qTab then return false end
-	qTab[questId .. "_claimed"] = true
-	log("Quest", questType, questId, "als claimed für", player.Name)
-	return true
 end
 
 -- ===================================
@@ -284,19 +302,60 @@ function ProfileWrapper:UpgradeInventory(player, newSize)
 end
 
 -- ===================================
--- SESSION MANAGEMENT (nur intern)
+-- REWARDS
 -- ===================================
+
+local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
+
+function ProfileWrapper:GrantRewards(player, rewards, logRewards)
+	assert(typeof(rewards) == "table", "Rewards muss ein Array sein")
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	for _, reward in ipairs(rewards) do
+		local rewardType = reward.type or "Item"
+		local amount = reward.amount or 1
+		local id = reward.id
+
+		if rewardType == "Gold" then
+			self:AddGold(player, amount)
+			if logRewards then log("Gold +" .. amount .. " an", player.Name) end
+
+		elseif rewardType == "Gems" then
+			self:AddGems(player, amount)
+			if logRewards then log("Gems +" .. amount .. " an", player.Name) end
+
+		elseif rewardType == "Item" then
+			if not ItemData[id] then
+				warnf("Ungültiges Item:", id, "für", player.Name)
+			else
+				self:AddItem(player, id, amount)
+				if logRewards then log("Item", id, "x" .. amount, "an", player.Name) end
+			end
+
+		else
+			warnf("Unbekannter RewardType:", rewardType, "bei", player.Name)
+		end
+	end
+
+	return true
+end
+
+-- ===================================
+-- SESSION MANAGEMENT
+-- ===================================
+
 function ProfileWrapper:ReleaseProfile(player)
-	local profile = activeProfiles[player]
+	local profile = activeProfiles[player.UserId]
 	if profile then
-		profile:Release()
-		activeProfiles[player] = nil
+		profile:EndSession()
+		activeProfiles[player.UserId] = nil
 		log("Profil für", player.Name, "freigegeben")
 	end
 end
 
 function ProfileWrapper:SaveProfile(player)
-	local profile = activeProfiles[player]
+	local profile = activeProfiles[player.UserId]
 	if profile then
 		profile:Save()
 		log("Profil für", player.Name, "gespeichert")
@@ -304,31 +363,38 @@ function ProfileWrapper:SaveProfile(player)
 end
 
 function ProfileWrapper:IsLoaded(player)
-	return activeProfiles[player] ~= nil
+	return activeProfiles[player.UserId] ~= nil
 end
 
 -- ===================================
--- SESSION-LADEN/SAVE, AUTOSAVE, SHUTDOWN
+-- SESSION LOAD / INIT
 -- ===================================
 
 local function onPlayerAdded(player)
-	local userId = "Player_" .. player.UserId
-	local profile = store:LoadProfile(userId, "ForceLoad")
-	if profile then
-		profile:Reconcile()
-		activeProfiles[player] = profile
-
-		profile:ListenToRelease(function()
-			activeProfiles[player] = nil
-			if player:IsDescendantOf(Players) then
-				player:Kick("Dein Profil wurde woanders geladen oder ist ungültig.")
-			end
-		end)
-		log("Profil geladen für", player.Name)
-	else
+	local userId = player.UserId
+	local profile = store:StartSessionAsync("Player_" .. userId)
+	if not profile then
 		warnf("Konnte Profil nicht laden für", player.Name)
 		player:Kick("Profil konnte nicht geladen werden.")
+		return
 	end
+	log("[DEBUG] onPlayerAdded ausgeführt für", player.Name)
+	profile:Reconcile()
+	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
+	for tabName in pairs(QuestDataModule) do
+		profile.Data.QuestProgress[tabName] = profile.Data.QuestProgress[tabName] or {}
+	end
+	activeProfiles[userId] = profile
+	ProfileLoadedEvent:FireClient(player)
+
+	profile.OnSessionEnd:Connect(function()
+		activeProfiles[userId] = nil
+		if player:IsDescendantOf(Players) then
+			player:Kick("Dein Profil wurde woanders geladen oder ist ungültig.")
+		end
+	end)
+
+	log("Profil geladen für", player.Name)
 end
 
 local function onPlayerRemoving(player)
@@ -344,14 +410,14 @@ game:BindToClose(function()
 	end
 end)
 
--- AutoSave-Loop
 task.spawn(function()
 	while true do
 		task.wait(AUTOSAVE_INTERVAL)
-		for player, profile in pairs(activeProfiles) do
+		for userId, profile in pairs(activeProfiles) do
 			if profile:IsActive() then
 				profile:Save()
-				log("AutoSave für", player.Name)
+				local player = Players:GetPlayerByUserId(userId)
+				if player then log("AutoSave für", player.Name) end
 			end
 		end
 	end

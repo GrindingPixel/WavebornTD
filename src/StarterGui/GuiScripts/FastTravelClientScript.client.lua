@@ -34,7 +34,7 @@ PanelManager:RegisterPanel(panel)
 local function teleport(areaName)
 	if PanelDebounce:Block("FastTravel_" .. areaName, 0.5) then return end
 	print("🛰️ Teleport zu Bereich:", areaName)
-	teleportRemote:FireServer(areaName)
+	teleportRemote:FireServer({ area = areaName })
 	PanelManager:ClosePanel(panel)
 end
 

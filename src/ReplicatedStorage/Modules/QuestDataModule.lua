@@ -5,7 +5,7 @@ local QuestData = {
 	-- 🔁 Daily Quests (wechseln täglich)
 	Daily = {
 		{
-			id = "D_001",
+			id = "1",
 			title = "Summon 3 Units",
 			description = "Use the Summon system 3 times",
 			type = "Summon",

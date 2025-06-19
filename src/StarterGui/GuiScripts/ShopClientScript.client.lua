@@ -66,7 +66,10 @@ for _, button in ipairs(packsSection:GetChildren()) do
 				button.Active = false
 				button.Image = GLOBAL_PURCHASING_IMAGE
 
-				shopEvent:FireServer(productId, button.Name)
+				shopEvent:FireServer({
+					productId = productId,
+					button = button.Name
+				})
 			end)
 		end
 

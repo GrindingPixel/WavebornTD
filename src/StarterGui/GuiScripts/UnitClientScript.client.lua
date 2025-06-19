@@ -11,7 +11,11 @@ local UnitsModule      = require(ReplicatedStorage.Modules.UnitDataModule)
 local PanelDebounce    = require(ReplicatedStorage.Modules.PanelDebounce)
 
 --// Remotes
-local remote = ReplicatedStorage.Remotes.Units:WaitForChild("GetPlayerUnits")
+local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local GetPlayerUnitsFunction = ReplicatedStorage.Remotes.Units:WaitForChild("GetPlayerUnits")
+local EquipUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("EquipUnit")
+local LevelUpUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("LevelUpUnit")
+local UnlockUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("UnlockUnit")
 
 --// GUI
 local gui       = GuiResolver:Get("UnitInventoryGui")
@@ -32,6 +36,7 @@ local unequipButton = infoPanel:WaitForChild("UnEquipButton")
 
 --// Init
 PanelManager:RegisterPanel(panel)
+ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// State
 local unitList = {}
@@ -145,7 +150,7 @@ end
 
 local function loadUnits()
 	local success, result = pcall(function()
-		return remote:InvokeServer()
+		return GetPlayerUnitsFunction:InvokeServer()
 	end)
 	if success and result then
 		unitList = result

@@ -15,6 +15,7 @@ local PanelDebounce = require(ReplicatedStorage.Modules:WaitForChild("PanelDebou
 local TooltipModule = require(ReplicatedStorage.Modules:WaitForChild("TooltipModule"))
 
 --// Remotes
+local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local Remotes         = ReplicatedStorage:WaitForChild("Remotes")
 local InventoryFolder = Remotes:WaitForChild("Inventory")
 local GetInventoryData = InventoryFolder:WaitForChild("GetInventoryData")
@@ -36,6 +37,7 @@ local itemCache    = {}
 
 --// Setup
 PanelManager:RegisterPanel(panel)
+ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// Utility: Filter Items nach Suchtext oder Tab
 local function shouldDisplay(item)
