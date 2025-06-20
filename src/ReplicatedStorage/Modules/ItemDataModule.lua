@@ -11,9 +11,16 @@ local ItemData = {
 	["Attribute_Token"] = {
 		displayName = "Attribute Token",
 		iconId = "rbxassetid://83291346465775",
-		category = "Material",
+		category = "Token",
 		rarity = "Epic",
 		desc = "Token used to upgrade unit attributes.",
+	},
+	["Reroll_Token"] = {
+		displayName = "Reroll Token",
+		iconId = "rbxassetid://134383472964237",
+		category = "Token",
+		rarity = "Divine",
+		desc = "Token used to reroll unit traits.",
 	},
 	["Universal_Fragment"] = {
 		displayName = "Univversal_Fragment",
@@ -21,21 +28,7 @@ local ItemData = {
 		category = "Material",
 		rarity = "Legendary",
 		desc = "Material used for universal upgrades.",
-	},
-	["Reroll_Token"] = {
-		displayName = "Reroll Token",
-		iconId = "rbxassetid://134383472964237",
-		category = "Material",
-		rarity = "Divine",
-		desc = "Token used to reroll unit traits.",
-	},
-	["Medal_Ruby"] = {
-		displayName = "Ruby Medal",
-		iconId = "rbxassetid://9988776655",
-		category = "Medal",
-		rarity = "Uncommon",
-		desc = "Awarded for completing daily missions.",
-	},
+	}
 }
 
 -- Hilfsfunktion zur sicheren Abfrage

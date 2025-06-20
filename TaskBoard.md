@@ -174,7 +174,7 @@
 | PlayerDataTemplate                     | ✅      | DataTemplate inkl. Battlepass.HasPremium, Seed, Claimed etc.    |
 | AutoSave & Release                     | ✅      | Implementiert im Wrapper                                        |
 | Battlepass-Seed Reset                  | ✅      | Reset bei Seed-Wechsel aktiv (inkl. Premium & Claimed)          |
-| LegacyServices (InventoryService etc.) | 🔜     | Werden durch Wrapper ersetzt                                    |
+| LegacyServices (InventoryService etc.) | ✅     | Werden durch Wrapper ersetzt                                    |
 
 ---
 
