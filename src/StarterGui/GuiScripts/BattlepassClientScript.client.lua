@@ -6,30 +6,31 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 --// Remotes
-local GetBattlepassInfo = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
-local ClaimBattlepassLevel = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
-local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local GetBattlepassInfo     = ReplicatedStorage.Remotes.Battlepass:WaitForChild("GetBattlepassInfo")
+local ClaimBattlepassLevel  = ReplicatedStorage.Remotes.Battlepass:WaitForChild("ClaimBattlepassLevel")
+local ProfileLoadedEvent    = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 
 --// Modules
-local GuiResolver = require(ReplicatedStorage.Modules:WaitForChild("GuiResolver"))
-local PanelManager = require(ReplicatedStorage.Modules:WaitForChild("PanelManager"))
-local PanelDebounce = require(ReplicatedStorage.Modules:WaitForChild("PanelDebounce"))
+local GuiResolver     = require(ReplicatedStorage.Modules:WaitForChild("GuiResolver"))
+local PanelManager    = require(ReplicatedStorage.Modules:WaitForChild("PanelManager"))
+local PanelDebounce   = require(ReplicatedStorage.Modules:WaitForChild("PanelDebounce"))
+local itemData 		  = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
+
 
 --// GUI
-local panel = GuiResolver:GetPanel("BattlepassGui", "BattlepassPanel")
+local panel           = GuiResolver:GetPanel("BattlepassGui", "BattlepassPanel")
 if not panel then return end
 
-local canvas = panel:WaitForChild("CanvasGroup")
-local scrollFrame = canvas:WaitForChild("BattlepassScrollFrame")
-local headerFrame = canvas:WaitForChild("HeaderFrame")
-local closeButton = canvas:FindFirstChild("BattlepassCloseButton", true)
-local levelTemplate = scrollFrame:WaitForChild("LevelTemplate")
+local canvas          = panel:WaitForChild("CanvasGroup")
+local scrollFrame     = canvas:WaitForChild("BattlepassScrollFrame")
+local headerFrame     = canvas:WaitForChild("HeaderFrame")
+local expbar		  = headerFrame:WaitForChild("ExpBar")
+local closeButton     = canvas:FindFirstChild("BattlepassCloseButton", true)
+local levelTemplate   = scrollFrame:WaitForChild("LevelTemplate")
+local levelText       = headerFrame:FindFirstChild("LevelLabel")
+local expText         = expbar:FindFirstChild("ExpTextLabel")
 
---// Setup
-PanelManager:RegisterPanel(panel)
-ProfileLoadedEvent.OnClientEvent:Wait()
-
---// Helpers
+--// Helper: Karten löschen
 local function clearCards()
 	for _, child in ipairs(scrollFrame:GetChildren()) do
 		if child:IsA("Frame") and child.Name ~= "LevelTemplate" then
@@ -38,14 +39,15 @@ local function clearCards()
 	end
 end
 
+--// Battlepass anzeigen
 local function buildBattlepass(data)
 	clearCards()
 
-	local level = data.Level
-	local exp = data.EXP
-	local claimed = data.Claimed or {}
-	local hasPremium = data.HasPremium
-	local layout = data.Layout
+	local level       = data.Level
+	local exp         = data.EXP
+	local claimed     = data.Claimed or {}
+	local hasPremium  = data.HasPremium
+	local layout      = data.Layout
 
 	for i = 1, 100 do
 		local entry = layout[i]
@@ -63,64 +65,106 @@ local function buildBattlepass(data)
 		local claimedFree = claimed[i .. "_free"]
 		local claimedPremium = claimed[i .. "_premium"]
 
-		-- Free Button
-		local freeBtn = card:FindFirstChild("FreeRewardsBP")
-		if freeBtn and entry.free and entry.free[1] then
-			local reward = entry.free[1]
-			freeBtn:SetAttribute("TooltipId", reward.id)
-			if claimedFree then
-				freeBtn.LockIcon.Visible = false
-			elseif exp >= entry.expRequired then
-				freeBtn.MouseButton1Click:Connect(function()
-					ClaimBattlepassLevel:FireServer({ level = i, type = "free" })
-				end)
-			else
-				freeBtn.LockIcon.Visible = true
-			end
-		end
+-- Free Slot
+local freeSlot = card:FindFirstChild("FreeRewardsBP")
+local freeBtn = freeSlot and freeSlot:FindFirstChild("FreeRewardButton1")
+local lockIcon = freeSlot and freeSlot:FindFirstChild("LockIcon")
 
-		-- Premium Button
-		local premiumBtn = card:FindFirstChild("PremiumRewardsBP")
-		if premiumBtn and entry.premium and entry.premium[1] then
-			local reward = entry.premium[1]
-			premiumBtn:SetAttribute("TooltipId", reward.id)
-			if claimedPremium then
-				premiumBtn.LockIcon.Visible = false
-			elseif hasPremium and exp >= entry.expRequired then
-				premiumBtn.MouseButton1Click:Connect(function()
-					ClaimBattlepassLevel:FireServer({ level = i, type = "premium" })
-				end)
-			else
-				premiumBtn.LockIcon.Visible = true
-			end
-		end
+if freeBtn and entry.free and entry.free[1] then
+	local reward = entry.free[1]
+	freeBtn:SetAttribute("TooltipId", reward.id)
+
+	-- Bild aus ItemDataModule setzen
+local iconMeta = itemData[reward.id]
+if iconMeta and iconMeta.iconId then
+	freeBtn.Image = iconMeta.iconId
+end
+
+
+	-- Claim-Logik
+	if claimedFree then
+		lockIcon.Visible = false
+	elseif i <= level then
+		lockIcon.Visible = false
+		freeBtn.MouseButton1Click:Connect(function()
+			ClaimBattlepassLevel:FireServer({ level = i, type = "free" })
+		end)
+	else
+		lockIcon.Visible = true
+	end
+end
+
+
+
+
+-- Premium Slot
+local premiumSlot = card:FindFirstChild("PremiumRewardsBP")
+local premiumBtn = premiumSlot and premiumSlot:FindFirstChild("PremiumRewardButton1")
+local premiumLock = premiumSlot and premiumSlot:FindFirstChild("LockIcon")
+
+if premiumBtn and entry.premium and entry.premium[1] then
+	local reward = entry.premium[1]
+	premiumBtn:SetAttribute("TooltipId", reward.id)
+
+	-- Bild aus ItemDataModule setzen
+	local iconMeta = itemData[reward.id]
+	if iconMeta and iconMeta.iconId then
+		premiumBtn.Image = iconMeta.iconId
+	end
+
+	if claimedPremium then
+		premiumLock.Visible = false
+	elseif hasPremium and i <= level then
+		premiumLock.Visible = false
+		premiumBtn.MouseButton1Click:Connect(function()
+			ClaimBattlepassLevel:FireServer({ level = i, type = "premium" })
+		end)
+	else
+		premiumLock.Visible = true
+	end
+end
+
+
+
 
 		-- EXP-Balken
-		local bar = card:FindFirstChild("ExpBar")
-		local fill = bar and bar:FindFirstChild("FillProgress")
-		if fill and entry.expRequired then
-			local percent = math.clamp(exp / entry.expRequired, 0, 1)
-			fill.Size = UDim2.new(0, 0, 1, 0)
-			TweenService:Create(
-				fill,
-				TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{ Size = UDim2.new(percent, 0, 1, 0) }
-			):Play()
+	local bar = card:FindFirstChild("ExpBar")
+	local fill = bar and bar:FindFirstChild("FillProgress")
+	if fill and entry.expRequired then
+		local percent = math.clamp(exp / entry.expRequired, 0, 1)
+		fill.Size = UDim2.new(0, 0, 1, 0)
+		TweenService:Create(
+			fill,
+			TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Size = UDim2.new(percent, 0, 1, 0) }
+		):Play()
 		end
 	end
 end
 
---// Init
-task.defer(function()
-	local info = GetBattlepassInfo:InvokeServer()
-	if not info then
-		warn("⚠️ BattlepassInfo konnte nicht vom Server geladen werden")
-		return
-	end
-	buildBattlepass(info)
-end)
+--// Setup
+ProfileLoadedEvent.OnClientEvent:Wait()
+PanelManager:RegisterPanel(panel, {
+	OnOpen = function()
+		local info = GetBattlepassInfo:InvokeServer()
+		if not info then
+			warn("⚠️ BattlepassInfo konnte nicht vom Server geladen werden")
+			return
+		end
 
---// Events
+		if levelText and info.Level then
+			levelText.Text = "Level " .. tostring(info.Level)
+		end
+
+		if expText and info.EXP then
+			expText.Text = tostring(info.EXP) .. " EXP"
+		end
+
+		buildBattlepass(info)
+	end
+})
+
+--// Schließen
 if closeButton then
 	closeButton.MouseButton1Click:Connect(function()
 		PanelManager:ClosePanel(panel)

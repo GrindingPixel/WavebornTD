@@ -12,7 +12,7 @@ local QuestData = {
 			goal = 3,
 			rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "Item", id = "Scroll_Basic", amount = 1 }
+				{ type = "BattlepassEXP", amount = 500 }
 			}
 		},
 		{

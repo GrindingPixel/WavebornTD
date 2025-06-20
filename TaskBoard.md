@@ -1,4 +1,5 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-19)
+
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-20)
 
 ---
 
@@ -19,7 +20,7 @@
 
 | System          | Status | Beschreibung                                             |
 | --------------- | ------ | -------------------------------------------------------- |
-| PanelManager    | ✅      | Öffnet/schließt Panels via CanvasGroup                   |
+| PanelManager    | ✅      | Öffnet/schließt Panels via CanvasGroup + OnOpen Callback |
 | PanelDebounce   | ✅      | Clientseitiger Klickschutz                               |
 | ServerDebounce  | ✅      | Schutz vor Server-Spam via RemoteEvents                  |
 | GuiResolver     | ✅      | Zugriff per GetPanel(guiName, panelName)                 |
@@ -32,7 +33,7 @@
 
 | Panel/GUI                       | Status | Besonderheiten                                            |
 | ------------------------------- | ------ | --------------------------------------------------------- |
-| BattlepassPanel                 | ✅      | EXP-Bar, LockSystem, modular aufgebaut                    |
+| BattlepassPanel                 | ✅      | EXP-Bar, LockSystem, modular aufgebaut, Live-Sync         |
 | ShopPanel                       | ✅      | Gamepasses, DevProducts + Serverhandler                   |
 | CodesPanel                      | ✅      | FocusLost + Server-Validation                             |
 | NewsPanel                       | ✅      | Markdown-Parsing, Mehrfachauswahl                         |
@@ -62,9 +63,10 @@
 
 | System                   | Status | Beschreibung                                           |
 | ------------------------ | ------ | ------------------------------------------------------ |
-| ShopServerHandler        | ✅      | Kaufverarbeitung, Abbruchsicherheit, Logging           |
+| ShopServerHandler        | ✅      | Refactort – nutzt ProfileStoreWrapper                  |
 | CodesServerHandler       | ✅      | Codeprüfung mit DataStore                              |
-| BattlepassInfoProvider   | ✅      | RemoteFunction liefert EXP, Level                      |
+| BattlepassServerHandler  | ✅      | Nutzt InfoProvider + GrantReward                       |
+| BattlepassInfoProvider   | ✅      | Dynamisch, Regenerate(), GetSeasonSeed                 |
 | QuestServerHandler       | ✅      | Gibt Testquests zurück, ClaimSingle + ClaimAll         |
 | TeleportPortalHandler    | ✅      | Portal-Touched → MapTeleportGui öffnen                 |
 | TeleportStageHandler     | ✅      | TeleportStageRequest + TimeoutReturn → CFrame-Teleport |
@@ -75,13 +77,15 @@
 
 ## 🧩 5. Battlepass-System
 
-| Element                    | Status | Beschreibung                        |
-| -------------------------- | ------ | ----------------------------------- |
-| BattlepassModule           | ✅      | Belohnungen über Table, modular     |
-| EXP-Bar + Levelanzeige     | ✅      | UI-gebunden, animiert               |
-| Lock-Status / Premiumcheck | ✅      | Sichtbarkeit dynamisch              |
-| Claim-System               | ✅      | Belohnung per Event + RewardService |
-| Infinity Mode              | ❌      | Noch nicht implementiert            |
+| Element                    | Status | Beschreibung                                               |
+| -------------------------- | ------ | ---------------------------------------------------------- |
+| BattlepassModule           | 🗑️      | Gelöscht, durch InfoProvider ersetzt                      |
+| EXP-Bar + Levelanzeige     | ✅      | UI-gebunden, animiert, Live-Update über ProfileSync        |
+| Lock-Status / Premiumcheck | ✅      | Sichtbarkeit dynamisch + Claim-Buttons                     |
+| Claim-System               | ✅      | Belohnung per Event → RewardService / ProfileWrapper       |
+| Bilder + Tooltip           | ✅      | ItemData-Verknüpfung + Iconanzeige in Buttons              |
+| Reset bei neuem Seed       | ✅      | Seedwechsel → Reset Level/EXP/Claimed/HasPremium           |
+| Infinity Mode              | ❌      | Noch nicht implementiert                                   |
 
 ---
 
@@ -92,7 +96,7 @@
 | QuestsGui            | ✅      | Tabs (Daily–Progress), Claim-Logik, HoverOverlay, Indicator |
 | QuestClientScript    | ✅      | Refactort – ClaimAll, Fortschritt, UI aktualisiert          |
 | QuestServerHandler   | ✅      | Refactort – ClaimAll + RewardEvent                          |
-| QuestProgressService | 🔜     | Veraltet, wird entfernt                                     |
+| QuestProgressService | 🗑️      | Entfernt – wird durch ProgressTrackerService ersetzt        |
 | QuestClaimResult     | ✅      | Sendet Popup-Daten bei Erfolg                               |
 | ClaimAllButton       | ✅      | Funktioniert, Debounce + Eventanbindung                     |
 
@@ -150,41 +154,52 @@
 
 ## 🧪 10. Refactoring & Codepflege
 
-| Bereich                        | Status | Beschreibung                                             |
-| ------------------------------ | ------ | -------------------------------------------------------- |
-| PanelManager-Vereinheitlichung | ✅      | Standardisiert (Open/Close)                              |
-| Scriptformatierung             | ✅      | Alle Scripts refactort (Formatblöcke, Struktur)          |
-| TooltipModule                  | ✅      | Final – mit \[b], \n, \[img:id], Attach per Function     |
-| Debounce-System                | ✅      | PanelDebounce, ServerDebounce systemweit im Einsatz      |
-| MapDataUtils                   | ✅      | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet |
+| Bereich                        | Status | Beschreibung                                                  |
+| ------------------------------ | ------ | ------------------------------------------------------------- |
+| PanelManager-Vereinheitlichung | ✅      | Standardisiert (Open/Close + OnOpenHandler)                   |
+| Scriptformatierung             | ✅      | Alle Scripts refactort (Formatblöcke, Struktur)               |
+| TooltipModule                  | ✅      | Final – mit \[b], 
+, \[img:id], Attach per Function          |
+| Debounce-System                | ✅      | PanelDebounce, ServerDebounce systemweit im Einsatz           |
+| MapDataUtils                   | ✅      | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet      |
 
 ---
 
 ## 🔒 11. Persistent PlayerData (ProfileService → ProfileStore)
 
-| Element                                | Status | Beschreibung                                  |
-| -------------------------------------- | ------ | --------------------------------------------- |
-| ProfileStoreWrapper                    | ✅      | Zentrales Interface für alle Data-Operationen |
-| ProfileService entfernt                | 🔜     | Alte Implementierung deaktivieren             |
-| PlayerDataTemplate                     | ✅      | DataTemplate inkl. Battlepass.HasPremium      |
-| AutoSave & Release                     | ✅      | Implementiert im Wrapper                      |
-| LegacyServices (InventoryService etc.) | 🔜     | Werden durch Wrapper ersetzt                  |
+| Element                                | Status | Beschreibung                                                    |
+| -------------------------------------- | ------ | --------------------------------------------------------------- |
+| ProfileStoreWrapper                    | ✅      | Zentrales Interface für alle Data-Operationen                   |
+| ProfileService entfernt                | ✅      | Alte Implementierung entfernt                                   |
+| PlayerDataTemplate                     | ✅      | DataTemplate inkl. Battlepass.HasPremium, Seed, Claimed etc.    |
+| AutoSave & Release                     | ✅      | Implementiert im Wrapper                                        |
+| Battlepass-Seed Reset                  | ✅      | Reset bei Seed-Wechsel aktiv (inkl. Premium & Claimed)          |
+| LegacyServices (InventoryService etc.) | 🔜     | Werden durch Wrapper ersetzt                                    |
 
 ---
 
-## 🔜 12. Nächste Schritte
+## ✅ 12. Abgeschlossene Tasks (seit 2025-06-19)
+
+* BattlepassClientScript auf neuen PanelManager migriert (OnOpen)
+* BattlepassInfoProvider neu aufgesetzt, dynamisch mit Regenerate()
+* Battlepass Reset bei neuem Seed korrekt implementiert
+* Reward-System über GrantRewards + AddBattlepassEXP integriert
+* Claim-Funktion über Server validiert und visuell geprüft
+* Bilder für Battlepass-Items via ItemDataModule korrekt angezeigt
+* Premium-Logik (Button + Lock) vollständig umgesetzt
+
+---
+
+## 🔜 13. Nächste Schritte
 
 * 🔄 Refactor InventoryServerHandler → ProfileStoreWrapper
-* 🔄 Refactor ShopServerHandler → ProfileStoreWrapper
 * 🔄 Refactor QuestServerHandler inkl. ClaimAll
-* 🔄 Refactor BattlepassServerHandler & BattlepassInfoProvider
-* 🔄 Refactor UnitServerHandler → ProfileStoreWrapper (läuft gerade)
-* ➕ Neues Script: UpgradeServerHandler + RemoteEvents
-* ➕ Neues ModuleScript: ProgressTrackerService
-* ➕ Neues ModuleScript: CodeDataModule & Config
 * 🔄 Refactor CodeRedeemHandler inkl. CodeResultEvent
+* 🔄 Refactor UnitServerHandler → ProfileStoreWrapper (läuft gerade)
+* 🔄 Refactor ShopServerHandler vollständig mit Wrapper
 * 🔧 Implement RewardPopupGui für Quest & Battlepass
 * 🔄 Add Wrapper-Methode: SetBattlepassPremium(player, value)
+* 🔧 ClaimAllBattlepassButton vorbereiten
+* 🔧 Fix: Claim schlägt bei Level 1 fehl („Level-Eintrag fehlt…“)
 * 💬 TradeSystem: geplant für später
 * 🧪 PvP-Arena: langfristige Erweiterung
-

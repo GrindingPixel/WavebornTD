@@ -210,7 +210,7 @@ function ProfileWrapper:AddBattlepassEXP(player, amount)
 	-- Beispiel für LevelUp: Passe Grenzwerte an deine Game-Balance an!
 	while bp.EXP >= 1000 do
 		bp.EXP = bp.EXP - 1000
-		bp.Level = (bp.Level or 1) + 1
+		bp.Level = (bp.Level or 0) + 1
 		log("Battlepass LevelUp für", player.Name, "→ Level", bp.Level)
 	end
 	log("Battlepass EXP +", amount, "→", bp.EXP, "für", player.Name)
@@ -344,6 +344,9 @@ function ProfileWrapper:GrantRewards(player, rewards, logRewards)
 				self:AddItem(player, id, amount)
 				if logRewards then log("Item", id, "x" .. amount, "an", player.Name) end
 			end
+		elseif rewardType == "BattlepassEXP" then
+			self:AddBattlepassEXP(player, amount)
+			if logRewards then log("BattlepassEXP +" .. amount .. " an", player.Name) end
 
 		else
 			warnf("Unbekannter RewardType:", rewardType, "bei", player.Name)
@@ -400,12 +403,28 @@ local function onPlayerAdded(player)
 		profile.Data.QuestProgress[tabName] = profile.Data.QuestProgress[tabName] or {}
 	end
 
-	-- Battlepass initialisieren
-	profile.Data.Battlepass = profile.Data.Battlepass or {}
-	profile.Data.Battlepass.Level = profile.Data.Battlepass.Level or 1
-	profile.Data.Battlepass.EXP = profile.Data.Battlepass.EXP or 0
-	profile.Data.Battlepass.Claimed = profile.Data.Battlepass.Claimed or {}
-	profile.Data.Battlepass.HasPremium = profile.Data.Battlepass.HasPremium or false
+-- Battlepass initialisieren
+profile.Data.Battlepass = profile.Data.Battlepass or {}
+local currentSeed = require(ReplicatedStorage.Modules.BattlepassInfoProvider).GetSeasonSeed()
+
+if not profile.Data.Battlepass.Seed then
+	-- Erst-Initialisierung
+	profile.Data.Battlepass.Level = 0
+	profile.Data.Battlepass.EXP = 0
+	profile.Data.Battlepass.Claimed = {}
+	profile.Data.Battlepass.HasPremium = false
+	profile.Data.Battlepass.Seed = currentSeed
+elseif profile.Data.Battlepass.Seed ~= currentSeed then
+	-- Season-Wechsel → alles zurücksetzen
+	profile.Data.Battlepass = {
+		Level = 0,
+		EXP = 0,
+		Claimed = {},
+		HasPremium = false,
+		Seed = currentSeed,
+	}
+	log("🎯 Battlepass zurückgesetzt für neue Season:", currentSeed, "bei", player.Name)
+end
 
 	activeProfiles[userId] = profile
 	ProfileLoadedEvent:FireClient(player)
@@ -419,6 +438,7 @@ local function onPlayerAdded(player)
 
 	log("Profil geladen für", player.Name)
 end
+
 
 
 local function onPlayerRemoving(player)

@@ -10,14 +10,17 @@ local PanelManager = {}
 PanelManager.RegisteredPanels     = {}
 PanelManager.OriginalSizes        = {}
 PanelManager.CurrentlyOpenPanel  = nil
-
---// Funktionen
+PanelManager.OpenHandlers        = {} -- [Instance] = function
 
 -- Panel registrieren
-function PanelManager:RegisterPanel(panel)
+function PanelManager:RegisterPanel(panel, options)
 	if panel and not table.find(self.RegisteredPanels, panel) then
 		table.insert(self.RegisteredPanels, panel)
 		self.OriginalSizes[panel] = panel.Size
+
+		if type(options) == "table" and typeof(options.OnOpen) == "function" then
+			self.OpenHandlers[panel] = options.OnOpen
+		end
 	end
 end
 
@@ -44,6 +47,14 @@ function PanelManager:OpenPanel(panel)
 		TweenService:Create(canvasGroup, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
 			GroupTransparency = 0
 		}):Play()
+	end
+
+	-- Aufruf der OnOpen-Funktion
+	local onOpen = self.OpenHandlers[panel]
+	if onOpen then
+		task.spawn(function()
+			pcall(onOpen)
+		end)
 	end
 
 	self.CurrentlyOpenPanel = panel
@@ -97,5 +108,4 @@ function PanelManager:InstantCloseAll(exceptPanel)
 	end
 end
 
---// Rückgabe
 return PanelManager

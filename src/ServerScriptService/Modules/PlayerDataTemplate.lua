@@ -49,7 +49,7 @@ local DefaultPlayerData = {
 
 	-- 🎟 Battlepass
 	Battlepass = {
-		Level = 1,
+		Level = 0,
 		EXP = 0,
 		Claimed = {},
 		HasPremium = false,

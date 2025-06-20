@@ -29,7 +29,7 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 	local playerBP = ProfileWrapper:GetBattlepass(player)
 
 	return {
-		Level = playerBP.Level or 1,
+		Level = playerBP.Level or 0,
 		EXP = playerBP.EXP or 0,
 		Claimed = playerBP.Claimed or {},
 		HasPremium = playerBP.HasPremium == true,

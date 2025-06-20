@@ -1,33 +1,33 @@
 -- ItemDataModule.lua
 
 local ItemData = {
-	["Scroll_Alpha"] = {
-		displayName = "Alpha Scroll",
-		iconId = "rbxassetid://1234567890",
+	["SummonScroll"] = {
+		displayName = "Common Summon Scroll",
+		iconId = "rbxassetid://91235668959527",
 		category = "Summon",
-		rarity = "Rare",
-		desc = "Used to summon rare units.",
-	},
-	["Evo_StarPiece"] = {
-		displayName = "Star Piece",
-		iconId = "rbxassetid://9876543210",
-		category = "Evo",
-		rarity = "Epic",
-		desc = "Evolution material for powerful units.",
-	},
-	["Skin_PinkDragon"] = {
-		displayName = "Pink Dragon Skin",
-		iconId = "rbxassetid://555666777",
-		category = "Cosmetic",
-		rarity = "Legendary",
-		desc = "A cosmetic skin for your unit.",
-	},
-	["EXP_MeatSmall"] = {
-		displayName = "Small EXP Meat",
-		iconId = "rbxassetid://1122334455",
-		category = "EXP",
 		rarity = "Common",
-		desc = "Grants 500 EXP to a unit.",
+		desc = "Used to summon rare to epic units.",
+	},
+	["Attribute_Token"] = {
+		displayName = "Attribute Token",
+		iconId = "rbxassetid://83291346465775",
+		category = "Material",
+		rarity = "Epic",
+		desc = "Token used to upgrade unit attributes.",
+	},
+	["Universal_Fragment"] = {
+		displayName = "Univversal_Fragment",
+		iconId = "rbxassetid://114136021497469",
+		category = "Material",
+		rarity = "Legendary",
+		desc = "Material used for universal upgrades.",
+	},
+	["Reroll_Token"] = {
+		displayName = "Reroll Token",
+		iconId = "rbxassetid://134383472964237",
+		category = "Material",
+		rarity = "Divine",
+		desc = "Token used to reroll unit traits.",
 	},
 	["Medal_Ruby"] = {
 		displayName = "Ruby Medal",

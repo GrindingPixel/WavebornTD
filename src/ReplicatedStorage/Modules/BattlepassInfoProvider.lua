@@ -1,24 +1,22 @@
--- BattlepassInfoProvider.server.lua
+-- BattlepassInfoProvider.lua
 -- Typ: ModuleScript
 
 --// Services
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
 local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 
 --// Konfiguration
-local SEASON_SEED = 123456 -- später austauschbar für neue Seasons
+local SEASON_SEED = 20221522 -- oder dynamisch einstellbar
 
--- Belohnungspool (nur IDs die in ItemData existieren)
+-- Belohnungspool (IDs müssen in ItemData existieren)
 local FreeRewardsPool = {
-	{ id = "Scroll_Alpha", amount = 1, type = "Item" },
-	{ id = "Evo_StarPiece", amount = 1, type = "Item" },
+	{ id = "SummonScroll", amount = 1, type = "Item" },
+	{ id = "Attribute_Token", amount = 1, type = "Item" },
+	{ id = "Universal_Fragment", amount = 1, type = "Item" },
+	{ id = "Reroll_Token", amount = 1, type = "Item" },
 	{ id = "Medal_Ruby", amount = 1, type = "Item" },
-	{ id = "Skin_PinkDragon", amount = 1, type = "Item" },
-	{ id = "EXP_MeatSmall", amount = 1, type = "Item" },
 }
 
 -- EXP-Kurve
@@ -26,44 +24,52 @@ local function getEXPForLevel(level)
 	return 100 + (level - 1) * 25
 end
 
--- Battlepass Datenstruktur generieren
+-- Battlepass generieren
 local function generateBattlepassData(seed)
 	math.randomseed(seed)
 	local pool = table.clone(FreeRewardsPool)
 	local shuffled = {}
 
-	-- Shuffle Belohnungen (keine Duplikate bis einmal komplett durch)
 	while #pool > 0 do
-		local index = math.random(1, #pool)
-		table.insert(shuffled, table.remove(pool, index))
+		local i = math.random(1, #pool)
+		table.insert(shuffled, table.remove(pool, i))
 	end
 
 	local data = {}
 
 	for level = 1, 100 do
 		local rewardIndex = ((level - 1) % #shuffled) + 1
-		local baseReward = table.clone(shuffled[rewardIndex])
-		local premiumReward = table.clone(baseReward)
-		premiumReward.amount += 1
+		local base = table.clone(shuffled[rewardIndex])
+		local premium = table.clone(base)
+		premium.amount += 1
 
 		data[level] = {
 			expRequired = getEXPForLevel(level),
-			free = { baseReward },
-			premium = { premiumReward },
+			free = { base },
+			premium = { premium },
 		}
 	end
 
 	return data
 end
 
--- Server-seitig gecachte Daten
-local battlepassData = generateBattlepassData(SEASON_SEED)
-
--- Exportierte Schnittstelle
+--// Modulstruktur
 local module = {}
+
+local battlepassData = generateBattlepassData(SEASON_SEED) -- 💡 nur hier lokal erzeugen
+
+function module.Regenerate(newSeed)
+	SEASON_SEED = newSeed or SEASON_SEED
+	battlepassData = generateBattlepassData(SEASON_SEED)
+	warn("[BattlepassInfoProvider] Neuer Battlepass mit Seed", SEASON_SEED, "generiert")
+end
 
 function module.GetSeasonData()
 	return battlepassData
+end
+
+function module.GetSeasonSeed()
+	return SEASON_SEED
 end
 
 function module.GetLevelData(level)
