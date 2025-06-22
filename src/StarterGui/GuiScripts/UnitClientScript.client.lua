@@ -2,41 +2,36 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
+local Players = game:GetService("Players")
 
 --// Modules
-local GuiResolver      = require(ReplicatedStorage.Modules.GuiResolver)
-local PanelManager     = require(ReplicatedStorage.Modules.PanelManager)
-local UnitsModule      = require(ReplicatedStorage.Modules.UnitDataModule)
-local PanelDebounce    = require(ReplicatedStorage.Modules.PanelDebounce)
+local GuiResolver = require(ReplicatedStorage.Modules.GuiResolver)
+local PanelManager = require(ReplicatedStorage.Modules.PanelManager)
+local UnitDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
+local PanelDebounce = require(ReplicatedStorage.Modules.PanelDebounce)
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local GetPlayerUnitsFunction = ReplicatedStorage.Remotes.Units:WaitForChild("GetPlayerUnits")
 local EquipUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("EquipUnit")
-local LevelUpUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("LevelUpUnit")
-local UnlockUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("UnlockUnit")
 
 --// GUI
-local gui       = GuiResolver:Get("UnitInventoryGui")
-local menuGui   = GuiResolver:Get("MainMenuGui")
+local gui = GuiResolver:Get("UnitInventoryGui")
+local menuGui = GuiResolver:Get("MainMenuGui")
 if not gui then return end
 
-local slotBar       = menuGui:WaitForChild("EquipSlotBar")
-local panel         = gui:WaitForChild("UnitInventoryPanel")
-local canvas        = panel:WaitForChild("CanvasGroup")
-local gridFrame     = canvas:WaitForChild("UnitGridFrame")
-local template      = gridFrame:WaitForChild("UnitTemplate")
-local searchBar     = canvas:WaitForChild("SearchBar")
-local unitCount     = canvas:WaitForChild("UnitCountLabel")
-local infoPanel     = canvas:WaitForChild("UnitInfoPanel")
-local closeButton   = canvas:WaitForChild("UnitCloseButton")
-local equipButton   = infoPanel:WaitForChild("EquipButton")
+local slotBar = menuGui:WaitForChild("EquipSlotBar")
+local panel = gui:WaitForChild("UnitInventoryPanel")
+local canvas = panel:WaitForChild("CanvasGroup")
+local gridFrame = canvas:WaitForChild("UnitGridFrame")
+local template = gridFrame:WaitForChild("UnitTemplate")
+local searchBar = canvas:WaitForChild("SearchBar")
+local unitCount = canvas:WaitForChild("UnitCountLabel")
+local infoPanel = canvas:WaitForChild("UnitInfoPanel")
+local closeButton = canvas:WaitForChild("UnitCloseButton")
+local equipButton = infoPanel:WaitForChild("EquipButton")
 local unequipButton = infoPanel:WaitForChild("UnEquipButton")
-
---// Init
-PanelManager:RegisterPanel(panel)
-ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// State
 local unitList = {}
@@ -75,48 +70,56 @@ local function renderUnitPreview(viewportFrame, modelName)
 end
 
 local function refreshInventoryGrid()
-	table.sort(unitList, function(a, b)
-		return (a.IsEquipped and not b.IsEquipped)
-	end)
-
 	for _, child in ipairs(gridFrame:GetChildren()) do
 		if child:IsA("Frame") and child.Name ~= "UnitTemplate" then
 			child:Destroy()
 		end
 	end
 
-	for _, unit in ipairs(unitList) do
-		local base = UnitsModule.BaseUnits[unit.BaseId]
+	for _, entry in ipairs(unitList) do
+		local unitUUID = entry.UUID
+		local unitData = entry.Data
+		local base = UnitDataModule.GetUnitData(unitData.Id)
 		if base then
-			local entry = template:Clone()
-			entry.Name = "Unit_" .. unit.UnitId
-			entry.Visible = true
-			entry.Parent = gridFrame
+			local ui = template:Clone()
+			ui.Name = "Unit_" .. unitUUID
+			ui.Visible = true
+			ui.Parent = gridFrame
 
-			local preview = entry:FindFirstChild("UnitPreview")
+			local preview = ui:FindFirstChild("UnitPreview")
 			if preview then
-				renderUnitPreview(preview, base.modelName or unit.BaseId)
+				renderUnitPreview(preview, base.modelName or unitData.Id)
 			end
 
-			local levelLabel = entry:FindFirstChild("LevelLabel")
+			local levelLabel = ui:FindFirstChild("LevelLabel")
 			if levelLabel then
-				levelLabel.Text = "Lvl " .. tostring(unit.Level)
+				levelLabel.Text = "Lvl " .. tostring(unitData.Level)
 			end
 
-			local clickZone = entry:FindFirstChild("ClickZone")
+			local clickZone = ui:FindFirstChild("ClickZone")
 			if clickZone then
 				clickZone.MouseButton1Click:Connect(function()
-					currentSelectedUnit = unit
+					currentSelectedUnit = entry
 					infoPanel.Visible = true
 
-					infoPanel:FindFirstChild("NameLabel").Text    = base.name
-					infoPanel:FindFirstChild("UnitImage").Image   = base.image
-					infoPanel:FindFirstChild("RarityLabel").Text  = base.rarity
-					infoPanel:FindFirstChild("TypeIcon").Image    = "rbxassetid://TYPE_ICON_ID"
-					infoPanel:FindFirstChild("TraitIcon").Image   = "rbxassetid://TRAIT_ICON_ID"
+					infoPanel:FindFirstChild("NameLabel").Text = base.name
+					infoPanel:FindFirstChild("UnitImage").Image = base.image
+					infoPanel:FindFirstChild("RarityLabel").Text = base.BaseStar
+					infoPanel:FindFirstChild("TypeIcon").Image = "rbxassetid://TYPE_ICON_ID"
+					infoPanel:FindFirstChild("TraitIcon").Image = "rbxassetid://TRAIT_ICON_ID"
 
-					equipButton.Visible   = not unit.IsEquipped
-					unequipButton.Visible = unit.IsEquipped
+					local isEquipped = false
+					for _, v in pairs(slotBar:GetChildren()) do
+						if v:IsA("Frame") and v:FindFirstChild("ViewUnitEquipSlot1") then
+							if v.ViewUnitEquipSlot1:FindFirstChild(unitUUID) then
+								isEquipped = true
+								break
+							end
+						end
+					end
+
+					equipButton.Visible = not isEquipped
+					unequipButton.Visible = isEquipped
 				end)
 			end
 		end
@@ -134,15 +137,18 @@ local function refreshEquipSlots()
 		end
 	end
 
-	local index = 1
-	for _, unit in ipairs(unitList) do
-		if unit.IsEquipped and index <= 6 then
-			local base = UnitsModule.BaseUnits[unit.BaseId]
-			local slot = slotBar:FindFirstChild("EquipSlot" .. index)
-			local viewport = slot and slot:FindFirstChild("ViewUnitEquipSlot" .. index)
-			if base and viewport then
-				renderUnitPreview(viewport, base.modelName or unit.BaseId)
-				index += 1
+	for i = 1, 6 do
+		local slot = slotBar:FindFirstChild("EquipSlot" .. i)
+		local viewport = slot and slot:FindFirstChild("ViewUnitEquipSlot" .. i)
+		local uuid = Players.LocalPlayer:GetAttribute("EquippedSlot" .. i)
+		if uuid and viewport then
+			for _, unit in ipairs(unitList) do
+				if unit.UUID == uuid then
+					local base = UnitDataModule.GetUnitData(unit.Data.Id)
+					if base then
+						renderUnitPreview(viewport, base.modelName or unit.Data.Id)
+					end
+				end
 			end
 		end
 	end
@@ -156,45 +162,32 @@ local function loadUnits()
 		unitList = result
 		refreshInventoryGrid()
 		refreshEquipSlots()
+		infoPanel.Visible = false
+		currentSelectedUnit = nil
 	end
 end
 
 --// Events
 equipButton.MouseButton1Click:Connect(function()
-	if not currentSelectedUnit or currentSelectedUnit.IsEquipped then return end
-
-	for _, unit in ipairs(unitList) do
-		if unit.IsEquipped and unit.BaseId == currentSelectedUnit.BaseId then
-			warn("⚠️ Eine Unit dieses Typs ist bereits ausgerüstet.")
-			return
-		end
-	end
+	if not currentSelectedUnit then return end
+	local uuid = currentSelectedUnit.UUID
 
 	for i = 1, 6 do
 		local slot = slotBar:FindFirstChild("EquipSlot" .. i)
 		local viewport = slot and slot:FindFirstChild("ViewUnitEquipSlot" .. i)
 		if viewport and #viewport:GetChildren() == 0 then
-			local base = UnitsModule.BaseUnits[currentSelectedUnit.BaseId]
-			if base then
-				currentSelectedUnit.IsEquipped = true
-				renderUnitPreview(viewport, base.modelName or currentSelectedUnit.BaseId)
-			end
-			break
+			EquipUnitEvent:FireServer(i, uuid)
+			task.wait(0.2)
+			loadUnits()
+			infoPanel.Visible = false
+			return
 		end
 	end
-
-	refreshInventoryGrid()
-	currentSelectedUnit = nil
-	infoPanel.Visible = false
 end)
 
 unequipButton.MouseButton1Click:Connect(function()
-	if not currentSelectedUnit or not currentSelectedUnit.IsEquipped then return end
-
-	currentSelectedUnit.IsEquipped = false
-	refreshEquipSlots()
-	refreshInventoryGrid()
 	currentSelectedUnit = nil
+	loadUnits()
 	infoPanel.Visible = false
 end)
 
@@ -204,5 +197,21 @@ if closeButton then
 	end)
 end
 
---// Init
-loadUnits()
+--// PanelManager (mit OnOpen → LoadUnits)
+PanelManager:RegisterPanel(panel, {
+	OnOpen = function()
+		loadUnits()
+	end
+})
+
+--// LiveSync
+ProfileChanged.OnClientEvent:Connect(function(key, value)
+	if key == "Units" then
+		unitList = value
+		refreshInventoryGrid()
+		refreshEquipSlots()
+	end
+end)
+
+--// Warten bis Profil geladen
+ProfileLoadedEvent.OnClientEvent:Wait()

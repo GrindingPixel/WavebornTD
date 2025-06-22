@@ -15,15 +15,18 @@ local DefaultPlayerData = {
 	},
 
 	-- 🧙‍♂️ Units
-	Unit = {
-		["Issoi_Highschool"] = {
-			Level = 1,
-			XP = 0,
-			Equipped = false,
-			Trait = nil,
-			SkillTree = {}
-		}
-	},
+	Units = {
+		-- Beispielstruktur:
+		-- ["UNIT_A1B2C3"] = {
+		--     Id = "Issoi_Highschool",
+		--     StarLevel = 3,
+		--     Level = 1,
+		--     Exp = 0,
+		--     Traits = {},
+		--     Skin = nil,
+		--     IsLocked = false
+		-- }
+		},
 
 	-- 🧠 Aktive Slots
 	EquippedUnits = { nil, nil, nil, nil, nil, nil },

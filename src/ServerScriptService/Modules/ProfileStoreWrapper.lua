@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
+local HttpService = game:GetService("HttpService")
 
 --// Modules
 local ProfileStore = require(ReplicatedStorage.Libs:WaitForChild("ProfileStore"))
@@ -12,6 +13,7 @@ local PlayerDataTemplate = require(Modules:WaitForChild("PlayerDataTemplate"))
 local QuestDataModule = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
 local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
+local UnitDataModule = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
@@ -144,57 +146,104 @@ function ProfileWrapper:ClaimQuest(player, questType, questId)
 end
 
 -- ===================================
--- UNITS
+-- UNITS (NEU mit UUID + StarLevel)
 -- ===================================
 
 function ProfileWrapper:GetUnits(player)
 	local profile = getProfile(player)
 	if not profile then return {} end
-	local copy = {}
-	for k, v in pairs(profile.Data.Units) do copy[k] = v end
-	return copy
-end
 
-function ProfileWrapper:UnlockUnit(player, unitId, initData)
-	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	if not profile.Data.Units[unitId] then
-		profile.Data.Units[unitId] = initData or { Level = 1, XP = 0, Equipped = false, Trait = nil, SkillTree = {} }
-		log("Unit", unitId, "für", player.Name, "freigeschaltet")
-		return true
+	local result = {}
+	for uuid, unit in pairs(profile.Data.Units or {}) do
+		local baseData = UnitDataModule.GetUnitData(unit.Id)
+		table.insert(result, {
+			UUID = uuid,
+			Data = unit,
+			BaseStar = baseData and baseData.BaseStar or 0,
+		})
 	end
-	warnf("Unit", unitId, "existiert bereits für", player.Name)
-	return false
+
+	-- Standard-Sortierung: nach BaseStar absteigend
+	table.sort(result, function(a, b)
+		return a.BaseStar > b.BaseStar
+	end)
+
+	return result
 end
 
-function ProfileWrapper:LevelUpUnit(player, unitId)
+function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
+
 	local profile = getProfile(player)
 	if not profile then return false end
-	local unit = profile.Data.Units[unitId]
-	if not unit then warnf("Unit nicht gefunden:", unitId); return false end
-	unit.Level = (unit.Level or 1) + 1
-	log("Unit", unitId, "LevelUp für", player.Name, "→ Level", unit.Level)
+
+	local unitData = UnitDataModule.GetUnitData(unitId)
+	if not unitData then
+		warnf("[Units] ❌ Unbekannter UnitId:", unitId)
+		return false
+	end
+
+	local uuid = "UNIT_" .. HttpService:GenerateGUID(false):sub(1, 6):upper()
+
+	profile.Data.Units[uuid] = {
+		Id = unitId,
+		StarLevel = overrideStar or unitData.BaseStar,
+		Level = 1,
+		Exp = 0,
+		Traits = {},
+		Skin = nil,
+		IsLocked = false
+	}
+
+	log("✅ Unit", unitId, "hinzugefügt als", uuid, "für", player.Name)
+
+	-- LiveSync an Client
+	local updated = ProfileWrapper:GetUnits(player)
+	ProfileSyncService:Send(player, "Units", updated)
+
 	return true
 end
 
-function ProfileWrapper:EquipUnit(player, slot, unitId)
-	assert(type(slot) == "number" and slot >= 1 and slot <= 6, "Slot muss 1–6 sein")
-	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
+function ProfileWrapper:RemoveUnit(player, unitUUID)
+	assert(type(unitUUID) == "string", "UnitUUID muss String sein!")
 	local profile = getProfile(player)
 	if not profile then return false end
-	profile.Data.EquippedUnits[slot] = unitId
-	log("Unit", unitId, "auf Slot", slot, "für", player.Name, "equippt")
+	if not profile.Data.Units[unitUUID] then
+		warnf("❌ Entfernen fehlgeschlagen – keine Unit mit UUID:", unitUUID)
+		return false
+	end
+	profile.Data.Units[unitUUID] = nil
+	log("❌ Unit entfernt:", unitUUID, "bei", player.Name)
+	return true
+end
+
+function ProfileWrapper:EquipUnit(player, slot, unitUUID)
+	assert(type(slot) == "number" and slot >= 1 and slot <= 6, "Ungültiger Slot!")
+	assert(type(unitUUID) == "string", "UnitUUID ungültig!")
+
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	if not profile.Data.Units[unitUUID] then
+		warnf("❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
+		return false
+	end
+
+	profile.Data.EquippedUnits[slot] = unitUUID
+	log("🎮 Unit", unitUUID, "auf Slot", slot, "equippt bei", player.Name)
 	return true
 end
 
 function ProfileWrapper:GetEquippedUnits(player)
 	local profile = getProfile(player)
 	if not profile then return {} end
-	local copy = {}
-	for i, v in ipairs(profile.Data.EquippedUnits) do copy[i] = v end
-	return copy
+
+	local equipped = {}
+	for slot, unitUUID in pairs(profile.Data.EquippedUnits or {}) do
+		equipped[slot] = unitUUID
+	end
+
+	return equipped
 end
 
 -- ===================================
@@ -328,29 +377,31 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 	local profile = activeProfiles[player.UserId]
 	if not profile then return end
 
-	for _, reward in ipairs(rewards) do
-		if typeof(reward) ~= "table" or not reward.type or not reward.id or not reward.amount then
-			warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
-			continue
-		end
+for _, reward in ipairs(rewards) do
+	if typeof(reward) ~= "table" or not reward.type or not reward.id then
+		warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
+		continue
+	end
 
-		local category = reward.type
+	if reward.type == "Units" then
+		ProfileWrapper:AddUnit(player, reward.id, reward.star) -- optional override
+		log("🎁 UnitReward:", reward.id, "→", player.Name)
+	else
 		local itemId = reward.id
-		local amount = reward.amount
+		local amount = reward.amount or 1
+		local category = reward.type
 
-		-- Existenzprüfung
 		local categoryTable = profile.Data.Inventory[category]
 		if not categoryTable then
 			warn("[ProfileWrapper] ❌ Ungültige Reward-Kategorie:", category)
 			continue
 		end
 
-		-- Stack hinzufügen
 		categoryTable[itemId] = (categoryTable[itemId] or 0) + amount
-
-		-- Logging
-		print(("[ProfileWrapper] 🎁 +%d × %s (%s) an %s"):format(amount, itemId, category, player.Name))
+		log("🎁 +", amount, "×", itemId, "(", category, ") an", player.Name)
 	end
+end
+
 
 	-- LiveSync
 	ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
