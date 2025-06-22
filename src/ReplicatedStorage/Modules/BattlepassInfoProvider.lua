@@ -25,10 +25,10 @@ end
 
 -- Eingebauter RewardPool
 local RewardPool = {
-	Scrolls = { "SummonScroll" },
-	Tokens = { "Reroll_Token", "Attribute_Token" },
-	Materials = { "Universal_Fragment" },
-	Units = { "Issoi_Highschool" }
+	Scroll = { "SummonScroll_Common" },
+	Token = { "Reroll_Token", "Attribute_Token" },
+	Material = { "Universal_Fragment" },
+	Unit = { "Issoi_Highschool" }
 }
 
 local function generateBattlepassData(seed)
@@ -42,13 +42,13 @@ local function generateBattlepassData(seed)
 
 		if i % 10 == 0 then
 			rewardType = "Unit"
-			rewardId = pickRandom(RewardPool.Units)
+			rewardId = pickRandom(RewardPool.Unit)
 		elseif i % 2 == 0 then
-			rewardType = "Item"
-			rewardId = pickRandom(RewardPool.Scrolls)
+			rewardType = "Scroll"
+			rewardId = pickRandom(RewardPool.Scroll)
 		else
-			rewardType = "Item"
-			rewardId = pickRandom(RewardPool.Tokens)
+			rewardType = "Token"
+			rewardId = pickRandom(RewardPool.Token)
 		end
 
 		local freeReward = {

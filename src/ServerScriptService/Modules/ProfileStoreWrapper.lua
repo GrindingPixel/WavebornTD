@@ -25,12 +25,8 @@ local DEBUG = true
 local store = ProfileStore.New(DATASTORE_NAME, PlayerDataTemplate)
 local activeProfiles = {} -- [userId] = profile
 
-local function log(...)
-	if DEBUG then print("[ProfileStoreWrapper]", ...) end
-end
-local function warnf(...)
-	if DEBUG then warn("[ProfileStoreWrapper]", ...) end
-end
+local function log(...) if DEBUG then print("[ProfileStoreWrapper]", ...) end end
+local function warnf(...) if DEBUG then warn("[ProfileStoreWrapper]", ...) end end
 
 local ProfileWrapper = {}
 
@@ -49,42 +45,51 @@ function ProfileWrapper:GetAllLoadedPlayers()
 end
 
 -- ===================================
--- INVENTORY
+-- INVENTORY SYSTEM (TYPED)
 -- ===================================
+function ProfileWrapper:AddItemTyped(player, itemType, itemId, amount, noSync)
+	assert(type(itemType) == "string" and itemType ~= "", "ItemType fehlt")
+	assert(type(itemId) == "string" and itemId ~= "", "ItemId fehlt")
+	assert(type(amount) == "number" and amount > 0, "Amount ungültig")
+
+	local profile = getProfile(player)
+	if not profile then return end
+
+	local invCategory = profile.Data.Inventory[itemType]
+	if not invCategory then warnf("[Inventory] Ungültiger ItemType:", itemType); return end
+
+	invCategory[itemId] = (invCategory[itemId] or 0) + amount
+
+	if not noSync then
+		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
+	end
+
+	log("[Inventory] +", amount, "x", itemId, "(", itemType, ") an", player.Name)
+end
+
+
+function ProfileWrapper:RemoveItemTyped(player, itemType, itemId, amount, noSync)
+	local profile = getProfile(player)
+	if not profile then return false end
+	local invCategory = profile.Data.Inventory[itemType]
+	if not invCategory or not invCategory[itemId] then return false end
+	if invCategory[itemId] < amount then return false end
+
+	invCategory[itemId] -= amount
+	if invCategory[itemId] <= 0 then invCategory[itemId] = nil end
+
+	if not noSync then
+		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
+	end
+
+	log("[Inventory] -", amount, "x", itemId, "(", itemType, ") bei", player.Name)
+	return true
+end
+
 
 function ProfileWrapper:GetInventory(player)
 	local profile = getProfile(player)
-	if not profile then return {} end
-	local copy = {}
-	for k, v in pairs(profile.Data.Inventory) do copy[k] = v end
-	return copy
-end
-
-function ProfileWrapper:AddItem(player, itemId, amount)
-	assert(type(itemId) == "string" and itemId ~= "", "ItemId ungültig!")
-	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
-	local profile = getProfile(player)
-	if not profile then return false end
-	local inv = profile.Data.Inventory
-	inv[itemId] = (inv[itemId] or 0) + amount
-	log("Item", itemId, "x", amount, "an", player.Name, "gegeben")
-	return true
-end
-
-function ProfileWrapper:RemoveItem(player, itemId, amount)
-	assert(type(itemId) == "string" and itemId ~= "", "ItemId ungültig!")
-	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
-	local profile = getProfile(player)
-	if not profile then return false end
-	local inv = profile.Data.Inventory
-	if not inv[itemId] or inv[itemId] < amount then
-		warnf("Zu wenig", itemId, "im Inventar von", player.Name)
-		return false
-	end
-	inv[itemId] = inv[itemId] - amount
-	if inv[itemId] <= 0 then inv[itemId] = nil end
-	log("Item", itemId, "x", amount, "von", player.Name, "entfernt")
-	return true
+	return profile and profile.Data.Inventory or {}
 end
 
 -- ===================================
@@ -314,15 +319,14 @@ function ProfileWrapper:UpgradeInventory(player, newSize)
 end
 
 -- ===================================
--- REWARDS
+-- REWARDSYSTEM (ERWEITERT)
 -- ===================================
-
-local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
-
 function ProfileWrapper:GrantRewards(player, rewards, logRewards)
 	assert(typeof(rewards) == "table", "Rewards muss ein Array sein")
 	local profile = getProfile(player)
 	if not profile then return false end
+
+	local inventoryChanged = false
 
 	for _, reward in ipairs(rewards) do
 		local rewardType = reward.type or "Item"
@@ -331,30 +335,45 @@ function ProfileWrapper:GrantRewards(player, rewards, logRewards)
 
 		if rewardType == "Gold" then
 			self:AddGold(player, amount)
-			if logRewards then log("Gold +" .. amount .. " an", player.Name) end
 
 		elseif rewardType == "Gems" then
 			self:AddGems(player, amount)
-			if logRewards then log("Gems +" .. amount .. " an", player.Name) end
 
-		elseif rewardType == "Item" then
-			if not ItemData[id] then
-				warnf("Ungültiges Item:", id, "für", player.Name)
-			else
-				self:AddItem(player, id, amount)
-				if logRewards then log("Item", id, "x" .. amount, "an", player.Name) end
-			end
 		elseif rewardType == "BattlepassEXP" then
 			self:AddBattlepassEXP(player, amount)
-			if logRewards then log("BattlepassEXP +" .. amount .. " an", player.Name) end
+
+		elseif rewardType == "Item" or rewardType == "Scroll" or rewardType == "Token"
+			or rewardType == "Material" or rewardType == "Cosmetics" or rewardType == "Medaillen" then
+
+			-- Kategorie auflösen falls nicht direkt mitgegeben
+			local itemType = rewardType
+			if rewardType == "Item" then
+				itemType = ItemData[id] and ItemData[id].category
+				if not itemType then
+					warnf("❌ Keine Kategorie gefunden für Item:", id)
+					continue
+				end
+			end
+
+			self:AddItemTyped(player, itemType, id, amount, true)
+			inventoryChanged = true
 
 		else
-			warnf("Unbekannter RewardType:", rewardType, "bei", player.Name)
+			warnf("Unbekannter RewardType:", rewardType)
 		end
+
+		if logRewards then
+			log("Reward erhalten:", rewardType, id, "x", amount, "von", player.Name)
+		end
+	end
+
+	if inventoryChanged then
+		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 	end
 
 	return true
 end
+
 
 -- ===================================
 -- SESSION MANAGEMENT

@@ -10,6 +10,7 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local CodeData = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
+local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 
 --// Debug
 local DEBUG = true
@@ -56,15 +57,24 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 		return
 	end
 
-	-- Belohnung vergeben und Feedback zusammenstellen
-	local rewardType, rewardAmount, rewardId = codeInfo.RewardType, codeInfo.RewardAmount, codeInfo.RewardId
-	if rewardType == "Gold" then
-		ProfileWrapper:AddGold(player, rewardAmount)
-	elseif rewardType == "Gems" then
-		ProfileWrapper:AddGems(player, rewardAmount)
-	elseif rewardType == "Item" and rewardId then
-		ProfileWrapper:AddItem(player, rewardId, rewardAmount)
+-- Belohnung vergeben und Feedback zusammenstellen
+local rewardType, rewardAmount, rewardId = codeInfo.RewardType, codeInfo.RewardAmount, codeInfo.RewardId
+
+if rewardType == "Gold" then
+	ProfileWrapper:AddGold(player, rewardAmount)
+
+elseif rewardType == "Gems" then
+	ProfileWrapper:AddGems(player, rewardAmount)
+
+elseif rewardType == "Item" and rewardId then
+	local itemType = ItemData[rewardId] and ItemData[rewardId].category
+	if itemType then
+		ProfileWrapper:AddItemTyped(player, itemType, rewardId, rewardAmount)
+	else
+		warn("[CodeReward] ❌ Kein gültiger ItemType für:", rewardId)
 	end
+end
+
 
 	-- Als eingelöst markieren (empfohlen: eigenes Wrapper-Flag, hier per Upgrades)
 	upgrades["Code_"..codeStr] = true

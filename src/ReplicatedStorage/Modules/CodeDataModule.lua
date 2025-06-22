@@ -13,10 +13,10 @@ return {
         Description = "Bonusgems für treue Spieler",
     },
     ["MEGAFOOD"] = {
-        RewardType = "Item",
-        RewardId = "XP_Food",
+        RewardType = "Scroll",
+        RewardId = "SummonScroll_Common",
         RewardAmount = 5,
-        Description = "Gibt 5x XP-Food!",
+        Description = "Gibt 5x SummonScroll_Common!",
     },
     -- Beliebig viele Codes...
 }

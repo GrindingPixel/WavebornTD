@@ -11,27 +11,27 @@ local MapData = {
 		Stages = {
 			{ StageId = 1, Name = "The Beginning", Rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 2, Name = "Ruined Alley", Rewards = {
 				{ type = "Gold", amount = 150 },
-				{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 3, Name = "Underground Nest", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 4, Name = "The Beginning", Rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 5, Name = "Ruined Alley", Rewards = {
 				{ type = "Gold", amount = 150 },
-				{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 6, Name = "Underground Nest", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 		},
 	},
@@ -44,27 +44,27 @@ local MapData = {
 		Stages = {
 			{ StageId = 1, Name = "Ash Gate", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Ash", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 2, Name = "Forgotten Quarters", Rewards = {
 				{ type = "Gold", amount = 250 },
-				{ type = "Item", id = "Scroll_Ash", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 3, Name = "Inner Sanctum", Rewards = {
 				{ type = "Gold", amount = 300 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 4, Name = "The Beginning", Rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 5, Name = "Ruined Alley", Rewards = {
 				{ type = "Gold", amount = 150 },
-				{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 6, Name = "Underground Nest", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 		},
 	},
@@ -77,27 +77,27 @@ local MapData = {
 		Stages = {
 			{ StageId = 1, Name = "Ash Gate", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Ash", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 2, Name = "Forgotten Quarters", Rewards = {
 				{ type = "Gold", amount = 250 },
-				{ type = "Item", id = "Scroll_Ash", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 3, Name = "Inner Sanctum", Rewards = {
 				{ type = "Gold", amount = 300 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 4, Name = "The Beginning", Rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "Item", id = "Scroll_Basic", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 			{ StageId = 5, Name = "Ruined Alley", Rewards = {
 				{ type = "Gold", amount = 150 },
-				{ type = "Item", id = "Scroll_Basic", amount = 2 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 			}},
 			{ StageId = 6, Name = "Underground Nest", Rewards = {
 				{ type = "Gold", amount = 200 },
-				{ type = "Item", id = "Scroll_Boss", amount = 1 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 },
 			}},
 		},
 	},

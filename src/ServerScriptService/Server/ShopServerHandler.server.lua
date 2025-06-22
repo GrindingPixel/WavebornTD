@@ -9,7 +9,8 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 --// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
-local ShopData = require(ReplicatedStorage.Modules:WaitForChild("ShopDataModule")) -- z. B. Produkt-Infos
+local ShopData = require(ReplicatedStorage.Modules:WaitForChild("ShopDataModule"))-- z. B. Produkt-Infos
+local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule")) -- z. B. Alle Items im Spiel
 
 --// Debug
 local DEBUG = true
@@ -68,11 +69,16 @@ shopRequest.OnServerEvent:Connect(function(player, productId, buttonName)
 		return
 	end
 
-	-- Belohnung
-	if offer.Item then
-		ProfileWrapper:AddItem(player, offer.Item, offer.Amount or 1)
+-- Belohnung
+if offer.Item then
+	local itemType = ItemData[offer.Item] and ItemData[offer.Item].category
+	if itemType then
+		ProfileWrapper:AddItemTyped(player, itemType, offer.Item, offer.Amount or 1)
 		log("Shopkauf:", productId, "→", offer.Item, "x", offer.Amount or 1, "an", player.Name)
+	else
+		warn("[ShopHandler] ❌ Kein gültiger ItemType für:", offer.Item)
 	end
+end
 
 	-- Rückmeldung an Client (Erfolg)
 	shopCompleted:FireClient(player, productId, buttonName)

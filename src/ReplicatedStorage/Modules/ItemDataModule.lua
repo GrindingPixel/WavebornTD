@@ -1,10 +1,10 @@
 -- ItemDataModule.lua
 
 local ItemData = {
-	["SummonScroll"] = {
+	["SummonScroll_Common"] = {
 		displayName = "Common Summon Scroll",
 		iconId = "rbxassetid://91235668959527",
-		category = "Summon",
+		category = "Scroll",
 		rarity = "Common",
 		desc = "Used to summon rare to epic units.",
 	},
@@ -37,3 +37,6 @@ function ItemData.GetMeta(id)
 end
 
 return ItemData
+
+
+-- Catergory = reward.type

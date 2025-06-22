@@ -5,14 +5,14 @@ local QuestData = {
 	-- 🔁 Daily Quests (wechseln täglich)
 	Daily = {
 		{
-			id = "1",
+			id = "D_001",
 			title = "Summon 3 Units",
 			description = "Use the Summon system 3 times",
 			type = "Summon",
 			goal = 3,
 			rewards = {
 				{ type = "Gold", amount = 100 },
-				{ type = "BattlepassEXP", amount = 500 }
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 10 }
 			}
 		},
 		{
@@ -22,7 +22,7 @@ local QuestData = {
 			type = "StageClear",
 			goal = 2,
 			rewards = {
-				{ type = "Item", id = "XP_Food", amount = 1 }
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 }
 			}
 		},
 	},
@@ -46,7 +46,7 @@ local QuestData = {
 			type = "UnitLevelUp",
 			goal = 5,
 			rewards = {
-				{ type = "Item", id = "Scroll_Boss", amount = 1 }
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 }
 			}
 		}
 	},
@@ -85,7 +85,7 @@ local QuestData = {
 			goal = 15,
 			rewards = {
 				{ type = "Gold", amount = 250 },
-				{ type = "Item", id = "Scroll_Premium", amount = 1 }
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 }
 			}
 		}
 	}

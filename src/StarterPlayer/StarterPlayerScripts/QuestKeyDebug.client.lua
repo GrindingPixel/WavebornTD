@@ -16,6 +16,6 @@ print("[🎯 QuestDebug] Drücke P, um Testquest zu erhöhen")
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.KeyCode == Enum.KeyCode.P then
-		DebugRemote:FireServer("Daily", "1", 1)
+		DebugRemote:FireServer("Daily", "D_001", 1)
 	end
 end)

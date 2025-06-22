@@ -7,12 +7,15 @@ local DefaultPlayerData = {
 
 	-- 📦 Items (z. B. Scrolls, EXP-Food)
 	Inventory = {
-		["Scroll_Basic"] = 3,
-		["XP_Food"] = 1,
+	Scroll = {},
+	Token = {},
+	Material = {},
+	Evo = {},
+	Cosmetics = {},
 	},
 
 	-- 🧙‍♂️ Units
-	Units = {
+	Unit = {
 		["Issoi_Highschool"] = {
 			Level = 1,
 			XP = 0,

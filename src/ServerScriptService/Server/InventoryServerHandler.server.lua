@@ -1,90 +1,105 @@
 -- InventoryServerHandler.server.lua
--- Typ: Script (ServerScript)
+-- Typ: Script (ServerScriptService)
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
+local ServerStorage     = game:GetService("ServerStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Modules           = ServerScriptService:WaitForChild("Modules")
 
 --// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
-local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
-
---// Debug
-local DEBUG = true
-local function log(...)
-	if DEBUG then print("[InventoryServerHandler]", ...) end
-end
-local function warnf(...)
-	if DEBUG then warn("[InventoryServerHandler]", ...) end
-end
+local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 
 --// Remotes
-local getInventoryFunction = ReplicatedStorage.Remotes.Inventory:WaitForChild("GetInventoryData")
-local addItemEvent = ReplicatedStorage.Remotes.Inventory:WaitForChild("AddItemRequest")
-local removeItemEvent = ReplicatedStorage.Remotes.Inventory:WaitForChild("RemoveItemRequest")
+local InventoryFolder = ReplicatedStorage.Remotes:WaitForChild("Inventory")
+local getInventoryFunction = InventoryFolder:WaitForChild("GetInventoryData")
+local addItemEvent        = InventoryFolder:WaitForChild("AddItemRequest")
+local removeItemEvent     = InventoryFolder:WaitForChild("RemoveItemRequest")
 
---// Inventory für Client (Read-Only)
+local DEBUG = true
+local function log(...) if DEBUG then print("[InventoryServerHandler]", ...) end end
+local function warnf(...) if DEBUG then warn("[InventoryServerHandler]", ...) end end
+
+-- GetInventoryData: Inventory als Array an Client
 getInventoryFunction.OnServerInvoke = function(player)
 	if not ProfileWrapper:IsLoaded(player) then
-		warnf("GetInventoryData abgelehnt für", player and player.Name)
+		warn("❌ [GetInventoryData] Profil nicht geladen für", player)
 		return {}
 	end
-	log("Inventory für", player.Name, "abgerufen")
-	return ProfileWrapper:GetInventory(player)
+
+	local inventory = ProfileWrapper:GetInventory(player)
+	if typeof(inventory) ~= "table" then
+		warn("❌ [GetInventoryData] Ungültiges Inventory für", player, "Typ:", typeof(inventory))
+		return {}
+	end
+
+	local result = {}
+
+	for itemType, itemList in pairs(inventory) do
+		if typeof(itemList) ~= "table" then
+			warn("⚠️ [GetInventoryData] Ungültiger Container für Typ:", itemType, "→", typeof(itemList))
+			continue
+		end
+
+		for itemId, amount in pairs(itemList) do
+			table.insert(result, {
+				id = itemId,
+				type = itemType,
+				amount = amount
+			})
+		end
+	end
+
+	print("✅ [GetInventoryData] Sende", #result, "Items an", player.Name)
+	return result
 end
 
---// Item hinzufügen (über RemoteEvent)
+
+-- AddItemRequest: Item hinzufügen
 addItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
-	if not ProfileWrapper:IsLoaded(player) then
-		warnf("AddItemRequest abgelehnt (Profil nicht geladen) für", player and player.Name)
-		return
-	end
-	if type(itemId) ~= "string" or itemId == "" then
-		warnf("Ungültige ItemId für AddItemRequest von", player.Name)
-		return
-	end
-	if type(amount) ~= "number" or amount <= 0 or amount > 999 then
-		warnf("Ungültige Menge für AddItemRequest:", amount, "von", player.Name)
-		return
-	end
-	if not ItemData[itemId] then
-		warnf("Unbekanntes Item für AddItemRequest:", itemId, "von", player.Name)
-		return
-	end
-	if ServerDebounce:Block(player, "AddItem", 1.0) then
-		warnf("Debounce Block AddItem für", player.Name)
+	if not ProfileWrapper:IsLoaded(player) then return end
+	if type(itemId) ~= "string" or itemId == "" then return end
+	if type(amount) ~= "number" or amount <= 0 or amount > 999 then return end
+	if not ItemData[itemId] then return end
+	if ServerDebounce:Block(player, "AddItem", 1.0) then return end
+
+	local category = ItemData[itemId].category
+	if not category then
+		warnf("❌ Item ohne Kategorie:", itemId)
 		return
 	end
 
-	ProfileWrapper:AddItem(player, itemId, amount)
-	log("AddItemRequest:", itemId, "x", amount, "an", player.Name)
+	ProfileWrapper:AddItemTyped(player, category, itemId, amount)
+	log("Item hinzugefügt:", itemId, "x", amount, "Typ:", category, "→", player.Name)
 end)
 
---// Item entfernen (über RemoteEvent)
+-- RemoveItemRequest: Item entfernen
 removeItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
-	if not ProfileWrapper:IsLoaded(player) then
-		warnf("RemoveItemRequest abgelehnt (Profil nicht geladen) für", player and player.Name)
-		return
-	end
-	if type(itemId) ~= "string" or itemId == "" then
-		warnf("Ungültige ItemId für RemoveItemRequest von", player.Name)
-		return
-	end
-	if type(amount) ~= "number" or amount <= 0 or amount > 999 then
-		warnf("Ungültige Menge für RemoveItemRequest:", amount, "von", player.Name)
-		return
-	end
-	if not ItemData[itemId] then
-		warnf("Unbekanntes Item für RemoveItemRequest:", itemId, "von", player.Name)
-		return
-	end
-	if ServerDebounce:Block(player, "RemoveItem", 1.0) then
-		warnf("Debounce Block RemoveItem für", player.Name)
+	if not ProfileWrapper:IsLoaded(player) then return end
+	if type(itemId) ~= "string" or itemId == "" then return end
+	if type(amount) ~= "number" or amount <= 0 or amount > 999 then return end
+	if not ItemData[itemId] then return end
+	if ServerDebounce:Block(player, "RemoveItem", 1.0) then return end
+
+	local category = ItemData[itemId].category
+	if not category then
+		warnf("❌ Item ohne Kategorie:", itemId)
 		return
 	end
 
-	ProfileWrapper:RemoveItem(player, itemId, amount)
-	log("RemoveItemRequest:", itemId, "x", amount, "von", player.Name)
+	local success = ProfileWrapper:RemoveItemTyped(player, category, itemId, amount)
+	if success then
+		log("Item entfernt:", itemId, "x", amount, "Typ:", category, "←", player.Name)
+	else
+		warnf("❌ Entfernen fehlgeschlagen:", itemId, "bei", player.Name)
+	end
+
+	local profile = ProfileWrapper:GetProfile(player)
+	if profile then
+		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
+	end
 end)
+
