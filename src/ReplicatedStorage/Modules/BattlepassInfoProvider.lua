@@ -64,8 +64,8 @@ local function generateBattlepassData(seed)
 		}
 
 		data[i] = {
-			freeReward = freeReward,
-			premiumReward = premiumReward,
+			free = freeReward,
+			premium = premiumReward,
 		}
 	end
 

@@ -34,15 +34,15 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 
 		if entry == nil then
 			warnf("❌ Kein Eintrag für Level", i)
-		elseif not entry.freeReward then
-			warnf("❌ entry.freeReward fehlt bei Level", i, "| Inhalt:", entry)
+		elseif not entry.free then
+			warnf("❌ entry.free fehlt bei Level", i, "| Inhalt:", entry)
 		end
 
 		if entry then
 			levelData[i] = {
 				level = i,
-				free = entry.freeReward,
-				premium = entry.premiumReward,
+				free = entry.free,
+				premium = entry.premium,
 			}
 		end
 	end
@@ -60,7 +60,6 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 	}
 end
 
---// Kostenlose Belohnung beanspruchen
 ClaimFree.OnServerEvent:Connect(function(player, level)
 	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(level) ~= "number" then return end
@@ -72,12 +71,14 @@ ClaimFree.OnServerEvent:Connect(function(player, level)
 	if claimed[claimKey] then return end
 
 	local entry = BattlepassInfoProvider.GetLevelData(level)
-	if not entry or not entry.freeReward then return end
+	if not entry or not entry.free then return end
 
-	local requiredEXP = BattlepassInfoProvider.GetEXPRequirement(level)
-	if (playerBP.EXP or 0) < requiredEXP then return end
+	if (playerBP.Level or 0) < level then
+		log(player.Name, "hat nicht genug Level für FREE", level)
+		return
+	end
 
-	ProfileWrapper:GrantRewards(player, entry.freeReward, true)
+	ProfileWrapper:GrantRewards(player, { entry.free }, true)
 	ProfileWrapper:ClaimBattlepassReward(player, level, "free")
 
 	log(player.Name, "hat FREE Battlepass-Level", level, "beansprucht")
@@ -89,21 +90,33 @@ ClaimPremium.OnServerEvent:Connect(function(player, level)
 	if type(level) ~= "number" then return end
 
 	local playerBP = ProfileWrapper:GetBattlepass(player)
-	if not playerBP.HasPremium then return end
+	if not playerBP.HasPremium then
+		log(player.Name, "hat keinen Premium-Pass – Zugriff verweigert")
+		return
+	end
 
 	local claimed = playerBP.Claimed or {}
 	local claimKey = tostring(level) .. "_premium"
 
-	if claimed[claimKey] then return end
+	if claimed[claimKey] then
+		log(player.Name, "hat PREMIUM Level", level, "bereits beansprucht")
+		return
+	end
 
 	local entry = BattlepassInfoProvider.GetLevelData(level)
-	if not entry or not entry.premiumReward then return end
+	if not entry or not entry.premium then
+		warnf("❌ Kein gültiger Premium-Reward bei Level", level, "| entry:", entry)
+		return
+	end
 
-	local requiredEXP = BattlepassInfoProvider.GetEXPRequirement(level)
-	if (playerBP.EXP or 0) < requiredEXP then return end
+	if (playerBP.Level or 0) < level then
+		log(player.Name, "hat nicht genug Level für PREMIUM", level)
+		return
+	end
 
-	ProfileWrapper:GrantRewards(player, entry.premiumReward, true)
+	ProfileWrapper:GrantRewards(player, { entry.premium }, true)
 	ProfileWrapper:ClaimBattlepassReward(player, level, "premium")
 
 	log(player.Name, "hat PREMIUM Battlepass-Level", level, "beansprucht")
 end)
+

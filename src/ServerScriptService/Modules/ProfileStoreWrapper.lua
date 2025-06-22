@@ -321,58 +321,46 @@ end
 -- ===================================
 -- REWARDSYSTEM (ERWEITERT)
 -- ===================================
-function ProfileWrapper:GrantRewards(player, rewards, logRewards)
-	assert(typeof(rewards) == "table", "Rewards muss ein Array sein")
-	local profile = getProfile(player)
-	if not profile then return false end
+function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
+	assert(ProfileWrapper:IsLoaded(player), "Profil nicht geladen")
+	assert(typeof(rewards) == "table", "Ungültige Rewards")
 
-	local inventoryChanged = false
+	local profile = activeProfiles[player.UserId]
+	if not profile then return end
 
 	for _, reward in ipairs(rewards) do
-		local rewardType = reward.type or "Item"
-		local amount = reward.amount or 1
-		local id = reward.id
-
-		if rewardType == "Gold" then
-			self:AddGold(player, amount)
-
-		elseif rewardType == "Gems" then
-			self:AddGems(player, amount)
-
-		elseif rewardType == "BattlepassEXP" then
-			self:AddBattlepassEXP(player, amount)
-
-		elseif rewardType == "Item" or rewardType == "Scroll" or rewardType == "Token"
-			or rewardType == "Material" or rewardType == "Cosmetics" or rewardType == "Medaillen" then
-
-			-- Kategorie auflösen falls nicht direkt mitgegeben
-			local itemType = rewardType
-			if rewardType == "Item" then
-				itemType = ItemData[id] and ItemData[id].category
-				if not itemType then
-					warnf("❌ Keine Kategorie gefunden für Item:", id)
-					continue
-				end
-			end
-
-			self:AddItemTyped(player, itemType, id, amount, true)
-			inventoryChanged = true
-
-		else
-			warnf("Unbekannter RewardType:", rewardType)
+		if typeof(reward) ~= "table" or not reward.type or not reward.id or not reward.amount then
+			warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
+			continue
 		end
 
-		if logRewards then
-			log("Reward erhalten:", rewardType, id, "x", amount, "von", player.Name)
+		local category = reward.type
+		local itemId = reward.id
+		local amount = reward.amount
+
+		-- Existenzprüfung
+		local categoryTable = profile.Data.Inventory[category]
+		if not categoryTable then
+			warn("[ProfileWrapper] ❌ Ungültige Reward-Kategorie:", category)
+			continue
 		end
+
+		-- Stack hinzufügen
+		categoryTable[itemId] = (categoryTable[itemId] or 0) + amount
+
+		-- Logging
+		print(("[ProfileWrapper] 🎁 +%d × %s (%s) an %s"):format(amount, itemId, category, player.Name))
 	end
 
-	if inventoryChanged then
-		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
-	end
+	-- LiveSync
+	ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 
-	return true
+	-- Optional: extra Log für Battlepass
+	if isBattlepass then
+		print("[ProfileWrapper] ✅ Rewards wurden dem Inventar hinzugefügt (Battlepass)")
+	end
 end
+
 
 
 -- ===================================

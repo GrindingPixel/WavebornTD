@@ -10,14 +10,13 @@ local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileCh
 local ProfileSyncService = {}
 
 function ProfileSyncService:Send(player, key, data)
+	print("📡 [ProfileSyncService] Sende LiveSync:", key, "→", player.Name)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then return end
 	if typeof(key) ~= "string" then return end
 	if data == nil then return end
 
-	ProfileChanged:FireClient(player, {
-		key = key,
-		data = data,
-	})
+	ProfileChanged:FireClient(player, key, data)
 end
+
 
 return ProfileSyncService

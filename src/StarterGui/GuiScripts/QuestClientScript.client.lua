@@ -207,12 +207,13 @@ PanelManager:RegisterPanel(panel, {
 })
 
 --// Live Sync
-ProfileChanged.OnClientEvent:Connect(function(update)
-	if update.key == "QuestProgress" then
-		LocalDataCache.QuestProgress = update.data
+ProfileChanged.OnClientEvent:Connect(function(category, data)
+	if category == "QuestProgress" then
+		LocalDataCache.QuestProgress = data
 		loadQuests(currentTab)
 	end
 end)
+
 
 UpdateTabIndicators.OnClientEvent:Connect(function()
 	updateTabIndicators()

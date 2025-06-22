@@ -19,6 +19,7 @@ local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"
 local InventoryFolder = ReplicatedStorage.Remotes:WaitForChild("Inventory")
 local GetInventoryData = InventoryFolder:WaitForChild("GetInventoryData")
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 
 --// GUI
 local panel = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
@@ -170,5 +171,29 @@ for _, tab in ipairs(tabsFrame:GetChildren()) do
 end
 
 loadInventory()
+
+-- Live-Updates bei Inventaränderungen
+ProfileChanged.OnClientEvent:Connect(function(category, data)
+	if category ~= "Inventory" or typeof(data) ~= "table" then return end
+	print("📡 [LiveSync] Inventory wurde aktualisiert!")
+
+	itemCache = {}
+
+	for itemType, itemList in pairs(data) do
+		for id, amount in pairs(itemList) do
+			local itemMeta = ItemData[id] or {}
+
+			table.insert(itemCache, {
+				id = id,
+				type = itemType,
+				amount = amount,
+				image = itemMeta.iconId or "rbxassetid://12345678"
+			})
+		end
+	end
+
+	renderInventory()
+end)
+
 
 end)
