@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-22)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-23)
 
 ---
 
@@ -48,29 +48,22 @@
 
 ---
 
-## 📐 GUI-Standardgrößen
+## 📦 4. Units-System
 
-| Typ           | Größe (Size)       | Position           |
-| ------------- | ------------------ | ------------------ |
-| StandardPanel | {0, 910}, {0, 705} | {0, 410}, {0, 80}  |
-| MidSizePanel  | {0, 450}, {0, 585} | {0, 660}, {0, 150} |
-| SmallPanel    | {0, 500}, {0, 350} | {0, 620}, {0, 250} |
-
----
-
-## 🔧 4. Serverseitige Systeme
-
-| System                   | Status | Beschreibung                                           |
-| ------------------------ | ------ | ------------------------------------------------------ |
-| ShopServerHandler        | ✅      | Refactort – nutzt ProfileStoreWrapper                  |
-| CodesServerHandler       | ✅      | Codeprüfung mit DataStore                              |
-| BattlepassServerHandler  | ✅      | Nutzt InfoProvider + GrantRewards                      |
-| BattlepassInfoProvider   | ✅      | Dynamisch, Regenerate(), GetSeasonSeed                 |
-| QuestServerHandler       | ✅      | Gibt Testquests zurück, ClaimSingle + ClaimAll         |
-| TeleportPortalHandler    | ✅      | Portal-Touched → MapTeleportGui öffnen                 |
-| TeleportStageHandler     | ✅      | TeleportStageRequest + TimeoutReturn → CFrame-Teleport |
-| TeleportLobbyHandler     | ✅      | Empfängt Zielname → Positionswechsel                   |
-| RemoteEvents / Functions | ✅      | Einheitlich in ReplicatedStorage.Remotes vorhanden     |
+| Element                           | Status | Beschreibung                                           |
+| --------------------------------- | ------ | ------------------------------------------------------ |
+| UnitInventoryGui                  | ✅      | Vollständige Struktur inkl. SlotBar, InfoPanel         |
+| UnitClientScript                  | ✅      | Equip-Logik, Slot-Anzeige, PreviewRenderer             |
+| UnitModels (ReplicatedStorage)    | ✅      | Modelle geladen & zentralisiert                        |
+| UnitStatsModule                   | ✅      | InfoPanel-Werte klar getrennt                          |
+| UnitAbilitiesModule               | ✅      | Passive/Active-Auflistung, dynamisch generiert         |
+| UnitInfoPanelScript               | ✅      | Preview, Seitenwechsel, Stat-Parsing                   |
+| EquipButton / UnEquipButton       | ✅      | Slot-Zuweisung & Entfernung inkl. UUID-Logik           |
+| CameraSetup                       | ✅      | Einheitlich mit FieldOfView, Licht & PrimaryPart-Check |
+| InfoPanelStats                    | ✅      | Dynamisch geladen über Frame.Name                      |
+| AbilityPage                       | ✅      | UIListLayout, Auto-Inhalt via AbilitiesModule          |
+| Dropdown-Menü                     | ✅      | Animiertes Menü mit Hover + Outside-Klick-Schließen    |
+| UnitServerHandler                 | ✅      | Vollständig über ProfileStoreWrapper angebunden        |
 
 ---
 
@@ -78,7 +71,7 @@
 
 | Element                    | Status | Beschreibung                                               |
 | -------------------------- | ------ | ---------------------------------------------------------- |
-| BattlepassModule           | 🗑️      | Gelöscht, durch BattlepassInfoProvider ersetzt             |
+| BattlepassInfoProvider     | ✅      | Dynamisch, Regenerate(), GetSeasonSeed                     |
 | EXP-Bar + Levelanzeige     | ✅      | UI-gebunden, animiert, Live-Update über ProfileSync        |
 | Lock-Status / Premiumcheck | ✅      | Sichtbarkeit dynamisch + Claim-Buttons                     |
 | Claim-System               | ✅      | Belohnung per Event → RewardSystem                         |
@@ -96,32 +89,14 @@
 | QuestsGui            | ✅      | Tabs (Daily–Progress), Claim-Logik, HoverOverlay, Indicator |
 | QuestClientScript    | ✅      | Refactort – ClaimAll, Fortschritt, UI aktualisiert          |
 | QuestServerHandler   | ✅      | Refactort – ClaimAll + RewardEvent                          |
-| QuestProgressService | 🗑️      | Entfernt – wird durch ProgressTrackerService ersetzt        |
+| QuestProgressService | 🗑️      | Entfernt – ersetzt durch ProgressTrackerService             |
+| ProgressTrackerService | ✅    | Hört auf Events (EnemyKilled, etc.)                         |
 | QuestClaimResult     | ✅      | Sendet Popup-Daten bei Erfolg                               |
 | ClaimAllButton       | ✅      | Funktioniert, Debounce + Eventanbindung                     |
 
 ---
 
-## 📦 7. Units-System
-
-| Element                           | Status | Beschreibung                                           |
-| --------------------------------- | ------ | ------------------------------------------------------ |
-| UnitInventoryGui                  | ✅      | Vollständige Struktur inkl. SlotBar, InfoPanel         |
-| UnitClientScript                  | ✅      | Equip-Logik, Slot-Anzeige, PreviewRenderer             |
-| UnitModels (ReplicatedStorage)    | ✅      | Modelle geladen & zentralisiert                        |
-| UnitStatsModule                   | ✅      | InfoPanel-Werte klar getrennt                          |
-| UnitAbilitiesModule               | ✅      | Passive/Active-Auflistung, dynamisch generiert         |
-| UnitInfoPanelScript               | ✅      | Preview, Seitenwechsel, Stat-Parsing                   |
-| EquipButton                       | ✅      | Triggert Slot-Vergabe und Slot-Preview                 |
-| UnEquipButton                     | ✅      | Entfernt Unit visuell & logisch                        |
-| CameraSetup                       | ✅      | Einheitlich mit FieldOfView, Licht & PrimaryPart-Check |
-| InfoPanelStats                    | ✅      | Dynamisch geladen über Frame.Name                      |
-| AbilityPage                       | ✅      | UIListLayout, Auto-Inhalt via AbilitiesModule          |
-| Dropdown-Menü (Feed, Evolve etc.) | ✅      | Animiertes Menü mit Hover + Outside-Klick-Schließen    |
-
----
-
-## 📍 8. Teleport-System
+## 📍 7. Teleport-System
 
 | Element                    | Status | Beschreibung                                           |
 | -------------------------- | ------ | ------------------------------------------------------ |
@@ -140,7 +115,7 @@
 
 ---
 
-## 🧭 9. FastTravel-System
+## 🧭 8. FastTravel-System
 
 | Element               | Status | Beschreibung                                      |
 | --------------------- | ------ | ------------------------------------------------- |
@@ -152,19 +127,7 @@
 
 ---
 
-## 🧪 10. Refactoring & Codepflege
-
-| Bereich                        | Status | Beschreibung                                                  |
-| ------------------------------ | ------ | ------------------------------------------------------------- |
-| PanelManager-Vereinheitlichung | ✅      | Standardisiert (Open/Close + OnOpenHandler)                   |
-| Scriptformatierung             | ✅      | Alle Scripts refactort (Formatblöcke, Struktur)               |
-| TooltipModule                  | ✅      | Final – mit \[b], \[img:id], Attach per Function              |
-| Debounce-System                | ✅      | PanelDebounce, ServerDebounce systemweit im Einsatz           |
-| MapDataUtils                   | ✅      | GetStageById + RewardPreview-Hilfsfunktionen vorbereitet      |
-
----
-
-## 🔒 11. Persistent PlayerData (ProfileService → ProfileStore)
+## 🔒 9. Persistent PlayerData (ProfileService → ProfileStore)
 
 | Element                                | Status | Beschreibung                                                    |
 | -------------------------------------- | ------ | --------------------------------------------------------------- |
@@ -173,12 +136,12 @@
 | PlayerDataTemplate                     | ✅      | DataTemplate inkl. Battlepass.HasPremium, Seed, Claimed etc.    |
 | AutoSave & Release                     | ✅      | Implementiert im Wrapper                                        |
 | Battlepass-Seed Reset                  | ✅      | Reset bei Seed-Wechsel aktiv (inkl. Premium & Claimed)          |
-| LegacyServices (InventoryService etc.) | ✅      | Werden durch Wrapper ersetzt und nicht mehr vorhanden           |
+| LegacyServices (InventoryService etc.) | ✅      | Entfernt / durch Wrapper ersetzt                                |
 | GrantRewards Funktion                  | ✅      | Serverweiter Standard für Item-Belohnungen                      |
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (seit 2025-06-22)
+## ✅ 10. Abgeschlossene Tasks (seit 2025-06-22)
 
 * BattlepassClientScript: Dynamische ItemLabels eingebaut (`FreeRewardLabel1` / `PremiumRewardLabel1`)
 * Battlepass-Bug bei ClaimFixed (Reward wurde nicht ins Inventory geschrieben)
@@ -186,15 +149,15 @@
 * GrantRewards: LiveSync & RewardStack funktionieren serverseitig
 * ProfileStoreWrapper: Einheitlicher Reward-Flow inkl. Itemprüfung
 * LiveSync für Battlepass/Inventory wird korrekt empfangen & angezeigt
+* Battlepass zeigt wieder alle 100 Level korrekt an (Fix EXP-Handling)
+* Refactor abgeschlossen: `UnitServerHandler` nutzt nun ProfileWrapper
 
 ---
 
-## 🔜 13. Nächste Schritte
+## 🔜 11. Nächste Schritte
 
 * 🔧 ClaimAllBattlepassButton vorbereiten
 * 🔧 Implement RewardPopupGui für Quest & Battlepass
-* 🔄 Refactor UnitServerHandler → ProfileStoreWrapper
 * 🔄 Refactor CodeRedeemHandler inkl. CodeResultEvent
 * 🔄 Refactor ShopServerHandler vollständig mit Wrapper
-* 💬 TradeSystem: geplant für später nach vollständigem release
-
+* 💬 TradeSystem: geplant für später nach vollständigem Release
