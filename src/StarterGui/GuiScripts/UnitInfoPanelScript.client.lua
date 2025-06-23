@@ -63,7 +63,7 @@ ProfileLoadedEvent.OnClientEvent:Wait()
 --// State
 local currentPage = 1
 local totalPages  = 2
-local currentUnit = "Issoi_Highschool"
+local currentUnit = "Issoi_HighSchool"
 local menuOpen = false
 local ignoreNextOutsideClick = false
 

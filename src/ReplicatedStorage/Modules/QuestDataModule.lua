@@ -13,7 +13,7 @@ local QuestData = {
 			rewards = {
 				{ type = "Gold", amount = 100 },
 				{ type = "Scroll", id = "SummonScroll_Common", amount = 10 },
-				{ type = "Units", id = "Issoi_Highschool"}
+				{ type = "Units", id = "Issoi_HighSchool"}
 			}
 		},
 		{

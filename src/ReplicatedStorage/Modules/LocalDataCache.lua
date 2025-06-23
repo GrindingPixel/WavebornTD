@@ -8,7 +8,7 @@ return {
 	Inventory      = {},
 	Battlepass     = {
 		Exp = 0,
-		Level = 1,
+		Level = 0,
 		Claimed = {},
 		Premium = false,
 	},

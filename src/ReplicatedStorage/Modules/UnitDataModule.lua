@@ -6,10 +6,10 @@ local Units = {}
 
 --// Basisdaten aller Unit-Arten
 Units.BaseUnits = {
-	Issoi_Highschool = {
+	Issoi_HighSchool = {
 		name       = "Issoi",
 		image      = "rbxassetid://12345678",
-		modelName  = "Issoi_Highschool",
+		modelName  = "Issoi_HighSchool",
 		type       = "HybridGround",
 		trait      = "DragonKing",
 		BaseStar   = 3,

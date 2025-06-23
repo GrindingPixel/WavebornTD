@@ -14,6 +14,7 @@ local QuestDataModule = require(ReplicatedStorage.Modules:WaitForChild("QuestDat
 local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 local UnitDataModule = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
+local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("BattlepassInfoProvider"))
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
@@ -259,17 +260,30 @@ function ProfileWrapper:AddBattlepassEXP(player, amount)
 	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein")
 	local profile = getProfile(player)
 	if not profile then return false end
+
 	local bp = profile.Data.Battlepass
 	bp.EXP = (bp.EXP or 0) + amount
-	-- Beispiel für LevelUp: Passe Grenzwerte an deine Game-Balance an!
-	while bp.EXP >= 1000 do
-		bp.EXP = bp.EXP - 1000
-		bp.Level = (bp.Level or 0) + 1
+	bp.Level = bp.Level or 0
+
+	local maxLevel = BattlepassInfoProvider.GetMaxLevel()
+	local expRequired = BattlepassInfoProvider.GetEXPRequirement(bp.Level + 1)
+
+	while bp.Level < maxLevel and bp.EXP >= expRequired do
+		bp.EXP -= expRequired
+		bp.Level += 1
 		log("Battlepass LevelUp für", player.Name, "→ Level", bp.Level)
+		expRequired = BattlepassInfoProvider.GetEXPRequirement(bp.Level + 1)
 	end
+
+	-- EXP-Überschuss bei MaxLevel löschen (optional)
+	if bp.Level >= maxLevel then
+		bp.EXP = 0
+	end
+
 	log("Battlepass EXP +", amount, "→", bp.EXP, "für", player.Name)
 	return true
 end
+
 
 function ProfileWrapper:ClaimBattlepassReward(player, level, rewardType)
 	assert(type(level) == "number" and level > 0, "Level ungültig!")

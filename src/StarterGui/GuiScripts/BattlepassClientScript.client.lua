@@ -42,6 +42,8 @@ local function clearCards()
 end
 
 -- Belohnung setzen
+local UnitDataModule = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
+
 local function setReward(btn, reward)
 	if not (btn and reward) then
 		warn("❌ setReward: Kein Button oder Reward übergeben")
@@ -57,11 +59,23 @@ local function setReward(btn, reward)
 
 	local nameLabel = btn.Parent:FindFirstChild(labelName)
 
+	-- 🔄 Unterscheidung zwischen Units und Items
+	if reward.type == "Units" then
+		local unitMeta = UnitDataModule.GetUnitData(reward.id)
+		btn.Image = unitMeta and unitMeta.Icon or "rbxassetid://123456789" -- Fallback Icon
+
+		if nameLabel and nameLabel:IsA("TextLabel") then
+			nameLabel.Text = unitMeta and unitMeta.DisplayName or reward.id or "???"
+		end
+		return
+	end
+
+	-- 🧱 Standard Item-Daten
 	if reward.id then
 		local meta = itemData.GetMeta(reward.id)
 		btn.Image = (meta and meta.iconId) or "rbxassetid://0"
 		if nameLabel and nameLabel:IsA("TextLabel") then
-			nameLabel.Text = (meta and meta.displayName)
+			nameLabel.Text = (meta and meta.displayName) or reward.id or "???"
 		end
 	else
 		btn.Image = "rbxassetid://0"
@@ -70,6 +84,7 @@ local function setReward(btn, reward)
 		end
 	end
 end
+
 
 
 -- EXP-Header aktualisieren

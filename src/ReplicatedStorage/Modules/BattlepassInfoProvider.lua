@@ -28,7 +28,7 @@ local RewardPool = {
 	Scroll = { "SummonScroll_Common" },
 	Token = { "Reroll_Token", "Attribute_Token" },
 	Material = { "Universal_Fragment" },
-	Units = { "Issoi_Highschool" }
+	Units = { "Issoi_HighSchool" }
 }
 
 local function generateBattlepassData(seed)

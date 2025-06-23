@@ -38,13 +38,14 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 			warnf("❌ entry.free fehlt bei Level", i, "| Inhalt:", entry)
 		end
 
-		if entry then
-			levelData[i] = {
-				level = i,
-				free = entry.free,
-				premium = entry.premium,
-			}
-		end
+		if entry and (entry.free or entry.premium) then
+	levelData[i] = {
+		level = i,
+		free = entry.free,
+		premium = entry.premium,
+	}
+end
+
 	end
 
 	return {
