@@ -1,86 +1,52 @@
 -- ShopServerHandler.server.lua
--- Typ: Script (ServerScript)
 
 --// Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
-local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
-local ShopData = require(ReplicatedStorage.Modules:WaitForChild("ShopDataModule"))-- z. B. Produkt-Infos
-local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule")) -- z. B. Alle Items im Spiel
+local ProfileStoreWrapper = require(game.ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
+local PremiumShop = require(ReplicatedStorage.Modules:WaitForChild("PremiumShopModule"))
 
---// Debug
-local DEBUG = true
-local function log(...)
-	if DEBUG then print("[ShopServerHandler]", ...) end
+--// ProcessReceipt
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+	if not player then return Enum.ProductPurchaseDecision.NotProcessedYet end
+
+	local profile = ProfileStoreWrapper:GetProfile(player)
+	if not profile then return Enum.ProductPurchaseDecision.NotProcessedYet end
+
+	local productId = receiptInfo.ProductId
+	local data = PremiumShop[productId]
+
+	if not data then
+		warn("[SHOP] Unbekannte ProductId:", productId)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- Initialisiere Kauf-Tracking
+	profile.Data.Purchases = profile.Data.Purchases or {}
+	local purchaseCount = profile.Data.Purchases[productId] or 0
+
+	-- One-Time-Kauf blockieren
+	if data.oneTime and purchaseCount > 0 then
+		warn("[SHOP] One-Time-Produkt wurde erneut gekauft:", productId)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- Limit prüfen
+	if data.maxPurchases and purchaseCount >= data.maxPurchases then
+		warn("[SHOP] Kauf-Limit erreicht für ProductId:", productId)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+
+	-- Kauf registrieren
+	profile.Data.Purchases[productId] = purchaseCount + 1
+
+	-- Belohnung vergeben
+	ProfileStoreWrapper:GrantRewards(player, data.rewards)
+
+	print("[SHOP] ✅ Kauf abgeschlossen:", productId, "→", data.productKey)
+	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
-local function warnf(...)
-	if DEBUG then warn("[ShopServerHandler]", ...) end
-end
-
---// Remotes
-local shopRequest = ReplicatedStorage.Remotes.Shop:WaitForChild("ShopPurchaseRequest")
-local shopCompleted = ReplicatedStorage.Remotes.Shop:WaitForChild("ShopPurchaseCompleted")
-
---// Shop-Handler
-shopRequest.OnServerEvent:Connect(function(player, productId, buttonName)
-	if not ProfileWrapper:IsLoaded(player) then
-		warnf("ShopPurchaseRequest abgelehnt (Profil nicht geladen) für", player and player.Name)
-		return
-	end
-
-	if type(productId) ~= "number" or not ShopData[productId] then
-		warnf("Ungültige Produkt-ID für ShopPurchaseRequest:", productId, "von", player.Name)
-		return
-	end
-
-	if type(buttonName) ~= "string" or buttonName == "" then
-		warnf("Ungültiger ButtonName für ShopPurchaseRequest:", buttonName, "von", player.Name)
-		return
-	end
-
-	if ServerDebounce:Block(player, "ShopBuy_" .. tostring(productId), 1.5) then
-		warnf("Debounce Block ShopBuy für", player.Name)
-		return
-	end
-
-	local offer = ShopData[productId]
-	local price = offer.Price
-	local currency = offer.Currency -- z. B. "Gold" oder "Gems"
-
-	-- Preisvalidierung
-	if currency == "Gold" then
-		if ProfileWrapper:GetGold(player) < price then
-			warnf("Nicht genug Gold für Kauf:", productId, "bei", player.Name)
-			return
-		end
-		ProfileWrapper:RemoveGold(player, price)
-	elseif currency == "Gems" then
-		if ProfileWrapper:GetGems(player) < price then
-			warnf("Nicht genug Gems für Kauf:", productId, "bei", player.Name)
-			return
-		end
-		ProfileWrapper:RemoveGems(player, price)
-	else
-		warnf("Unbekannte Währung für Produkt:", productId, "bei", player.Name)
-		return
-	end
-
--- Belohnung
-if offer.Item then
-	local itemType = ItemData[offer.Item] and ItemData[offer.Item].category
-	if itemType then
-		ProfileWrapper:AddItemTyped(player, itemType, offer.Item, offer.Amount or 1)
-		log("Shopkauf:", productId, "→", offer.Item, "x", offer.Amount or 1, "an", player.Name)
-	else
-		warn("[ShopHandler] ❌ Kein gültiger ItemType für:", offer.Item)
-	end
-end
-
-	-- Rückmeldung an Client (Erfolg)
-	shopCompleted:FireClient(player, productId, buttonName)
-	log("Shopkauf abgeschlossen für", player.Name, "→ Produkt-ID:", productId)
-end)

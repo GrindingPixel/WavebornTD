@@ -419,6 +419,7 @@ end
 
 	-- LiveSync
 	ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
+	ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
 
 	-- Optional: extra Log für Battlepass
 	if isBattlepass then

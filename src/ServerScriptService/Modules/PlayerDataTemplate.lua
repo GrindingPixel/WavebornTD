@@ -59,6 +59,15 @@ local DefaultPlayerData = {
 		EXP = 0,
 		Claimed = {},
 		HasPremium = false,
+	},
+
+	--	🛒 Shop-Daten
+	Purchases = {
+		-- Beispielstruktur:
+		-- ["PRODUCT_ID"] = {
+		--     Count = 1,
+		--     LastPurchase = os.time()
+		-- }
 	}
 }
 
