@@ -476,28 +476,36 @@ local function onPlayerAdded(player)
 		profile.Data.QuestProgress[tabName] = profile.Data.QuestProgress[tabName] or {}
 	end
 
--- Battlepass initialisieren
-profile.Data.Battlepass = profile.Data.Battlepass or {}
-local currentSeed = require(ReplicatedStorage.Modules.BattlepassInfoProvider).GetSeasonSeed()
+	-- Battlepass initialisieren
+	profile.Data.Battlepass = profile.Data.Battlepass or {}
+	local currentSeed = require(ReplicatedStorage.Modules.BattlepassInfoProvider).GetSeasonSeed()
 
-if not profile.Data.Battlepass.Seed then
-	-- Erst-Initialisierung
-	profile.Data.Battlepass.Level = 0
-	profile.Data.Battlepass.EXP = 0
-	profile.Data.Battlepass.Claimed = {}
-	profile.Data.Battlepass.HasPremium = false
-	profile.Data.Battlepass.Seed = currentSeed
-elseif profile.Data.Battlepass.Seed ~= currentSeed then
-	-- Season-Wechsel → alles zurücksetzen
-	profile.Data.Battlepass = {
-		Level = 0,
-		EXP = 0,
-		Claimed = {},
-		HasPremium = false,
-		Seed = currentSeed,
-	}
-	log("🎯 Battlepass zurückgesetzt für neue Season:", currentSeed, "bei", player.Name)
-end
+	if not profile.Data.Battlepass.Seed then
+		-- Erst-Initialisierung
+		profile.Data.Battlepass.Level = 0
+		profile.Data.Battlepass.EXP = 0
+		profile.Data.Battlepass.Claimed = {}
+		profile.Data.Battlepass.HasPremium = false
+		profile.Data.Battlepass.Seed = currentSeed
+	elseif profile.Data.Battlepass.Seed ~= currentSeed then
+		-- Season-Wechsel → Battlepass zurücksetzen
+		profile.Data.Battlepass = {
+			Level = 0,
+			EXP = 0,
+			Claimed = {},
+			HasPremium = false,
+			Seed = currentSeed,
+		}
+		log("🎯 Battlepass zurückgesetzt für neue Season:", currentSeed, "bei", player.Name)
+
+		-- Purchases-Tabelle komplett neu aufsetzen
+		profile.Data.Purchases = {}
+		log("🗑️ Purchases-Tabelle vollständig geleert für", player.Name)
+
+		-- 🔥 Direktes Sync nach Reset → schickt den sauberen Stand an den Client
+		ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
+		profile:Save()
+	end
 
 	activeProfiles[userId] = profile
 	ProfileLoadedEvent:FireClient(player)
@@ -511,6 +519,8 @@ end
 
 	log("Profil geladen für", player.Name)
 end
+
+
 
 
 

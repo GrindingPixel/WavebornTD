@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ItemDataModule = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 
 --// State
-local SEASON_SEED = 46446
+local SEASON_SEED = 46729440
 local battlepassData = {}
 local MAX_LEVEL = 100
 

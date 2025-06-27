@@ -24,7 +24,17 @@ local PremiumShop = {
 		name = "5x Beschwörungsrollen",
 		description = "Gibt dir 5 Scrolls für die Einheit-Beschwörung.",
 		icon = "rbxassetid://123456789"
-	}
+	},
+
+	[3318264719] = {
+        productKey = "BattlepassPremium",
+        rewards = {}, -- keine Items direkt, nur Premium-Status
+        oneTime = true,
+		maxPurchases = nil,
+        name = "Battlepass Premium",
+        description = "Schalte Premium-Belohnungen frei",
+        icon = "rbxassetid://...", -- dein Icon
+    },
 
 	-- Weitere Produkte können hier hinzugefügt werden
 }

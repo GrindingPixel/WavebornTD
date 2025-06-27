@@ -82,8 +82,13 @@ ClaimFree.OnServerEvent:Connect(function(player, level)
 	ProfileWrapper:GrantRewards(player, { entry.free }, true)
 	ProfileWrapper:ClaimBattlepassReward(player, level, "free")
 
+	-- 🔥 Hier Battlepass-Daten syncen:
+	local updatedBP = ProfileWrapper:GetBattlepass(player)
+	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "Battlepass", updatedBP)
+
 	log(player.Name, "hat FREE Battlepass-Level", level, "beansprucht")
 end)
+
 
 --// Premium Belohnung beanspruchen
 ClaimPremium.OnServerEvent:Connect(function(player, level)
@@ -118,6 +123,11 @@ ClaimPremium.OnServerEvent:Connect(function(player, level)
 	ProfileWrapper:GrantRewards(player, { entry.premium }, true)
 	ProfileWrapper:ClaimBattlepassReward(player, level, "premium")
 
+	-- 🔥 Hier Battlepass-Daten syncen:
+	local updatedBP = ProfileWrapper:GetBattlepass(player)
+	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "Battlepass", updatedBP)
+
 	log(player.Name, "hat PREMIUM Battlepass-Level", level, "beansprucht")
 end)
+
 
