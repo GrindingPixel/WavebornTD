@@ -3,30 +3,24 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local ProfileStoreWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
-local CodeData = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
-local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
+local CodesDataModule = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
 
 --// Debug
 local DEBUG = true
-local function log(...)
-	if DEBUG then print("[CodeRedeemHandler]", ...) end
-end
-local function warnf(...)
-	if DEBUG then warn("[CodeRedeemHandler]", ...) end
-end
+local function log(...) if DEBUG then print("[CodeRedeemHandler]", ...) end end
+local function warnf(...) if DEBUG then warn("[CodeRedeemHandler]", ...) end end
 
 --// Remotes
 local redeemCodeEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode")
 local codeResultEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("CodeResultEvent")
 
 redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
-	if not ProfileWrapper:IsLoaded(player) then
+	if not ProfileStoreWrapper:IsLoaded(player) then
 		warnf("RedeemCode abgelehnt (Profil nicht geladen) für", player and player.Name)
 		codeResultEvent:FireClient(player, false, "PROFILE_NOT_LOADED")
 		return
@@ -42,43 +36,54 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 		return
 	end
 
-	local codeInfo = CodeData[codeStr]
+	local codeKey = string.upper(codeStr)
+	local codeInfo = CodesDataModule[codeKey]
 	if not codeInfo then
-		warnf("Unbekannter Promo-Code:", codeStr, "bei", player.Name)
+		warnf("Unbekannter Promo-Code:", codeKey, "bei", player.Name)
 		codeResultEvent:FireClient(player, false, "INVALID_CODE")
 		return
 	end
 
-	-- Prüfen, ob Code schon eingelöst wurde
-	local upgrades = ProfileWrapper:GetUpgrades(player)
-	if upgrades["Code_"..codeStr] then
-		warnf("Code bereits eingelöst:", codeStr, "bei", player.Name)
+	-- Profil holen
+	local profile = ProfileStoreWrapper:GetProfile(player)
+	if not profile then
+		warnf("Kein Profil gefunden bei", player.Name)
+		codeResultEvent:FireClient(player, false, "PROFILE_NOT_FOUND")
+		return
+	end
+
+	-- Bereits eingelöst?
+	profile.Data.RedeemedCodes = profile.Data.RedeemedCodes or {}
+	if profile.Data.RedeemedCodes[codeKey] then
+		warnf("Code bereits eingelöst:", codeKey, "bei", player.Name)
 		codeResultEvent:FireClient(player, false, "ALREADY_REDEEMED")
 		return
 	end
 
--- Belohnung vergeben und Feedback zusammenstellen
-local rewardType, rewardAmount, rewardId = codeInfo.RewardType, codeInfo.RewardAmount, codeInfo.RewardId
-
-if rewardType == "Gold" then
-	ProfileWrapper:AddGold(player, rewardAmount)
-
-elseif rewardType == "Gems" then
-	ProfileWrapper:AddGems(player, rewardAmount)
-
-elseif rewardType == "Item" and rewardId then
-	local itemType = ItemData[rewardId] and ItemData[rewardId].category
-	if itemType then
-		ProfileWrapper:AddItemTyped(player, itemType, rewardId, rewardAmount)
-	else
-		warn("[CodeReward] ❌ Kein gültiger ItemType für:", rewardId)
+	-- Premium prüfen
+	if codeInfo.PremiumOnly and not profile.Data.Battlepass.HasPremium then
+		warnf("Code benötigt Premium:", codeKey, "bei", player.Name)
+		codeResultEvent:FireClient(player, false, "PREMIUM_ONLY")
+		return
 	end
-end
 
+	-- Rewards vergeben über ProfileStoreWrapper
+	if codeInfo.Rewards then
+		ProfileStoreWrapper:GrantRewards(player, codeInfo.Rewards)
+		log("Rewards vergeben für Code:", codeKey, "an", player.Name)
+	else
+		warnf("Kein Rewards-Feld im Code:", codeKey)
+		codeResultEvent:FireClient(player, false, "NO_REWARD_DEFINED")
+		return
+	end
 
-	-- Als eingelöst markieren (empfohlen: eigenes Wrapper-Flag, hier per Upgrades)
-	upgrades["Code_"..codeStr] = true
+	-- Als eingelöst markieren
+	profile.Data.RedeemedCodes[codeKey] = true
 
-	log("Promo-Code eingelöst:", codeStr, "für", player.Name)
-	codeResultEvent:FireClient(player, true, "SUCCESS", rewardType, rewardAmount, rewardId)
+	log("Promo-Code erfolgreich eingelöst:", codeKey, "für", player.Name)
+
+	-- Reward-Infos an Client senden (erster Reward als Feedback)
+	-- Neue Version: Alle Rewards zusammen als Tabelle senden
+codeResultEvent:FireClient(player, true, "SUCCESS", codeInfo.Rewards)
+
 end)

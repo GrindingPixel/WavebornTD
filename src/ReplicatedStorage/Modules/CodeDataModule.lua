@@ -1,22 +1,62 @@
--- CodeDataModule.lua
--- Typ: ModuleScript (in ReplicatedStorage/Modules)
-
-return {
-    ["TEST2024"] = {
-        RewardType = "Gold",
-        RewardAmount = 1000,
-        Description = "Startbonus für Tester",
+local CodesDataModule = {
+    ["WELCOME"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+        },
     },
-    ["SUPERGEMS"] = {
-        RewardType = "Gems",
-        RewardAmount = 50,
-        Description = "Bonusgems für treue Spieler",
+    ["1KLIKES"] = {
+        Rewards = {
+            {type = "Token", id = "Attribute_Token", Amount = 1},
+        },
     },
-    ["MEGAFOOD"] = {
-        RewardType = "Scroll",
-        RewardId = "SummonScroll_Common",
-        RewardAmount = 5,
-        Description = "Gibt 5x SummonScroll_Common!",
+    ["WELCOME10"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 3}
+        },
     },
-    -- Beliebig viele Codes...
+    ["WELCOME11"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Token", id = "Attribute_Token", Amount = 3}
+        },
+    },
+    ["WELCOME12"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Token", id = "Attribute_Token", Amount = 3},
+            {type = "Token", id = "Reroll_Token", Amount = 3}
+        },
+    },
+    ["WELCOME162"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Token", id = "Attribute_Token", Amount = 3},
+            {type = "Token", id = "Reroll_Token", Amount = 3},
+            {type = "Material", id = "Universal_Fragment", Amount = 3}
+        },
+    },
+    ["WELCOME164"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Token", id = "Attribute_Token", Amount = 3},
+            {type = "Token", id = "Reroll_Token", Amount = 3},
+            {type = "Material", id = "Universal_Fragment", Amount = 3}
+        },
+    },
+    ["WELCOME165"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+            {type = "Token", id = "Attribute_Token", Amount = 3},
+            {type = "Token", id = "Reroll_Token", Amount = 3},
+            {type = "Material", id = "Universal_Fragment", Amount = 3}
+        },
+    },
+    ["WELCOME14"] = {
+        Rewards = {
+            {type = "Scroll", id = "SummonScroll_Common", Amount = 1},
+        },
+    }
 }
+
+return CodesDataModule
