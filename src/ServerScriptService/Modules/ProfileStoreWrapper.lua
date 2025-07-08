@@ -18,6 +18,8 @@ local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("B
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
+
 
 --// Einstellungen
 local DATASTORE_NAME = "WavebornTDPlayerData"
@@ -27,6 +29,9 @@ local DEBUG = true
 --// ProfileStore-Instanz
 local store = ProfileStore.New(DATASTORE_NAME, PlayerDataTemplate)
 local activeProfiles = {} -- [userId] = profile
+local systemsToWaitFor = { "Battlepass", "Codes", "Inventory", "Quests", "Shop", "Units" }
+local systemReady = {} -- [userId] = { [systemName] = true }
+
 
 local function log(...) if DEBUG then print("[ProfileStoreWrapper]", ...) end end
 local function warnf(...) if DEBUG then warn("[ProfileStoreWrapper]", ...) end end
@@ -508,7 +513,17 @@ local function onPlayerAdded(player)
 	end
 
 	activeProfiles[userId] = profile
+
+	-- Marker für alle Systeme setzen (nur hier, zentral und garantiert nach Profil-Init!)
+	ProfileWrapper:MarkSystemReady(player, "Battlepass")
+	ProfileWrapper:MarkSystemReady(player, "Shop")
+	ProfileWrapper:MarkSystemReady(player, "Inventory")
+	ProfileWrapper:MarkSystemReady(player, "Quests")
+	ProfileWrapper:MarkSystemReady(player, "Units")
+	ProfileWrapper:MarkSystemReady(player, "Codes")
+
 	ProfileLoadedEvent:FireClient(player)
+
 
 	profile.OnSessionEnd:Connect(function()
 		activeProfiles[userId] = nil
@@ -520,9 +535,27 @@ local function onPlayerAdded(player)
 	log("Profil geladen für", player.Name)
 end
 
+function ProfileWrapper:MarkSystemReady(player, system)
+	local userId = player.UserId
+	systemReady[userId] = systemReady[userId] or {}
+	systemReady[userId][system] = true
 
+	local allReady = true
+	for _, sys in ipairs(systemsToWaitFor) do
+		if not systemReady[userId][sys] then
+			allReady = false
+			break
+		end
+	end
 
-
+	if allReady then
+		ProfileLoadedEvent:FireClient(player)
+		log("✅ Alle Systeme bereit, ProfileLoadedEvent gesendet für", player.Name)
+		systemReady[userId] = nil
+	else
+		log("⏳ System-Ready für", system, "gesetzt – noch nicht alle Systeme fertig bei", player.Name)
+	end
+end
 
 local function onPlayerRemoving(player)
 	ProfileWrapper:ReleaseProfile(player)
@@ -540,6 +573,11 @@ end)
 function ProfileWrapper:GetProfile(player)
 	return getProfile(player)
 end
+
+IsProfileReady.OnServerInvoke = function(player)
+	return ProfileWrapper:IsLoaded(player)
+end
+
 
 task.spawn(function()
 	while true do

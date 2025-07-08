@@ -14,6 +14,8 @@ local PremiumShop = require(ReplicatedStorage.Modules.PremiumShopModule)
 --// REMOTES
 local ProfileChangedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local GetPurchases = ReplicatedStorage.Remotes.Profile:WaitForChild("GetPurchases")
+local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local panel = GuiResolver:GetPanel("ShopGui", "ShopPanel")
@@ -22,6 +24,17 @@ if not panel then return end
 local canvasGroup = panel:WaitForChild("CanvasGroup")
 local packsSection = canvasGroup:WaitForChild("PacksSection")
 local closeButton = canvasGroup:WaitForChild("ShopCloseButton")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// CONSTANTS
 local GLOBAL_PURCHASING_IMAGE = "rbxassetid://987654321"

@@ -3,10 +3,11 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileStoreWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local CodesDataModule = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
 
@@ -20,7 +21,7 @@ local redeemCodeEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode
 local codeResultEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("CodeResultEvent")
 
 redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
-	if not ProfileStoreWrapper:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("RedeemCode abgelehnt (Profil nicht geladen) für", player and player.Name)
 		codeResultEvent:FireClient(player, false, "PROFILE_NOT_LOADED")
 		return
@@ -45,7 +46,7 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 	end
 
 	-- Profil holen
-	local profile = ProfileStoreWrapper:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then
 		warnf("Kein Profil gefunden bei", player.Name)
 		codeResultEvent:FireClient(player, false, "PROFILE_NOT_FOUND")
@@ -67,9 +68,9 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 		return
 	end
 
-	-- Rewards vergeben über ProfileStoreWrapper
+	-- Rewards vergeben über ProfileWrapper
 	if codeInfo.Rewards then
-		ProfileStoreWrapper:GrantRewards(player, codeInfo.Rewards)
+		ProfileWrapper:GrantRewards(player, codeInfo.Rewards)
 		log("Rewards vergeben für Code:", codeKey, "an", player.Name)
 	else
 		warnf("Kein Rewards-Feld im Code:", codeKey)
@@ -84,6 +85,6 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 
 	-- Reward-Infos an Client senden (erster Reward als Feedback)
 	-- Neue Version: Alle Rewards zusammen als Tabelle senden
-codeResultEvent:FireClient(player, true, "SUCCESS", codeInfo.Rewards)
+	codeResultEvent:FireClient(player, true, "SUCCESS", codeInfo.Rewards)
 
 end)

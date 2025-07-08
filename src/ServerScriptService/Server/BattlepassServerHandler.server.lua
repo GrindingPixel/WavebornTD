@@ -39,13 +39,12 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 		end
 
 		if entry and (entry.free or entry.premium) then
-	levelData[i] = {
-		level = i,
-		free = entry.free,
-		premium = entry.premium,
-	}
-end
-
+			levelData[i] = {
+				level = i,
+				free = entry.free,
+				premium = entry.premium,
+			}
+		end
 	end
 
 	return {
@@ -89,7 +88,6 @@ ClaimFree.OnServerEvent:Connect(function(player, level)
 	log(player.Name, "hat FREE Battlepass-Level", level, "beansprucht")
 end)
 
-
 --// Premium Belohnung beanspruchen
 ClaimPremium.OnServerEvent:Connect(function(player, level)
 	if not ProfileWrapper:IsLoaded(player) then return end
@@ -129,5 +127,3 @@ ClaimPremium.OnServerEvent:Connect(function(player, level)
 
 	log(player.Name, "hat PREMIUM Battlepass-Level", level, "beansprucht")
 end)
-
-

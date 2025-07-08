@@ -9,6 +9,10 @@ local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
 local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 
+--// Remotes
+local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
+
 --// GUI
 local panel       = GuiResolver:GetPanel("ProfileGui", "ProfilePanel")
 local titlesPanel = GuiResolver:GetPanel("ProfileGui", "TitlesPanel")
@@ -28,6 +32,17 @@ local equipButton    = titlesGroup:FindFirstChild("EquipButton")
 local closeBtn       = profileGroup:FindFirstChild("ProfileCloseButton")
 local titlesBtn      = profileGroup:FindFirstChild("TitlesButton")
 local titleCloseBtn  = titlesGroup:FindFirstChild("TitleCloseButton")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// State
 local selectedTitle = nil

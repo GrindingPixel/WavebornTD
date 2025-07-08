@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-06-27)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-06)
 
 ---
 
@@ -15,14 +15,15 @@
 
 ## 🧾 2. Technische Kernsysteme
 
-| System          | Status | Beschreibung                                        |
-| --------------- | ------ | --------------------------------------------------- |
-| PanelManager    | ✅      | Panels mit OnOpen, Schließen, Debounce             |
-| PanelDebounce   | ✅      | Klickschutz für schnelle Interaktionen             |
-| GuiResolver     | ✅      | Einheitliche GUI-Zugriffe                          |
-| ServerDebounce  | ✅      | Serverseitige Klick-/Spam-Prüfung                  |
-| ProfileLoadedEvent | ✅   | Wird bei erfolgreichem Profil-Laden gefeuert       |
-| ProfileChangedEvent | ✅  | Wird bei Änderungen wie Purchases oder BP gesendet |
+| System               | Status | Beschreibung                                        |
+| ------------------- | ------ | --------------------------------------------------- |
+| PanelManager         | ✅      | Panels mit OnOpen, Schließen, Debounce             |
+| PanelDebounce        | ✅      | Klickschutz für schnelle Interaktionen             |
+| GuiResolver          | ✅      | Einheitliche GUI-Zugriffe                          |
+| ServerDebounce       | ✅      | Serverseitige Klick-/Spam-Prüfung                  |
+| ProfileLoadedEvent   | ✅      | Wird bei erfolgreichem Profil-Laden gefeuert       |
+| ProfileChangedEvent  | ✅      | Wird bei Änderungen wie Purchases oder BP gesendet |
+| IsProfileReady Remote| ✅      | Clients prüfen Serverstatus vor Ladeaktionen       |
 
 ---
 
@@ -35,7 +36,7 @@
 | PremiumShopModule      | ✅      | Produktdaten (ProductId, Rewards, Limits)           |
 | Purchases-System       | ✅      | One-Time & MaxPurchases live im Shop                |
 | UI-Feedback            | ✅      | Buttons mit GLOBAL_PURCHASING_IMAGE                 |
-| GetPurchases Remote    | ✅      | Liefert aktuelle Käufe beim Panel-Open für sofortige UI-Sperre |
+| GetPurchases Remote    | ✅      | Liefert aktuelle Käufe beim Panel-Open              |
 
 ---
 
@@ -48,7 +49,7 @@
 | BattlepassInfoProvider | ✅      | Leveldaten, EXP-Anforderungen, Seed-System         |
 | ProfileStoreWrapper    | ✅      | Battlepass-Verwaltung im Profil, Resets bei Seed-Wechsel |
 | PlayerDataTemplate     | ✅      | Battlepass-Felder: Seed, Level, EXP, Claimed etc.  |
-| Premiumkauf (DevProduct) | ✅    | BattlepassPremium wird als DevProduct gekauft und setzt HasPremium |
+| Premiumkauf (DevProduct) | ✅    | Wird als DevProduct gekauft, HasPremium gesetzt     |
 | LiveSync BP/Purchases  | ✅      | Premium-Status und Purchases werden korrekt synchronisiert |
 
 ---
@@ -59,7 +60,7 @@
 | --------------------- | ------ | ------------------------------------------------------ |
 | GrantRewards          | ✅      | Items & Units werden korrekt ins Inventar eingefügt    |
 | InventoryClientScript | ✅      | Live-Sync & Anzeige der Items                         |
-| ItemDataModule        | ✅      | Icons, Namen und Metadaten                           |
+| ItemDataModule        | ✅      | Icons, Namen, Metadaten                               |
 
 ---
 
@@ -69,7 +70,7 @@
 | ------------------ | ------ | ------------------------------------------------- |
 | UnitInventoryGui   | ✅      | GridFrame, InfoPanel, SlotBar                     |
 | EquipSystem        | ✅      | Equip/UnEquip mit UUID                           |
-| UnitServerHandler  | ✅      | Entfernt – durch ProfileWrapper ersetzt          |
+| UnitClientScript   | ✅      | Lädt Units, LiveSync, Slot-Anzeige               |
 | ProfileStoreWrapper| ✅      | AddUnit/RemoveUnit/GetUnits                      |
 
 ---
@@ -98,10 +99,10 @@
 
 | Element                 | Status | Beschreibung                                         |
 | ----------------------- | ------ | --------------------------------------------------- |
-| ProfileSyncService      | ✅      | Sorgt für Updates von Inventory, Purchases, Battlepass|
+| ProfileSyncService      | ✅      | Sorgt für Updates von Inventory, Purchases, Battlepass |
 | LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert         |
 | LiveSync Purchases      | ✅      | Shop-Buttons sperren sich nach Kauf-Limit           |
-| BattlepassClient        | ✅      | Premium-Status wird nach Kauf oder Claim sofort im UI angezeigt |
+| ProfileChanged Events   | ✅      | Battlepass, Purchases, Units etc. aktualisieren dynamisch |
 
 ---
 
@@ -110,26 +111,27 @@
 | Element             | Status | Beschreibung                                    |
 | ------------------- | ------ | ----------------------------------------------- |
 | ProfileStoreWrapper | ✅      | Speichert alle Daten via ProfileStore           |
-| PlayerDataTemplate  | ✅      | Neue Battlepass-Struktur & Purchases            |
+| PlayerDataTemplate  | ✅      | Battlepass, Purchases, Units                    |
 | AutoSave            | ✅      | Speichert Profile regelmäßig                   |
+| MarkerSystem        | ✅      | Alle Systeme setzen Ready-Marker vor ProfilRelease |
 
 ---
 
-## ✅ 11. Abgeschlossene Tasks (Stand: 2025-06-27)
+## ✅ 11. Abgeschlossene Tasks (Stand: 2025-07-06)
 
-- Shop-System vollständig refactort mit Limits und One-Time-Produkten
-- PremiumShopModule erstellt & integriert
-- Battlepass-System zurück auf Einzelpass konsolidiert
-- BattlepassClientScript refactort: UI, Claims, Premiumkauf, direkte Premium-Sync beim Öffnen
-- BattlepassServerHandler aktualisiert für Einzelpass inkl. Premium-Status-Verwaltung
-- ProfileWrapper: neue Methoden für Battlepass-Reset und Shop-Sync
-- LiveSync für Purchases und Battlepass implementiert
-- PlayerDataTemplate auf Battlepass & Purchases aktualisiert
-- GetPurchases-Remote für sofortige UI-Aktualisierung beim Panel-Open hinzugefügt
-- BattlepassPremium-Kauf als DevProduct umgesetzt, nicht mehr als Gamepass
-- Kauf-Status wird jetzt korrekt bei Seed-Wechsel zurückgesetzt
-- BattlepassClientScript prüft beim Öffnen Panel-Status live und aktualisiert korrekt
-- StatusLabel des BattlepassClientScripts wird nach Claims oder Käufen direkt aktualisiert
+- ProfileStoreWrapper aktualisiert mit Ready-Markern & synchronem `ProfileLoadedEvent`
+- PanelManager-Initialisierung auf Event-gesteuertes Setup umgestellt
+- BattlepassClientScript aktualisiert mit `IsProfileReady` + Catch für fehlerhafte Daten
+- UnitsClientScript refactort mit Fallback + LiveSync + Join-Datenanzeige
+- Lade-Reihenfolge von Inventory → Quests → Battlepass → Units eingeführt
+- Inventory funktioniert jetzt auch bei langsamer Verbindung
+- Shop-Käufe mit synchronen Purchases blockieren nun korrekt bei Limit
+- Alle PanelScripts reagieren auf Profilstatus korrekt – keine Race Conditions mehr
+- Server-Fehlermeldungen bei zu früher Nutzung entfernt
+- RewardSystem vergibt korrekt Items & Units
+- QuestSystem verarbeitet nun LiveSync und ClaimAll fehlerfrei
+- Codes-System vollständig implementiert
+- CloseButtons funktionieren jetzt in allen Panels zuverlässig
 
 ---
 
@@ -137,5 +139,15 @@
 
 - RewardPopupGui fertigstellen für Quests & Battlepass
 - ClaimAllButton für Battlepass implementieren
-- CodesPanel refactorn (inkl. CodeRedeemHandler)
+- Globales TooltipSystem (z. B. für Traits, Rewards, Quests, Items)
 - TradeSystem nach Release der Kernelemente entwickeln
+
+---
+
+## 🧪 Known Issues (Live Client)
+
+- Shop CancelBuy: UI bleibt sichtbar bei Abbruch
+- Equip von Units wird manchmal visuell nicht aktualisiert
+- Stage-Auswahl im MapTeleport noch ohne Back/Close-Logik
+- Kein Popup für Rewards bei Claims sichtbar
+- Tooltip-System placeholderhaft oder leer

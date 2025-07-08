@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage     = game:GetService("ServerStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Modules           = ServerScriptService:WaitForChild("Modules")
+local Players = game:GetService("Players")
 
 --// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
@@ -102,4 +103,3 @@ removeItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
 		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 	end
 end)
-

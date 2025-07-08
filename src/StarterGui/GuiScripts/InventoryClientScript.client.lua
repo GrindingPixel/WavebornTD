@@ -20,6 +20,7 @@ local InventoryFolder = ReplicatedStorage.Remotes:WaitForChild("Inventory")
 local GetInventoryData = InventoryFolder:WaitForChild("GetInventoryData")
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local panel = GuiResolver:GetPanel("InventoryGui", "InventoryPanel")
@@ -32,6 +33,17 @@ local gridFrame = canvas:WaitForChild("ItemScrollFrame")
 local itemTemplate = gridFrame:WaitForChild("ItemTemplate")
 local closeButton = canvas:WaitForChild("InventoryCloseButton")
 local allTab = tabsFrame:FindFirstChild("AllTab")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// State
 local currentTab = allTab and allTab.Name or "AllTab"
@@ -121,7 +133,6 @@ PanelManager:RegisterPanel(panel, {
 	end
 })
 
-ProfileLoadedEvent.OnClientEvent:Wait()
 
 --// Init Inventory einmalig vom Server
 local function loadInventory()

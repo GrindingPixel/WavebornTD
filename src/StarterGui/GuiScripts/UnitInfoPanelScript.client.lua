@@ -10,7 +10,10 @@ local UserInputService    = game:GetService("UserInputService")
 local GuiResolver         = require(ReplicatedStorage.Modules.GuiResolver)
 local UnitStats           = require(ReplicatedStorage.Modules.UnitStatsModule)
 local UnitAbilities       = require(ReplicatedStorage.Modules.UnitAbilitiesModule)
-local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+
+--// Remotes
+local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local gui         = GuiResolver:Get("UnitInventoryGui")
@@ -22,6 +25,17 @@ local infoPanel   = canvas:WaitForChild("UnitInfoPanel")
 local viewport    = infoPanel:WaitForChild("InfoUnitPreview")
 local scroll      = infoPanel:WaitForChild("ScrollingFrame")
 local statList    = scroll:WaitForChild("StatList")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 -- Pages
 local abilityPage = scroll:FindFirstChild("AbilityPage") or Instance.new("Frame")

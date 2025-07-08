@@ -13,6 +13,7 @@ local ClaimPremium        = ReplicatedStorage.Remotes.Battlepass:WaitForChild("C
 local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local ProfileChanged      = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local getPurchasesRemote  = ReplicatedStorage.Remotes.Profile:WaitForChild("GetPurchases")
+local IsProfileReady 	  = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// Modules
 local GuiResolver    = require(ReplicatedStorage.Modules:WaitForChild("GuiResolver"))
@@ -178,8 +179,26 @@ local function buildBattlepass(data)
 	updatePremiumStatus()
 end
 
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
+
+local info = GetBattlepassInfo:InvokeServer()
+if info then
+	print("[BattlepassClient] Battlepass-Daten beim Join erhalten, baue direkt auf...")
+	buildBattlepass(info)
+else
+	warn("[BattlepassClient] Battlepass konnte beim Join nicht geladen werden!")
+end
+
 -- Setup
-ProfileLoadedEvent.OnClientEvent:Wait()
 PanelManager:RegisterPanel(panel, {
 	OnOpen = function()
 		local getPurchasesRemote = ReplicatedStorage.Remotes.Profile:WaitForChild("GetPurchases")

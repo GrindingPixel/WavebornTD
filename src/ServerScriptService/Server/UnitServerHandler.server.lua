@@ -58,3 +58,4 @@ equipUnitEvent.OnServerEvent:Connect(function(player, slot, unitUUID)
 		warnf("EquipUnit fehlgeschlagen für", player.Name, "→", unitUUID)
 	end
 end)
+

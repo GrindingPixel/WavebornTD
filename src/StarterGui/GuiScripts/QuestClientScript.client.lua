@@ -14,6 +14,7 @@ local LocalDataCache = require(ReplicatedStorage.Modules.LocalDataCache)
 --// Remotes
 local ProfileChanged       = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local ProfileLoadedEvent   = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 local remotes              = ReplicatedStorage.Remotes.Quests
 local GetPlayerQuests      = remotes:WaitForChild("GetPlayerQuests")
 local ClaimQuest           = remotes:WaitForChild("ClaimQuest")
@@ -38,6 +39,17 @@ local descriptionLabel = infoFrame:WaitForChild("DescriptionLabel")
 local progressLabel    = infoFrame:WaitForChild("ProgressLabel")
 local rewardIconsFrame = infoFrame:WaitForChild("RewardIconsFrame")
 local claimButton      = infoFrame:WaitForChild("ClaimButton")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// Debug
 local DEBUG = true
@@ -199,9 +211,9 @@ function loadQuests(tabName)
 end
 
 --// Init
-ProfileLoadedEvent.OnClientEvent:Wait()
 PanelManager:RegisterPanel(panel, {
 	OnOpen = function()
+		print("[QuestClient] Panel geöffnet → starte Quest-Aufbau")
 		loadQuests(currentTab)
 	end,
 })

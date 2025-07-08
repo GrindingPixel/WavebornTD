@@ -10,6 +10,10 @@ local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 local NewsModule     = require(ReplicatedStorage.Modules.NewsModule)
 
+--// Remotes
+local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
+
 --// GUI
 local panel = GuiResolver:GetPanel("NewsGui", "NewsPanel")
 if not panel then return end
@@ -21,6 +25,17 @@ local newsBody    = newsContent:WaitForChild("NewsBody")
 local newsImage   = newsContent:WaitForChild("NewsImage")
 local newsList    = canvasGroup:WaitForChild("NewsList")
 local closeButton = canvasGroup:WaitForChild("NewsCloseButton")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// State
 local newsData = NewsModule.NewsData

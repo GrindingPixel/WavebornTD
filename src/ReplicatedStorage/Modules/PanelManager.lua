@@ -9,8 +9,8 @@ local PanelManager = {}
 --// State
 PanelManager.RegisteredPanels     = {}
 PanelManager.OriginalSizes        = {}
-PanelManager.CurrentlyOpenPanel  = nil
-PanelManager.OpenHandlers        = {} -- [Instance] = function
+PanelManager.CurrentlyOpenPanel   = nil
+PanelManager.OpenHandlers         = {} -- [Instance] = function
 
 -- Panel registrieren
 function PanelManager:RegisterPanel(panel, options)
@@ -34,6 +34,13 @@ function PanelManager:OpenPanel(panel)
 	if self.CurrentlyOpenPanel and self.CurrentlyOpenPanel ~= panel and self.CurrentlyOpenPanel.Visible then
 		print("PanelManager: Schließe vorheriges Panel:", self.CurrentlyOpenPanel.Name)
 		self:ClosePanel(self.CurrentlyOpenPanel)
+	end
+
+	-- ScreenGui aktivieren
+	local screenGui = panel:FindFirstAncestorWhichIsA("ScreenGui")
+	if screenGui and not screenGui.Enabled then
+		screenGui.Enabled = true
+		print("PanelManager: ScreenGui aktiviert:", screenGui.Name)
 	end
 
 	-- Panel sichtbar machen
@@ -89,11 +96,43 @@ function PanelManager:ClosePanel(panel)
 			if panel == self.CurrentlyOpenPanel then
 				self.CurrentlyOpenPanel = nil
 			end
+
+			-- Prüfe, ob keine Panels in dieser ScreenGui mehr sichtbar sind → ScreenGui deaktivieren
+			local screenGui = panel:FindFirstAncestorWhichIsA("ScreenGui")
+			if screenGui then
+				local anyVisible = false
+				for _, desc in ipairs(screenGui:GetDescendants()) do
+					if desc:IsA("GuiObject") and desc.Visible then
+						anyVisible = true
+						break
+					end
+				end
+				if not anyVisible then
+					screenGui.Enabled = false
+					print("PanelManager: ScreenGui deaktiviert:", screenGui.Name)
+				end
+			end
 		end)
 	else
 		panel.Visible = false
 		if panel == self.CurrentlyOpenPanel then
 			self.CurrentlyOpenPanel = nil
+		end
+
+		-- Prüfe, ob keine Panels mehr sichtbar sind → ScreenGui deaktivieren
+		local screenGui = panel:FindFirstAncestorWhichIsA("ScreenGui")
+		if screenGui then
+			local anyVisible = false
+			for _, desc in ipairs(screenGui:GetDescendants()) do
+				if desc:IsA("GuiObject") and desc.Visible then
+					anyVisible = true
+					break
+				end
+			end
+			if not anyVisible then
+				screenGui.Enabled = false
+				print("PanelManager: ScreenGui deaktiviert:", screenGui.Name)
+			end
 		end
 	end
 end

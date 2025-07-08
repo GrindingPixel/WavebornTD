@@ -15,6 +15,7 @@ local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("Profi
 local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local GetPlayerUnitsFunction = ReplicatedStorage.Remotes.Units:WaitForChild("GetPlayerUnits")
 local EquipUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("EquipUnit")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local gui = GuiResolver:Get("UnitInventoryGui")
@@ -32,6 +33,10 @@ local infoPanel = canvas:WaitForChild("UnitInfoPanel")
 local closeButton = canvas:WaitForChild("UnitCloseButton")
 local equipButton = infoPanel:WaitForChild("EquipButton")
 local unequipButton = infoPanel:WaitForChild("UnEquipButton")
+
+-- Warte auf Profil-Initialisierung
+
+
 
 --// State
 local unitList = {}
@@ -196,6 +201,30 @@ if closeButton then
 		PanelManager:ClosePanel(panel)
 	end)
 end
+
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
+
+local unitsData = GetPlayerUnitsFunction:InvokeServer()
+if unitsData then
+	print("[UnitClient] Units beim Join erhalten, baue direkt auf...")
+	unitList = unitsData
+	refreshInventoryGrid()
+	refreshEquipSlots()
+	infoPanel.Visible = false
+	currentSelectedUnit = nil
+else
+	warn("[UnitClient] Units konnten beim Join nicht geladen werden!")
+end
+
+
 
 --// PanelManager (mit OnOpen → LoadUnits)
 PanelManager:RegisterPanel(panel, {

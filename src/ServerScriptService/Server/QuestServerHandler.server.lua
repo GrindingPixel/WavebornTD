@@ -139,3 +139,4 @@ getQuestsFunction.OnServerInvoke = function(player, questType)
 	log("Quests für", player.Name, "Typ:", questType, "abgerufen")
 	return result
 end
+

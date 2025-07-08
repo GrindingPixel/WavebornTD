@@ -13,6 +13,8 @@ local ItemDataModule = require(ReplicatedStorage.Modules.ItemDataModule)
 --// Remotes
 local redeemCodeEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode")
 local codeResultEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("CodeResultEvent")
+local ProfileLoadedEvent  = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
+local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local panel = GuiResolver:GetPanel("CodesGui", "CodesPanel")
@@ -25,6 +27,17 @@ local feedbackLabel = canvasGroup:WaitForChild("FeedbackLabel")
 local closeButton = canvasGroup:WaitForChild("CodesCloseButton")
 local rewardsFrame = canvasGroup:WaitForChild("RewardsFrame")
 local rewardTemplate = rewardsFrame:WaitForChild("RewardTemplate")
+
+-- Warte auf Profil-Initialisierung
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
+if not isReady then
+	-- Profil ist noch nicht fertig → warte auf Ready-Signal
+	ProfileLoadedEvent.OnClientEvent:Wait()
+end
 
 --// Init
 PanelManager:RegisterPanel(panel)
