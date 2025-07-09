@@ -159,23 +159,50 @@ function ProfileWrapper:GetUnits(player)
 	local profile = getProfile(player)
 	if not profile then return {} end
 
-	local result = {}
-	for uuid, unit in pairs(profile.Data.Units or {}) do
-		local baseData = UnitDataModule.GetUnitData(unit.Id)
-		table.insert(result, {
-			UUID = uuid,
-			Data = unit,
-			BaseStar = baseData and baseData.BaseStar or 0,
-		})
+	local equippedOrder = {}
+	local equippedSet = {}
+
+	-- 🔁 Erst Equipped Units in Slot-Reihenfolge einfügen
+	for i = 1, 6 do
+		local uuid = profile.Data.EquippedUnits[i]
+		if uuid and profile.Data.Units[uuid] then
+			local unit = profile.Data.Units[uuid]
+			local baseData = UnitDataModule.GetUnitData(unit.Id)
+			table.insert(equippedOrder, {
+				UUID = uuid,
+				Data = unit,
+				BaseStar = baseData and baseData.BaseStar or 0,
+			})
+			equippedSet[uuid] = true
+		end
 	end
 
-	-- Standard-Sortierung: nach BaseStar absteigend
-	table.sort(result, function(a, b)
+	-- 🔁 Danach alle unequipped Units einfügen (sortiert)
+	local otherUnits = {}
+	for uuid, unit in pairs(profile.Data.Units or {}) do
+		if not equippedSet[uuid] then
+			local baseData = UnitDataModule.GetUnitData(unit.Id)
+			table.insert(otherUnits, {
+				UUID = uuid,
+				Data = unit,
+				BaseStar = baseData and baseData.BaseStar or 0,
+			})
+		end
+	end
+
+	-- 📊 Nach BaseStar sortieren
+	table.sort(otherUnits, function(a, b)
 		return a.BaseStar > b.BaseStar
 	end)
 
-	return result
+	-- 🔗 Kombinieren: Equipped zuerst, dann Rest
+	for _, entry in ipairs(otherUnits) do
+		table.insert(equippedOrder, entry)
+	end
+
+	return equippedOrder
 end
+
 
 function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
@@ -230,15 +257,32 @@ function ProfileWrapper:EquipUnit(player, slot, unitUUID)
 	local profile = getProfile(player)
 	if not profile then return false end
 
+	-- 🔧 UNEQUIP → Slot leeren
+	if unitUUID == "" then
+		profile.Data.EquippedUnits[slot] = nil
+		log("❌ Slot", slot, "geleert bei", player.Name)
+		return true
+	end
+
+	-- 🔒 Prüfen, ob Unit existiert
 	if not profile.Data.Units[unitUUID] then
-		warnf("❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
+		warn("[Units] ❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
 		return false
 	end
 
+	-- 🧹 Vorherige Vorkommen entfernen (1x UUID = 1 Slot)
+	for s = 1, 6 do
+		if profile.Data.EquippedUnits[s] == unitUUID then
+			profile.Data.EquippedUnits[s] = nil
+		end
+	end
+
+	-- ✅ Equip in gewünschten Slot
 	profile.Data.EquippedUnits[slot] = unitUUID
 	log("🎮 Unit", unitUUID, "auf Slot", slot, "equippt bei", player.Name)
 	return true
 end
+
 
 function ProfileWrapper:GetEquippedUnits(player)
 	local profile = getProfile(player)
@@ -549,6 +593,17 @@ function ProfileWrapper:MarkSystemReady(player, system)
 	end
 
 	if allReady then
+		-- 🔧 EquippedSlots direkt setzen
+		local equippedSlots = ProfileWrapper:GetEquippedUnits(player)
+		for s = 1, 6 do
+			local uuid = equippedSlots[s]
+			if uuid then
+				player:SetAttribute("EquippedSlot" .. s, uuid)
+			else
+				player:SetAttribute("EquippedSlot" .. s, nil)
+			end
+		end
+
 		ProfileLoadedEvent:FireClient(player)
 		log("✅ Alle Systeme bereit, ProfileLoadedEvent gesendet für", player.Name)
 		systemReady[userId] = nil
@@ -556,6 +611,7 @@ function ProfileWrapper:MarkSystemReady(player, system)
 		log("⏳ System-Ready für", system, "gesetzt – noch nicht alle Systeme fertig bei", player.Name)
 	end
 end
+
 
 local function onPlayerRemoving(player)
 	ProfileWrapper:ReleaseProfile(player)

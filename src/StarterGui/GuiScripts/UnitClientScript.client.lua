@@ -34,15 +34,20 @@ local closeButton = canvas:WaitForChild("UnitCloseButton")
 local equipButton = infoPanel:WaitForChild("EquipButton")
 local unequipButton = infoPanel:WaitForChild("UnEquipButton")
 
--- Warte auf Profil-Initialisierung
-
-
-
 --// State
 local unitList = {}
 local currentSelectedUnit = nil
 
 --// Funktionen
+local function isUnitEquipped(uuid)
+	for i = 1, 6 do
+		if Players.LocalPlayer:GetAttribute("EquippedSlot" .. i) == uuid then
+			return true
+		end
+	end
+	return false
+end
+
 local function renderUnitPreview(viewportFrame, modelName)
 	viewportFrame:ClearAllChildren()
 	viewportFrame.BackgroundTransparency = 1
@@ -113,16 +118,7 @@ local function refreshInventoryGrid()
 					infoPanel:FindFirstChild("TypeIcon").Image = "rbxassetid://TYPE_ICON_ID"
 					infoPanel:FindFirstChild("TraitIcon").Image = "rbxassetid://TRAIT_ICON_ID"
 
-					local isEquipped = false
-					for _, v in pairs(slotBar:GetChildren()) do
-						if v:IsA("Frame") and v:FindFirstChild("ViewUnitEquipSlot1") then
-							if v.ViewUnitEquipSlot1:FindFirstChild(unitUUID) then
-								isEquipped = true
-								break
-							end
-						end
-					end
-
+					local isEquipped = isUnitEquipped(unitUUID)
 					equipButton.Visible = not isEquipped
 					unequipButton.Visible = isEquipped
 				end)
@@ -191,10 +187,22 @@ equipButton.MouseButton1Click:Connect(function()
 end)
 
 unequipButton.MouseButton1Click:Connect(function()
-	currentSelectedUnit = nil
+	if not currentSelectedUnit then return end
+	local uuid = currentSelectedUnit.UUID
+
+	for i = 1, 6 do
+		local attr = Players.LocalPlayer:GetAttribute("EquippedSlot" .. i)
+		if attr == uuid then
+			EquipUnitEvent:FireServer(i, "") -- leeren Slot setzen
+			task.wait(0.1)
+		end
+	end
+
+	task.wait(0.2)
 	loadUnits()
 	infoPanel.Visible = false
 end)
+
 
 if closeButton then
 	closeButton.MouseButton1Click:Connect(function()
@@ -202,6 +210,7 @@ if closeButton then
 	end)
 end
 
+-- Warte auf Profil-Initialisierung
 local isReady = false
 pcall(function()
 	isReady = IsProfileReady:InvokeServer()
@@ -223,7 +232,6 @@ if unitsData then
 else
 	warn("[UnitClient] Units konnten beim Join nicht geladen werden!")
 end
-
 
 
 --// PanelManager (mit OnOpen → LoadUnits)
