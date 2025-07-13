@@ -63,17 +63,18 @@ end)
 
 --// Panels registrieren
 local panelMap = {
-	{ gui = "BattlepassGui",  panel = "BattlepassPanel" },
-	{ gui = "CodesGui",       panel = "CodesPanel" },
-	{ gui = "NewsGui",        panel = "NewsPanel" },
-	{ gui = "ShopGui",        panel = "ShopPanel" },
-	{ gui = "ProfileGui",     panel = "ProfilePanel" },
-	{ gui = "ProfileGui",     panel = "TitlesPanel" },
-	{ gui = "FastTravelGui",  panel = "FastTravelPanel" },
-	{ gui = "QuestGui",       panel = "QuestPanel" },
-	{ gui = "InventoryGui",   panel = "InventoryPanel" },
+	{ gui = "BattlepassGui",  	panel = "BattlepassPanel" },
+	{ gui = "CodesGui",       	panel = "CodesPanel" },
+	{ gui = "NewsGui",        	panel = "NewsPanel" },
+	{ gui = "ShopGui",        	panel = "ShopPanel" },
+	{ gui = "ProfileGui",     	panel = "ProfilePanel" },
+	{ gui = "ProfileGui",     	panel = "TitlesPanel" },
+	{ gui = "FastTravelGui",  	panel = "FastTravelPanel" },
+	{ gui = "QuestGui",       	panel = "QuestPanel" },
+	{ gui = "InventoryGui",   	panel = "InventoryPanel" },
 	{ gui = "UnitInventoryGui", panel = "UnitInventoryPanel" },
-	{ gui = "MapTeleportGui", panel = "MapTeleportPanel" },
+	{ gui = "MapTeleportGui", 	panel = "MapTeleportPanel" },
+	{ gui = "TDGui", 		  	panel = "TDPanel" },
 }
 
 for _, entry in ipairs(panelMap) do

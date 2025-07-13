@@ -4,7 +4,10 @@
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Modules = ServerScriptService:WaitForChild("Modules")
+local Server = ServerScriptService:WaitForChild("Server")
+local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
 local HttpService = game:GetService("HttpService")
 
 --// Modules
@@ -29,7 +32,30 @@ local DEBUG = true
 --// ProfileStore-Instanz
 local store = ProfileStore.New(DATASTORE_NAME, PlayerDataTemplate)
 local activeProfiles = {} -- [userId] = profile
-local systemsToWaitFor = { "Battlepass", "Codes", "Inventory", "Quests", "Shop", "Units" }
+
+--// MapMeta basierend auf MapType
+local systemsToWaitFor = {}
+
+local function check(handlerName: string, markerName: string)
+	local scriptObj = Server:FindFirstChild(handlerName)
+		or TowerDefense:FindFirstChild(handlerName)
+	if scriptObj and scriptObj:IsA("Script") then
+		if scriptObj.Enabled then
+			table.insert(systemsToWaitFor, markerName)
+			if DEBUG then print("[ProfileStoreWrapper] ✔️", markerName, "aktiviert über", handlerName) end
+		else
+			if DEBUG then print("[ProfileStoreWrapper] ⛔", markerName, "ist deaktiviert (", handlerName, ")") end
+		end
+	end
+end
+
+check("ShopServerHandler", "Shop")
+check("QuestServerHandler", "Quests")
+check("UnitServerHandler", "Units")
+check("BattlepassServerHandler", "Battlepass")
+check("CodesServerHandler", "Codes")
+check("InventoryServerHandler", "Inventory")
+
 local systemReady = {} -- [userId] = { [systemName] = true }
 
 
@@ -558,15 +584,20 @@ local function onPlayerAdded(player)
 
 	activeProfiles[userId] = profile
 
-	-- Marker für alle Systeme setzen (nur hier, zentral und garantiert nach Profil-Init!)
-	ProfileWrapper:MarkSystemReady(player, "Battlepass")
-	ProfileWrapper:MarkSystemReady(player, "Shop")
-	ProfileWrapper:MarkSystemReady(player, "Inventory")
-	ProfileWrapper:MarkSystemReady(player, "Quests")
-	ProfileWrapper:MarkSystemReady(player, "Units")
-	ProfileWrapper:MarkSystemReady(player, "Codes")
+-- Marker für alle aktiven Systeme setzen
+for _, system in ipairs(systemsToWaitFor) do
+	if DEBUG then
+		print("[ProfileStoreWrapper] ✅ Setze Marker für aktives System:", system)
+	end
+	ProfileWrapper:MarkSystemReady(player, system)
+end
 
-	ProfileLoadedEvent:FireClient(player)
+-- GUI-Sync auslösen
+ProfileLoadedEvent:FireClient(player)
+
+if DEBUG then
+	print("[ProfileStoreWrapper] ✅ ProfileLoadedEvent gesendet für", player.Name)
+end
 
 
 	profile.OnSessionEnd:Connect(function()

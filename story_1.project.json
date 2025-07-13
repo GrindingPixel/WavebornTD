@@ -1,0 +1,48 @@
+{
+  "name": "story_1",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      },
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "Libs": {
+        "$path": "src/ReplicatedStorage/Libs"
+      }
+    },
+        "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/ServerScriptService/Server"
+      },
+      "Modules": {
+        "$path": "src/ServerScriptService/Modules"
+      },
+      "Debug": {
+        "$path": "src/ServerScriptService/Debug"
+      },
+      "TowerDefense": {
+        "$path": "src/ServerScriptService/TowerDefense"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "GuiScripts": {
+        "$path": "src/StarterGui/GuiScripts"
+      },
+      "TDGuiScripts": {
+        "$path": "src/StarterGui/TDGuiScripts"
+      }
+    }
+  }
+}

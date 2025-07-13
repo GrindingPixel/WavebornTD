@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-06)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-09)
 
 ---
 
@@ -66,12 +66,15 @@
 
 ## 🧠 6. Units-System
 
-| Element            | Status | Beschreibung                                      |
-| ------------------ | ------ | ------------------------------------------------- |
-| UnitInventoryGui   | ✅      | GridFrame, InfoPanel, SlotBar                     |
-| EquipSystem        | ✅      | Equip/UnEquip mit UUID                           |
-| UnitClientScript   | ✅      | Lädt Units, LiveSync, Slot-Anzeige               |
-| ProfileStoreWrapper| ✅      | AddUnit/RemoveUnit/GetUnits                      |
+| Element            | Status | Beschreibung                                                                 |
+| ------------------ | ------ | ---------------------------------------------------------------------------- |
+| UnitInventoryGui   | ✅      | GridFrame, InfoPanel, SlotBar                                               |
+| EquipSystem        | ✅      | Equip/UnEquip mit UUID, Schutz gegen mehrfaches Ausrüsten                   |
+| UnitClientScript   | ✅      | Lädt Units, LiveSync, Slot-Anzeige, Equip-Status sofort erkennbar          |
+| ProfileStoreWrapper| ✅      | AddUnit/RemoveUnit/GetUnits + Equip/Unequip-Logik                           |
+| EquipOrder Sort    | ✅      | Ausgerüstete Units stehen im Inventory oben (Slots 1–6 vor allen anderen)  |
+| EquipButtonFix     | ✅      | Equip/Unequip Buttons aktualisieren sich korrekt beim Öffnen               |
+| EquipInitSync      | ✅      | EquippedSlot1–6 werden direkt beim Profil-Ready gesetzt                     |
 
 ---
 
@@ -103,6 +106,7 @@
 | LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert         |
 | LiveSync Purchases      | ✅      | Shop-Buttons sperren sich nach Kauf-Limit           |
 | ProfileChanged Events   | ✅      | Battlepass, Purchases, Units etc. aktualisieren dynamisch |
+| EquipSlots Sync         | ✅      | EquippedSlot1–6 werden automatisch bei Join + Equip gesetzt |
 
 ---
 
@@ -117,21 +121,17 @@
 
 ---
 
-## ✅ 11. Abgeschlossene Tasks (Stand: 2025-07-06)
+## ✅ 11. Abgeschlossene Tasks (Stand: 2025-07-09)
 
-- ProfileStoreWrapper aktualisiert mit Ready-Markern & synchronem `ProfileLoadedEvent`
-- PanelManager-Initialisierung auf Event-gesteuertes Setup umgestellt
-- BattlepassClientScript aktualisiert mit `IsProfileReady` + Catch für fehlerhafte Daten
-- UnitsClientScript refactort mit Fallback + LiveSync + Join-Datenanzeige
-- Lade-Reihenfolge von Inventory → Quests → Battlepass → Units eingeführt
-- Inventory funktioniert jetzt auch bei langsamer Verbindung
-- Shop-Käufe mit synchronen Purchases blockieren nun korrekt bei Limit
-- Alle PanelScripts reagieren auf Profilstatus korrekt – keine Race Conditions mehr
-- Server-Fehlermeldungen bei zu früher Nutzung entfernt
-- RewardSystem vergibt korrekt Items & Units
-- QuestSystem verarbeitet nun LiveSync und ClaimAll fehlerfrei
-- Codes-System vollständig implementiert
-- CloseButtons funktionieren jetzt in allen Panels zuverlässig
+- EquipSystem blockiert jetzt mehrfaches Ausrüsten derselben UUID
+- EquipSlots werden direkt beim Join korrekt gesetzt (EquippedSlot1–6)
+- Equip-Button im Inventory zeigt jetzt korrekt UNEQUIP, wenn Unit bereits aktiv
+- UnitClientScript aktualisiert mit neuer `isUnitEquipped()`-Logik
+- Unequip-Funktion über leeren Equip-Call ("" als UUID) umgesetzt
+- Inventory zeigt immer zuerst die ausgerüsteten Units (Slots 1–6)
+- ProfileWrapper:EquipUnit() vollständig überarbeitet (inkl. Slot-Reset, UUID-Prüfung)
+- Join-Bug gefixt: Equip-Slots und Buttons sind beim Öffnen direkt korrekt
+- Kein mehrfaches LoadUnits mehr nötig
 
 ---
 
@@ -147,7 +147,7 @@
 ## 🧪 Known Issues (Live Client)
 
 - Shop CancelBuy: UI bleibt sichtbar bei Abbruch
-- Equip von Units wird manchmal visuell nicht aktualisiert
+- Equip von Units wird manchmal visuell nicht aktualisiert (nur bei sehr hoher Latenz)
 - Stage-Auswahl im MapTeleport noch ohne Back/Close-Logik
 - Kein Popup für Rewards bei Claims sichtbar
 - Tooltip-System placeholderhaft oder leer
