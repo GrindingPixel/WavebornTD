@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
 
 --// LocalPlayer
 local LocalPlayer = Players.LocalPlayer
@@ -26,7 +27,6 @@ local UnitPlacementEnabled = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitFo
 --// GUI
 local menuGui = GuiResolver:Get("MainMenuGui")
 local EquipSlotBar = if menuGui then menuGui:FindFirstChild("EquipSlotBar") else nil
-
 if not menuGui or not EquipSlotBar then
 	warn("❌ MainMenuGui oder EquipSlotBar fehlt – Platzierung deaktiviert")
 	return
@@ -36,10 +36,13 @@ end
 local canPlaceUnits = false
 local placing = false
 local ghostModel: Model? = nil
+local highlight: Highlight? = nil
 local selectedSlot: number? = nil
 local selectedUUID: string? = nil
 local selectedUnitName: string? = nil
+local placementCircle: MeshPart? = nil
 local slotButtons = {}
+local currentValid = false
 
 --// Profil-Daten
 local unitProfileData: { [string]: { Id: string } } = {}
@@ -47,8 +50,52 @@ local unitProfileData: { [string]: { Id: string } } = {}
 --// Platzierungsfreigabe
 UnitPlacementEnabled.Event:Connect(function()
 	canPlaceUnits = true
-	print("▶️ Platzierung jetzt erlaubt")
 end)
+
+--// Utility: Farbe tweenen
+local function tweenColor(from: Color3, to: Color3, alpha: number): Color3
+	return from:Lerp(to, alpha)
+end
+
+--// BoundingBox gegen WalkArea prüfen
+local function isGhostOnWalkArea(): boolean
+	if not ghostModel or not ghostModel.PrimaryPart then return false end
+
+	local cframe = ghostModel:GetPrimaryPartCFrame()
+	local size = ghostModel:GetExtentsSize()
+
+	-- Prüfe WalkArea
+	local walkArea = Workspace:FindFirstChild("WalkArea")
+	if walkArea then
+		local params = OverlapParams.new()
+		params.FilterType = Enum.RaycastFilterType.Whitelist
+		params.FilterDescendantsInstances = walkArea:GetChildren()
+		if #Workspace:GetPartBoundsInBox(cframe, size, params) > 0 then
+			return true
+		end
+	end
+
+	-- Prüfe bestehende platzierte Units
+	local unitFolder = Workspace:FindFirstChild("Units")
+	if unitFolder then
+		local params = OverlapParams.new()
+		params.FilterType = Enum.RaycastFilterType.Whitelist
+		params.FilterDescendantsInstances = unitFolder:GetDescendants()
+		if #Workspace:GetPartBoundsInBox(cframe, size, params) > 0 then
+			return true
+		end
+	end
+
+	return false
+end
+
+
+--// Ghost einfärben
+local function setGhostHighlight(valid: boolean)
+	if not highlight then return end
+	local target = valid and Color3.fromRGB(110, 255, 110) or Color3.fromRGB(255, 80, 80)
+	highlight.FillColor = tweenColor(highlight.FillColor, target, 0.3)
+end
 
 --// Ghost löschen
 local function clearGhost()
@@ -56,16 +103,30 @@ local function clearGhost()
 		ghostModel:Destroy()
 		ghostModel = nil
 	end
+	if placementCircle then
+		placementCircle:Destroy()
+		placementCircle = nil
+	end
+	highlight = nil
 end
 
 --// Ghost verschieben
 local function updateGhostPosition(position: Vector3)
-	local model = ghostModel
-	if model and model.PrimaryPart then
-		local heightOffset = model:GetExtentsSize().Y / 2
-		model:PivotTo(CFrame.new(position + Vector3.new(0, heightOffset, 0)))
+	if not ghostModel or not ghostModel.PrimaryPart then return end
+	local heightOffset = ghostModel:GetExtentsSize().Y / 2
+	ghostModel:PivotTo(CFrame.new(position + Vector3.new(0, heightOffset, 0)))
+	local isValid = not isGhostOnWalkArea()
+	currentValid = isValid
+	setGhostHighlight(isValid)
+	if placementCircle and ghostModel and ghostModel.PrimaryPart then
+		local ghostCF = ghostModel:GetPrimaryPartCFrame()
+		local ghostSize = ghostModel:GetExtentsSize()
+		local bottomY = ghostCF.Position.Y - (ghostSize.Y / 2)
+		placementCircle.Position = Vector3.new(ghostCF.Position.X, bottomY + 0.05, ghostCF.Position.Z)
+		placementCircle.Color = currentValid and Color3.fromRGB(110, 255, 110) or Color3.fromRGB(255, 80, 80)
 	end
 end
+
 
 --// Mausposition im 3D-Raum holen
 local function getMouseWorldPosition(): Vector3?
@@ -73,55 +134,75 @@ local function getMouseWorldPosition(): Vector3?
 	if not camera then return nil end
 
 	local mouseLocation = UserInputService:GetMouseLocation()
-	local ray = camera:ScreenPointToRay(mouseLocation.X, mouseLocation.Y)
+	local ray = camera:ViewportPointToRay(mouseLocation.X, mouseLocation.Y)
+
+	local ignoreList = {LocalPlayer.Character}
+
+	if ghostModel then
+		table.insert(ignoreList, ghostModel)
+	end
+	if placementCircle then
+		table.insert(ignoreList, placementCircle)
+	end
 
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = {LocalPlayer.Character, ghostModel or Instance.new("Folder")}
+	params.FilterDescendantsInstances = ignoreList
 	params.IgnoreWater = true
 
 	local result = Workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 	return result and result.Position or nil
 end
 
+
+
 --// Platzierung starten
 local function startPlacement(modelName: string)
-	if not canPlaceUnits then
-		warn("🚫 Platzierung nicht erlaubt")
-		return
-	end
-
+	if not canPlaceUnits then return end
 	clearGhost()
-
 	local unitModelsFolder = ReplicatedStorage:FindFirstChild("UnitModels")
-	if not unitModelsFolder then
-		warn("❌ UnitModels fehlt")
-		return
-	end
-
+	if not unitModelsFolder then return end
 	local modelTemplate = unitModelsFolder:FindFirstChild(modelName)
-	if not modelTemplate or not modelTemplate:IsA("Model") then
-		warn("❌ Ungültiges Modell:", modelName)
-		return
-	end
-
+	if not modelTemplate or not modelTemplate:IsA("Model") then return end
 	local preview = modelTemplate:Clone()
 	preview.Name = "GhostPreview"
 	preview.Parent = Workspace
-
 	for _, d in ipairs(preview:GetDescendants()) do
 		if d:IsA("BasePart") then
 			d.Transparency = 0.5
 			d.CanCollide = false
 		end
 	end
+if not preview.PrimaryPart then return end
+ghostModel = preview
+-- Placement Circle erzeugen
+local assets = ReplicatedStorage:FindFirstChild("Assets")
+if assets then
+	local circleTemplate = assets:FindFirstChild("PlacementCircle")
+	if circleTemplate and circleTemplate:IsA("BasePart") then
+		local circle = circleTemplate:Clone()
+		circle.Anchored = true
+		circle.CanCollide = false
+		circle.Transparency = 0.4
+		circle.Parent = Workspace
+		placementCircle = circle
+		placing = true
 
-	if not preview.PrimaryPart then
-		warn("❌ GhostModel hat keine PrimaryPart")
+		-- Puls-Animation
+		local tween = TweenService:Create(circle, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Size = Vector3.new(3.4, 0.1, 3.4)
+		})
+		tween:Play()
 	end
+end
 
-	ghostModel = preview
-	placing = true
+	-- Highlight erstellen
+	highlight = Instance.new("Highlight")
+	highlight.Adornee = preview
+	highlight.FillColor = Color3.new(1, 1, 1)
+	highlight.FillTransparency = 0.4
+	highlight.OutlineTransparency = 1
+	highlight.Parent = preview
 end
 
 --// Platzierung abbrechen
@@ -162,10 +243,9 @@ end
 --// Mausplatzierung
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed or not placing or not canPlaceUnits then return end
-
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		local pos = getMouseWorldPosition()
-		if pos and selectedUnitName and selectedUUID then
+		if pos and selectedUnitName and selectedUUID and currentValid then
 			placeTowerEvent:FireServer(selectedUnitName, selectedUUID, pos)
 			cancelPlacement()
 		end

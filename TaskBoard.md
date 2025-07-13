@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-09)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-13)
 
 ---
 
@@ -9,7 +9,7 @@
 | default.project.json         | ✅      | Konfiguriert, Scripts korrekt zugewiesen        |
 | ModuleScript-Struktur        | ✅      | Einzigartige Module pro Funktion                |
 | Rojo-Setup                   | ✅      | Projektstruktur unter src/                      |
-| Script-Format                | ✅      | Alle Dateien UTF-8, einheitliches Line-Ending   |
+| Script-Format                | ✅      | UTF-8 + einheitliches Line-Ending               |
 
 ---
 
@@ -78,7 +78,7 @@
 
 ---
 
-## 📋 7. Quest-System
+## 🧩 7. Quest-System
 
 | Element               | Status | Beschreibung                                    |
 | --------------------- | ------ | ----------------------------------------------- |
@@ -98,56 +98,80 @@
 
 ---
 
-## 🔄 9. Live-Sync
+## ⚔️ 9. Tower-Defense Gameplay
 
-| Element                 | Status | Beschreibung                                         |
-| ----------------------- | ------ | --------------------------------------------------- |
-| ProfileSyncService      | ✅      | Sorgt für Updates von Inventory, Purchases, Battlepass |
-| LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert         |
-| LiveSync Purchases      | ✅      | Shop-Buttons sperren sich nach Kauf-Limit           |
-| ProfileChanged Events   | ✅      | Battlepass, Purchases, Units etc. aktualisieren dynamisch |
-| EquipSlots Sync         | ✅      | EquippedSlot1–6 werden automatisch bei Join + Equip gesetzt |
+| Element              | Status | Beschreibung                                                     |
+| -------------------- | ------ | ---------------------------------------------------------------- |
+| UnitPlacer           | ✅      | Raycast-Platzierung mit Vorschau, Highlight, Puls-Kreis, BoundingBox |
+| PlaceTowerHandler    | ✅      | Serverseitige Validierung, Clone + Spawn, Collision-Check       |
+| MatchServerHandler   | ✅      | Startet Waves über Remote, validiert Requests                   |
+| StartMatchScript     | ✅      | Aktiviert Platzierung via Event, startet Countdown              |
+| WaveManager          | ✅      | Definiert Waves, Delay & Spawns via EnemyManager                |
+| EnemyManager         | ✅      | Spawnt Gegner mit Wegpunktlogik + DamageToBase                  |
+| EnemyPath (Folder)   | ✅      | Wird korrekt gelesen, sortiert und verwendet                    |
+| UnitModels           | ✅      | Vorschau + echte Platzierung nutzen dieselbe Quelle             |
+| WalkArea-Blocking    | ✅      | Ghost wird rot, wenn BoundingBox WalkArea berührt               |
+| PlacementCircle      | ✅      | Animierter Mesh-Kreis unter Ghost, wird via Assets geladen      |
+| PlacementFilter      | ✅      | Raycast ignoriert Workspace.Units und WalkArea                  |
 
 ---
 
-## 🔒 10. Persistent PlayerData
+## 🔄 10. Live-Sync
+
+| Element                 | Status | Beschreibung                                             |
+| ----------------------- | ------ | ------------------------------------------------------- |
+| ProfileSyncService      | ✅      | Sorgt für Updates von Inventory, Purchases, Battlepass |
+| LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert             |
+| LiveSync Units          | ✅      | EquipSlots und Inventar synchron mit Client             |
+| EquipSlots Sync         | ✅      | EquippedSlot1–6 werden automatisch bei Join + Equip gesetzt |
+| ProfileChanged Events   | ✅      | Battlepass, Purchases, Units etc. aktualisieren dynamisch |
+
+---
+
+## 🔒 11. Persistent PlayerData
 
 | Element             | Status | Beschreibung                                    |
 | ------------------- | ------ | ----------------------------------------------- |
 | ProfileStoreWrapper | ✅      | Speichert alle Daten via ProfileStore           |
 | PlayerDataTemplate  | ✅      | Battlepass, Purchases, Units                    |
-| AutoSave            | ✅      | Speichert Profile regelmäßig                   |
+| AutoSave            | ✅      | Speichert Profile regelmäßig                    |
 | MarkerSystem        | ✅      | Alle Systeme setzen Ready-Marker vor ProfilRelease |
 
 ---
 
-## ✅ 11. Abgeschlossene Tasks (Stand: 2025-07-09)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-13)
 
-- EquipSystem blockiert jetzt mehrfaches Ausrüsten derselben UUID
-- EquipSlots werden direkt beim Join korrekt gesetzt (EquippedSlot1–6)
-- Equip-Button im Inventory zeigt jetzt korrekt UNEQUIP, wenn Unit bereits aktiv
-- UnitClientScript aktualisiert mit neuer `isUnitEquipped()`-Logik
-- Unequip-Funktion über leeren Equip-Call ("" als UUID) umgesetzt
-- Inventory zeigt immer zuerst die ausgerüsteten Units (Slots 1–6)
-- ProfileWrapper:EquipUnit() vollständig überarbeitet (inkl. Slot-Reset, UUID-Prüfung)
-- Join-Bug gefixt: Equip-Slots und Buttons sind beim Öffnen direkt korrekt
-- Kein mehrfaches LoadUnits mehr nötig
+- ✅ Platzierung prüft BoundingBox vs. WalkArea mit Blockierung
+- ✅ PlacementCircle (MeshPart) wird unter GhostModel erstellt & gepulst
+- ✅ Highlight-Farbe wird per Tween (Lerp) zwischen grün/rot animiert
+- ✅ Raycast nutzt `Exclude` statt `Blacklist`, inkl. Units und Ghost
+- ✅ Fehler „Modell fliegt zur Kamera“ dauerhaft behoben
+- ✅ Unit-Modelle & Platzierungslogik jetzt in allen Maps funktionsfähig
+- ✅ Workspace.Units als Blockierzone im Raycast & Platzierungsprüfung integriert
 
 ---
 
-## 🔜 12. Nächste Schritte
+## 🔜 13. Nächste Schritte
 
 - RewardPopupGui fertigstellen für Quests & Battlepass
 - ClaimAllButton für Battlepass implementieren
-- Globales TooltipSystem (z. B. für Traits, Rewards, Quests, Items)
-- TradeSystem nach Release der Kernelemente entwickeln
+- TooltipSystem global umsetzbar machen (Traits, Rewards, Items)
+- Upgrade-/Sell-System für platzierte Tower
+- Match-Ende Logik (Victory / Defeat)
+- Wellen-Zähler + nächste Wave Trigger (Auto/Manuell)
+- Region-Validierung für Platzierung (Whitelist-Zonen)
+- DamageSystem für Tower/Units
 
 ---
 
 ## 🧪 Known Issues (Live Client)
 
-- Shop CancelBuy: UI bleibt sichtbar bei Abbruch
-- Equip von Units wird manchmal visuell nicht aktualisiert (nur bei sehr hoher Latenz)
 - Stage-Auswahl im MapTeleport noch ohne Back/Close-Logik
 - Kein Popup für Rewards bei Claims sichtbar
 - Tooltip-System placeholderhaft oder leer
+
+---
+
+**Q1:** Wie könnte das Damage-System für platzierte Units aufgebaut sein?  
+**Q2:** Wie strukturieren wir die Upgrades & Tower-Stats (z. B. Damage, Range, SPA)?  
+**Q3:** Welche Events und UI-Komponenten braucht das Match-Ende (Victory/Defeat)?
