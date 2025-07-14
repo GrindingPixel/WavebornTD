@@ -65,8 +65,8 @@ function WaveManager:StartWave(waveNumber: number): ()
 		for _, group in ipairs(wave) do
 			if group and group.type then
 				for _ = 1, group.count do
-					log("🚀 Spawne Gegner:", group.type)
-					EnemyManager:SpawnEnemy(group.type)
+					log("🚀 Spawne Gegner:", group.type, waveNumber)
+					EnemyManager:SpawnEnemy(group.type, waveNumber)
 					task.wait(group.delay)
 				end
 			else

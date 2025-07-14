@@ -2,8 +2,9 @@
 
 local DefaultPlayerData = {
 	-- 💰 Währungen
-	Gold = 1000,
+	TDEclipsium = 500,
 	Gems = 50,
+	Eclipsium = 10000,
 
 	-- 📦 Items (z. B. Scrolls, EXP-Food)
 	Inventory = {

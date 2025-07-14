@@ -7,13 +7,14 @@ local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 --// Modules
-local EnemyData = require(ReplicatedStorage.Modules.EnemyDataModule)
+local EnemyTypes = require(ReplicatedStorage.Modules.Enemy.EnemyTypesModule)
+local EnemyUtilities = require(ReplicatedStorage.Modules.Enemy.EnemyUtilities)
 
 --// Workspace
 local pathFolder = Workspace:WaitForChild("EnemyPath", 10)
 if not pathFolder then
-	warn("❌ EnemyPath nicht gefunden nach 10 Sekunden!")
-	error("EnemyPath fehlt")
+	warn("❌ EnemyPath not found after 10 seconds!")
+	error("Missing EnemyPath")
 end
 
 local enemiesFolder = Workspace:FindFirstChild("Enemies") or Instance.new("Folder")
@@ -23,61 +24,77 @@ enemiesFolder.Parent = Workspace
 --// State
 local baseHP = 100
 
---// Modul
+--// Module
 local EnemyManager = {}
 
 function EnemyManager:Init()
-	print("✅ EnemyManager bereit")
+	print("✅ EnemyManager ready")
 end
 
-function EnemyManager:SpawnEnemy(enemyType: string)
-	print("🚀 SpawnEnemy gestartet für:", enemyType)
+function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
+	print("🚀 Spawning enemy:", enemyId, "[Wave", wave, "]")
 
-	local data = EnemyData[enemyType]
+	local data = EnemyTypes[enemyId]
 	if not data then
-		warn("❌ Gegnerdaten fehlen für:", enemyType)
+		warn("❌ Enemy type not found:", enemyId)
 		return
 	end
 
-	local template = ServerStorage:FindFirstChild(enemyType)
+	local template = ServerStorage:FindFirstChild(enemyId)
 	if not template or not template:IsA("Model") then
-		warn("❌ Gegner-Modell fehlt oder ungültig:", enemyType)
+		warn("❌ Enemy model missing or invalid:", enemyId)
 		return
 	end
-
-	print("📦 Gegner-Modell gefunden:", template.Name)
 
 	local enemy = template:Clone()
+	enemy.Name = enemyId .. "_Wave" .. tostring(wave)
 	enemy.Parent = enemiesFolder
-	enemy:SetAttribute("HP", data.HP)
-	enemy:SetAttribute("Speed", data.Speed)
+
+	local maxHP = math.floor(data.MaxHealth * (1 + 0.1 * wave))
+	local speed = data.BaseSpeed
+	local enemyType = data.Type or "Ground"
+
+	enemy:SetAttribute("MaxHP", maxHP)
+	enemy:SetAttribute("CurrentHP", maxHP)
+	enemy:SetAttribute("Speed", speed)
+	enemy:SetAttribute("Type", enemyType)
+
+	EnemyUtilities.ApplyHealthBar(enemy, maxHP)
 
 	task.spawn(function()
 		local points = pathFolder:GetChildren()
-
 		table.sort(points, function(a, b)
 			local aNum = tonumber(a.Name)
 			local bNum = tonumber(b.Name)
 			return (aNum or math.huge) < (bNum or math.huge)
 		end)
 
-		for _, point in ipairs(points) do
+		for i, point in ipairs(points) do
 			if not enemy.Parent then return end
 
-			local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-			if not humanoid then
-				warn("❌ Kein Humanoid im Gegner:", enemy.Name)
+			local hrp = enemy:FindFirstChild("HumanoidRootPart")
+			if not hrp then
+				warn("❌ Missing HumanoidRootPart in enemy:", enemy.Name)
 				return
 			end
 
-			humanoid:MoveTo(point.Position)
-			humanoid.MoveToFinished:Wait()
-			task.wait(0.05)
+			local distance = (hrp.Position - point.Position).Magnitude
+			enemy:SetAttribute("PathProgress", i)
+			enemy:SetAttribute("DistanceToGoal", distance)
+
+			local bodyVel = Instance.new("BodyVelocity")
+			bodyVel.Velocity = (point.Position - hrp.Position).Unit * speed
+			bodyVel.MaxForce = Vector3.new(1e5, 0, 1e5)
+			bodyVel.Parent = hrp
+			while (hrp.Position - point.Position).Magnitude > 1 do
+				task.wait(0.05)
+			end
+			bodyVel:Destroy()
 		end
 
 		if enemy.Parent then
-			baseHP -= data.DamageToBase
-			print("💥 Gegner erreicht Basis! Base HP:", baseHP)
+			baseHP -= 10
+			print("💥 Enemy reached base! Base HP:", baseHP)
 			enemy:Destroy()
 		end
 	end)

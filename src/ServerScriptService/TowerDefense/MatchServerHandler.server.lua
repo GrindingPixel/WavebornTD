@@ -18,7 +18,7 @@ local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local WaveManager = require(TowerDefense:WaitForChild("WaveManager"))
 local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
 
---// Einstellungen
+--// Settings
 local DEBUG = true
 local function log(...: any)
 	if DEBUG then

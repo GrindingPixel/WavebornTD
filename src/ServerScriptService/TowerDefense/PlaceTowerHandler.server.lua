@@ -12,6 +12,7 @@ local PlaceTowerRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForCh
 --// Module
 local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
 local UnitDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
+local DamageSystem = require(ServerScriptService.TowerDefense.Combat.DamageSystem)
 
 --// Konstanten
 local UnitModels = ReplicatedStorage:WaitForChild("UnitModels")
@@ -98,6 +99,10 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 	unitModel.Parent = UnitFolder
 	unitModel:SetAttribute("Owner", player.UserId)
 	unitModel:SetAttribute("UUID", uuid)
+	unitModel:SetAttribute("TargetingMode", "Nearest") -- optional
+
+	-- ✅ DamageSystem aktivieren
+	DamageSystem.RegisterTower(unitModel, unitEntry.Id, player)
 
 	print("✅", player.Name, "hat", unitName, "mit UUID", uuid, "bei", adjustedPosition, "platziert.")
 end)

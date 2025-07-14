@@ -7,6 +7,12 @@
       "Modules": {
         "$path": "src/ReplicatedStorage/Modules"
       },
+      "Combats": {
+        "$path": "src/ReplicatedStorage/Modules/Combat"
+      },
+      "Enemy": {
+        "$path": "src/ReplicatedStorage/Modules/Enemy"
+      },
       "Shared": {
         "$path": "src/ReplicatedStorage/Shared"
       },
@@ -33,6 +39,9 @@
       },
       "TowerDefense": {
         "$path": "src/ServerScriptService/TowerDefense"
+      },
+      "Enemys": {
+        "$path": "src/ServerScriptService/TowerDefense/Enemys"
       }
     },
     "StarterGui": {

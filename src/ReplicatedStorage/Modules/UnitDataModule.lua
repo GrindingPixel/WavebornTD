@@ -13,13 +13,7 @@ Units.BaseUnits = {
 		type       = "HybridGround",
 		trait      = "DragonKing",
 		BaseStar   = 3,
-		MaxStar    = 12,
-		stats      = {
-			damage = 9000,
-			range  = 30,
-			spa    = 2.5,
-			crit   = 10
-		}
+		MaxStar    = 12
 	},
 
 	test_dummy = {
@@ -29,8 +23,7 @@ Units.BaseUnits = {
 		type       = "Ground",
 		trait      = "None",
 		BaseStar   = 1,
-		MaxStar    = 12,
-		stats      = {}
+		MaxStar    = 12
 	},
 
 	rukia = {
@@ -40,13 +33,7 @@ Units.BaseUnits = {
 		type       = "HybridAir",
 		trait      = "IceQueen",
 		BaseStar   = 4,
-		MaxStar    = 12,
-		stats      = {
-			damage = 12000,
-			range  = 40,
-			spa    = 3.0,
-			crit   = 15
-		}
+		MaxStar    = 12
 	},
 
 	ichigo = {
@@ -56,13 +43,7 @@ Units.BaseUnits = {
 		type       = "HybridGround",
 		trait      = "SoulReaper",
 		BaseStar   = 5,
-		MaxStar    = 12,
-		stats      = {
-			damage = 15000,
-			range  = 50,
-			spa    = 2.0,
-			crit   = 20
-		}
+		MaxStar    = 12
 	},
 }
 

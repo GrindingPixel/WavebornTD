@@ -251,6 +251,7 @@ function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 		Exp = 0,
 		Traits = {},
 		Skin = nil,
+		TotalKills = 0,
 		IsLocked = false
 	}
 
@@ -322,6 +323,23 @@ function ProfileWrapper:GetEquippedUnits(player)
 	return equipped
 end
 
+function ProfileWrapper:IncrementUnitKills(player, uuid, amount, sync)
+	assert(type(uuid) == "string", "Ungültige UUID")
+	assert(type(amount) == "number", "Amount muss Zahl sein")
+	local profile = getProfile(player)
+	if not profile then return end
+	local unit = profile.Data.Units[uuid]
+	if not unit then return end
+
+	unit.TotalKills = (unit.TotalKills or 0) + amount
+
+	if sync then
+		local updated = ProfileWrapper:GetUnits(player)
+		ProfileSyncService:Send(player, "Units", updated)
+	end
+end
+
+
 -- ===================================
 -- BATTLEPASS
 -- ===================================
@@ -384,9 +402,14 @@ end
 -- SHOP/WÄHRUNG
 -- ===================================
 
-function ProfileWrapper:GetGold(player)
+function ProfileWrapper:GetEclipsium(player)
 	local profile = getProfile(player)
-	return profile and (profile.Data.Gold or 0) or 0
+	return profile and (profile.Data.Eclipsium or 0) or 0
+end
+
+function ProfileWrapper:GetTDEclipsium(player)
+	local profile = getProfile(player)
+	return profile and (profile.Data.TDEclipsium or 0) or 0
 end
 
 function ProfileWrapper:GetGems(player)
@@ -394,25 +417,21 @@ function ProfileWrapper:GetGems(player)
 	return profile and (profile.Data.Gems or 0) or 0
 end
 
-function ProfileWrapper:AddGold(player, amount)
-	assert(type(amount) == "number", "Gold-Amount muss Zahl sein!")
+function ProfileWrapper:AddEclipsium(player, amount)
+	assert(type(amount) == "number", "Eclipsium-Amount muss Zahl sein!")
 	local profile = getProfile(player)
 	if not profile then return false end
-	profile.Data.Gold = math.max((profile.Data.Gold or 0) + amount, 0)
-	log("Gold für", player.Name, "auf", profile.Data.Gold, "geändert (Delta:", amount, ")")
+	profile.Data.Eclipsium = math.max((profile.Data.Eclipsium or 0) + amount, 0)
+	log("Eclipsium für", player.Name, "auf", profile.Data.Eclipsium, "geändert (Delta:", amount, ")")
 	return true
 end
 
-function ProfileWrapper:RemoveGold(player, amount)
-	assert(type(amount) == "number" and amount > 0, "Gold-Amount muss >0 sein!")
+function ProfileWrapper:AddTDEclipsium(player, amount)
+	assert(type(amount) == "number", "Amount muss Zahl sein!")
 	local profile = getProfile(player)
 	if not profile then return false end
-	if (profile.Data.Gold or 0) < amount then
-		warnf("Nicht genug Gold bei", player.Name)
-		return false
-	end
-	profile.Data.Gold = profile.Data.Gold - amount
-	log("Gold für", player.Name, "- ", amount, "→", profile.Data.Gold)
+	profile.Data.TDEclipsium = math.max((profile.Data.TDEclipsium or 0) + amount, 0)
+	log("TDEclipsium für", player.Name, "+", amount, "→", profile.Data.TDEclipsium)
 	return true
 end
 
@@ -422,6 +441,32 @@ function ProfileWrapper:AddGems(player, amount)
 	if not profile then return false end
 	profile.Data.Gems = math.max((profile.Data.Gems or 0) + amount, 0)
 	log("Gems für", player.Name, "auf", profile.Data.Gems, "geändert (Delta:", amount, ")")
+	return true
+end
+
+function ProfileWrapper:RemoveEclipsium(player, amount)
+	assert(type(amount) == "number" and amount > 0, "Eclipsium-Amount muss >0 sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	if (profile.Data.Eclipsium or 0) < amount then
+		warnf("Nicht genug Eclipsium bei", player.Name)
+		return false
+	end
+	profile.Data.Eclipsium -= amount
+	log("Eclipsium für", player.Name, "- ", amount, "→", profile.Data.Eclipsium)
+	return true
+end
+
+function ProfileWrapper:RemoveTDEclipsium(player, amount)
+	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	if (profile.Data.TDEclipsium or 0) < amount then
+		warnf("Nicht genug TDEclipsium bei", player.Name)
+		return false
+	end
+	profile.Data.TDEclipsium -= amount
+	log("TDEclipsium für", player.Name, "- ", amount, "→", profile.Data.TDEclipsium)
 	return true
 end
 

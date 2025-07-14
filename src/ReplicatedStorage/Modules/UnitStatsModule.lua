@@ -8,10 +8,9 @@ local UnitStats = {}
 UnitStats["Issoi_HighSchool"] = {
 	PlacementCost  = 500,
 	Damage         = 130,
-	Range          = 25,
+	Range          = 250,
 	SPA            = 4.0,
-	AbilityDamage  = 220,
-	TotalKills     = 184
+	AbilityDamage  = 220
 }
 
 -- Weitere Units können so ergänzt werden:
