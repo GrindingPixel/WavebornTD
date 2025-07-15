@@ -31,6 +31,9 @@
       "Modules": {
         "$path": "src/ServerScriptService/Modules"
       },
+      "TowerDefense": {
+        "$path": "src/ServerScriptService/TowerDefense"
+      },
       "Debug": {
         "$path": "src/ServerScriptService/Debug"
       }

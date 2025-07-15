@@ -7,11 +7,8 @@
       "Modules": {
         "$path": "src/ReplicatedStorage/Modules"
       },
-      "Combats": {
-        "$path": "src/ReplicatedStorage/Modules/Combat"
-      },
-      "Enemy": {
-        "$path": "src/ReplicatedStorage/Modules/Enemy"
+      "TDModules": {
+        "$path": "src/ReplicatedStorage/TDModules"
       },
       "Shared": {
         "$path": "src/ReplicatedStorage/Shared"

@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-13)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-15)
 
 ---
 
@@ -107,12 +107,15 @@
 | MatchServerHandler   | ✅      | Startet Waves über Remote, validiert Requests                   |
 | StartMatchScript     | ✅      | Aktiviert Platzierung via Event, startet Countdown              |
 | WaveManager          | ✅      | Definiert Waves, Delay & Spawns via EnemyManager                |
-| EnemyManager         | ✅      | Spawnt Gegner mit Wegpunktlogik + DamageToBase                  |
-| EnemyPath (Folder)   | ✅      | Wird korrekt gelesen, sortiert und verwendet                    |
-| UnitModels           | ✅      | Vorschau + echte Platzierung nutzen dieselbe Quelle             |
-| WalkArea-Blocking    | ✅      | Ghost wird rot, wenn BoundingBox WalkArea berührt               |
-| PlacementCircle      | ✅      | Animierter Mesh-Kreis unter Ghost, wird via Assets geladen      |
-| PlacementFilter      | ✅      | Raycast ignoriert Workspace.Units und WalkArea                  |
+| EnemyManager         | ✅      | Spawnt Gegner, wandern per Wegpunkte & EndTrigger, HealthBar    |
+| EnemyPath            | ✅      | Enthält Start, Ende + nummerierte Punkte, wird sortiert         |
+| EnemyDamageToBase    | ✅      | Wenn Gegner „Ende“ berühren → HP-Abzug, Trigger via Part        |
+| Enemy CollisionGroup | ✅      | Gegner können durch Spieler laufen via „Enemy“-Group            |
+| Player CollisionGroup| ✅      | Spieler automatisch „Players“-Group zugewiesen                  |
+| Units CollisionGroup | ✅      | Platzierte Türme erhalten automatisch „Units“-Gruppe            |
+| DamageSystem         | ✅      | Tower greifen automatisch Gegner im Range an                    |
+| UnitTargetingModule  | ✅      | Unterstützt Nearest, First, Strongest                           |
+| CombatStatsProvider  | ✅      | Liefert Damage, Range, SPA aus UnitDataModule                   |
 
 ---
 
@@ -139,7 +142,7 @@
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-13)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-15)
 
 - ✅ Platzierung prüft BoundingBox vs. WalkArea mit Blockierung
 - ✅ PlacementCircle (MeshPart) wird unter GhostModel erstellt & gepulst
@@ -148,6 +151,14 @@
 - ✅ Fehler „Modell fliegt zur Kamera“ dauerhaft behoben
 - ✅ Unit-Modelle & Platzierungslogik jetzt in allen Maps funktionsfähig
 - ✅ Workspace.Units als Blockierzone im Raycast & Platzierungsprüfung integriert
+- ✅ Enemies wandern über sortierte Punkte von „Start“ nach „Ende“
+- ✅ EndPart erzeugt Base-Schaden bei Touch
+- ✅ Gegner spawnen korrekt auf Bodenniveau (angepasste Höhe)
+- ✅ Spieler blockieren Gegner nicht mehr (CollisionGroups)
+- ✅ CollisionGroup-Script weist Spielern automatisch „Players“ zu
+- ✅ Gegner erhalten Live-HealthBar + HP-Attribute
+- ✅ DamageSystem zieht korrekt HP ab und zerstört Gegner bei 0 HP
+- ✅ Tower greifen Gegner basierend auf TargetingMode an
 
 ---
 
@@ -160,7 +171,10 @@
 - Match-Ende Logik (Victory / Defeat)
 - Wellen-Zähler + nächste Wave Trigger (Auto/Manuell)
 - Region-Validierung für Platzierung (Whitelist-Zonen)
-- DamageSystem für Tower/Units
+- StatusEffect-System (Burn, Slow etc.)
+- AirUnit-Support (Type = Flyer)
+- Boss-Type Logik (mehr HP, andere Farbe, z. B. via Type = Boss)
+- Tower-Zielmodus durch Spieler änderbar (Dropdown/Buttons pro Tower)
 
 ---
 
@@ -172,6 +186,6 @@
 
 ---
 
-**Q1:** Wie könnte das Damage-System für platzierte Units aufgebaut sein?  
-**Q2:** Wie strukturieren wir die Upgrades & Tower-Stats (z. B. Damage, Range, SPA)?  
-**Q3:** Welche Events und UI-Komponenten braucht das Match-Ende (Victory/Defeat)?
+**Q1:** Wie könnte das StatusEffect-System (Burn, Freeze) technisch integriert werden?  
+**Q2:** Wie sollen AirUnits (Type = Flyer) und Bodeneinheiten unterschieden und behandelt werden?  
+**Q3:** Wie soll das TowerUpgrade-Interface strukturiert sein (Kosten, Stat-Vorschau etc.)?

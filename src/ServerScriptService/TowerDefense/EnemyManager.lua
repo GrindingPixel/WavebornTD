@@ -7,28 +7,51 @@ local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 --// Modules
-local EnemyTypes = require(ReplicatedStorage.Modules.Enemy.EnemyTypesModule)
-local EnemyUtilities = require(ReplicatedStorage.Modules.Enemy.EnemyUtilities)
+local EnemyTypes = require(ReplicatedStorage.TDModules.Enemy.EnemyTypesModule)
+local EnemyUtilities = require(ReplicatedStorage.TDModules.Enemy.EnemyUtilities)
 
---// Workspace
-local pathFolder = Workspace:WaitForChild("EnemyPath", 10)
-if not pathFolder then
-	warn("❌ EnemyPath not found after 10 seconds!")
-	error("Missing EnemyPath")
-end
+--// Path Setup
+local pathFolder = Workspace:WaitForChild("EnemyPath")
+local startPoint = pathFolder:WaitForChild("Start")
+local endPoint = pathFolder:WaitForChild("Ende")
 
+--// Enemies Folder
 local enemiesFolder = Workspace:FindFirstChild("Enemies") or Instance.new("Folder")
 enemiesFolder.Name = "Enemies"
 enemiesFolder.Parent = Workspace
 
---// State
+--// Base HP
 local baseHP = 100
+
+--// CollisionGroup Setter
+local function setCollisionGroup(model: Model, groupName: string)
+	for _, part in ipairs(model:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.CollisionGroup = groupName
+		end
+	end
+end
 
 --// Module
 local EnemyManager = {}
 
 function EnemyManager:Init()
 	print("✅ EnemyManager ready")
+
+	-- Base Hit Detection
+	if not endPoint:IsA("BasePart") then
+		error("❌ EndPoint must be a BasePart!")
+	end
+
+	endPoint.Touched:Connect(function(hit)
+		local enemy = hit:FindFirstAncestorWhichIsA("Model")
+		if enemy and enemy:IsDescendantOf(enemiesFolder) and not enemy:GetAttribute("ReachedEnd") then
+			enemy:SetAttribute("ReachedEnd", true)
+			baseHP -= 10
+			print("💥", enemy.Name, "reached base. Base HP now:", baseHP)
+			enemy:Destroy()
+		end
+	end)
 end
 
 function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
@@ -42,13 +65,14 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 
 	local template = ServerStorage:FindFirstChild(enemyId)
 	if not template or not template:IsA("Model") then
-		warn("❌ Enemy model missing or invalid:", enemyId)
+		warn("❌ Enemy model not found:", enemyId)
 		return
 	end
 
 	local enemy = template:Clone()
 	enemy.Name = enemyId .. "_Wave" .. tostring(wave)
 	enemy.Parent = enemiesFolder
+	setCollisionGroup(enemy, "Enemy")
 
 	local maxHP = math.floor(data.MaxHealth * (1 + 0.1 * wave))
 	local speed = data.BaseSpeed
@@ -61,40 +85,43 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 
 	EnemyUtilities.ApplyHealthBar(enemy, maxHP)
 
+	local hrp = enemy:FindFirstChild("HumanoidRootPart")
+	local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+	if not hrp or not humanoid then
+		warn("❌ Enemy missing HRP or Humanoid:", enemy.Name)
+		enemy:Destroy()
+		return
+	end
+
+	enemy:MoveTo(startPoint.Position)
+
 	task.spawn(function()
-		local points = pathFolder:GetChildren()
-		table.sort(points, function(a, b)
-			local aNum = tonumber(a.Name)
-			local bNum = tonumber(b.Name)
-			return (aNum or math.huge) < (bNum or math.huge)
+		local pathPoints = {}
+		for _, obj in ipairs(pathFolder:GetChildren()) do
+			if tonumber(obj.Name) then
+				table.insert(pathPoints, obj)
+			end
+		end
+		table.sort(pathPoints, function(a, b)
+			return tonumber(a.Name) < tonumber(b.Name)
 		end)
 
-		for i, point in ipairs(points) do
-			if not enemy.Parent then return end
+		table.insert(pathPoints, endPoint)
 
-			local hrp = enemy:FindFirstChild("HumanoidRootPart")
-			if not hrp then
-				warn("❌ Missing HumanoidRootPart in enemy:", enemy.Name)
-				return
-			end
+		for i, point in ipairs(pathPoints) do
+			if not enemy:IsDescendantOf(workspace) then return end
 
-			local distance = (hrp.Position - point.Position).Magnitude
+			local dist = (hrp.Position - point.Position).Magnitude
 			enemy:SetAttribute("PathProgress", i)
-			enemy:SetAttribute("DistanceToGoal", distance)
+			enemy:SetAttribute("DistanceToGoal", dist)
 
-			local bodyVel = Instance.new("BodyVelocity")
-			bodyVel.Velocity = (point.Position - hrp.Position).Unit * speed
-			bodyVel.MaxForce = Vector3.new(1e5, 0, 1e5)
-			bodyVel.Parent = hrp
-			while (hrp.Position - point.Position).Magnitude > 1 do
-				task.wait(0.05)
-			end
-			bodyVel:Destroy()
+			humanoid:MoveTo(point.Position)
+			local success = humanoid.MoveToFinished:Wait(5)
+			if not success then break end
 		end
 
-		if enemy.Parent then
-			baseHP -= 10
-			print("💥 Enemy reached base! Base HP:", baseHP)
+		if enemy:IsDescendantOf(workspace) and not enemy:GetAttribute("ReachedEnd") then
+			warn("⚠️ Enemy did not reach End, but path completed:", enemy.Name)
 			enemy:Destroy()
 		end
 	end)

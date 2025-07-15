@@ -101,6 +101,13 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 	unitModel:SetAttribute("UUID", uuid)
 	unitModel:SetAttribute("TargetingMode", "Nearest") -- optional
 
+	-- CollisionGroup setzen (Units)
+for _, part in ipairs(unitModel:GetDescendants()) do
+	if part:IsA("BasePart") then
+		part.CollisionGroup = "Units"
+	end
+end
+
 	-- ✅ DamageSystem aktivieren
 	DamageSystem.RegisterTower(unitModel, unitEntry.Id, player)
 

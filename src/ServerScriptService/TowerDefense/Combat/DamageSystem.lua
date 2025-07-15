@@ -9,8 +9,8 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
-local CombatStatsProvider = require(ReplicatedStorage.Modules.Combat.CombatStatsProvider)
-local UnitTargetingModule = require(ReplicatedStorage.Modules.Combat.UnitTargetingModule)
+local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatStatsProvider)
+local UnitTargetingModule = require(ReplicatedStorage.TDModules.Combat.UnitTargetingModule)
 
 --// Constants
 local UnitsFolder = Workspace:WaitForChild("Units")
