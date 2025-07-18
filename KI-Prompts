@@ -4,7 +4,21 @@ aktualisiere unser taskboard mit allen änderungen bzw ergänzungen. gib mir das
 
 
 Neuer Chat zusammen fassung:
-fasse mir den gesamten chat mit allen punkten die wir am spiel geändert haben so detailreich wie möglich zusammen. das ich ohne probleme den chat in einem neuen chat fortführen kann.
+**„Fasse mir den gesamten bisherigen Chatverlauf vollständig und strukturiert zusammen.
+
+Die Zusammenfassung soll so detailliert wie nötig sein, damit ich die Arbeit im neuen Chat ohne Informationsverlust direkt fortsetzen kann – ohne Rückfragen oder doppelte Wiederholungen.
+
+Die Zusammenfassung muss enthalten:**
+✅ Alle wichtigen Änderungen am Spiel, z. B. neue Systeme, Skriptstrukturierungen, UI-Anpassungen, Architekturentscheidungen
+✅ Alle aktuellen Fehler oder offenen Probleme, an denen gerade gearbeitet wird oder die noch nicht final gelöst sind
+✅ Den exakten Entwicklungsstand, an dem wir zuletzt aufgehört haben (z. B. was zuletzt erfolgreich umgesetzt wurde, was vorbereitet ist)
+✅ Alle Systemkonventionen, die bisher festgelegt wurden (z. B. Rojo-Namensstruktur, Ordner-Layout, Debounce-Konzept, Benennung von GUIs/Scripts)
+✅ Relevante Abhängigkeiten (z. B. wichtige Module, Remotes, geplante Dateipositionen)
+✅ Alle vereinbarten Best Practices, die für künftige Code- oder UI-Erweiterungen verbindlich sind
+
+Format: Gliedere die Zusammenfassung klar und lesbar in sinnvolle Abschnitte (z. B. „Gameplay-Systeme“, „Aktuelle Bugs“, „UI-Regeln“, „Letzter Stand“ usw.)“**
+
+
 
 Neuer Chat:
 **„Nutze alle archivierten und laufenden Chatverläufe sowie alle Inhalte aus dem Projektordner ‚Roblox TD‘ als vollständige Grundlage.

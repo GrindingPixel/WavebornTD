@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
+local HttpService = game:GetService("HttpService")
 
 --// Remotes
 local PlaceTowerRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("PlaceTowerRequest")
@@ -13,6 +14,7 @@ local PlaceTowerRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForCh
 local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
 local UnitDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
 local DamageSystem = require(ServerScriptService.TowerDefense.Combat.DamageSystem)
+local UnitStatModule = require(ReplicatedStorage.Modules.UnitStatsModule)
 
 --// Konstanten
 local UnitModels = ReplicatedStorage:WaitForChild("UnitModels")
@@ -72,6 +74,24 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 		return
 	end
 
+	-- 3. Platzierungskosten prüfen
+	local placementCost = UnitStatModule.GetStat(unitEntry.Id, 0, "PlacementCost")
+	if not placementCost then
+		warn("❌ Platzierungskosten nicht gefunden für", unitEntry.Id)
+		return
+	end
+
+	if profile.Data.TDEclipsium < placementCost then
+		warn(`❌ {player.Name} hat nicht genug TDEclipsium ({profile.Data.TDEclipsium}) für {unitEntry.Id} (Kosten: {placementCost})`)
+		return
+	end
+
+	profile.Data.TDEclipsium -= placementCost
+	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.TDEclipsium)
+
+
+
+
 	-- 3. Modell vorbereiten
 	local modelTemplate = UnitModels:FindFirstChild(unitName)
 	if not modelTemplate then
@@ -97,19 +117,26 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 
 	unitModel:SetPrimaryPartCFrame(CFrame.new(adjustedPosition))
 	unitModel.Parent = UnitFolder
-	unitModel:SetAttribute("Owner", player.UserId)
-	unitModel:SetAttribute("UUID", uuid)
-	unitModel:SetAttribute("TargetingMode", "Nearest") -- optional
 
-	-- CollisionGroup setzen (Units)
-for _, part in ipairs(unitModel:GetDescendants()) do
-	if part:IsA("BasePart") then
-		part.CollisionGroup = "Units"
+	-- ✅ Attribute setzen
+	local tuuid = "TUNIT_" .. HttpService:GenerateGUID(false):gsub("-", ""):sub(1, 6):upper()
+
+	unitModel:SetAttribute("UnitId", unitEntry.Id) -- z. B. "Issoi_Highschool"
+	unitModel:SetAttribute("UUID", uuid)           -- Inventar-UUID
+	unitModel:SetAttribute("TUUID", tuuid)         -- Platzierungs-Instanz (neu)
+	unitModel:SetAttribute("UpgradeLevel", 0)
+	unitModel:SetAttribute("TargetingMode", "Nearest")
+	unitModel:SetAttribute("OwnerId", player.UserId)
+
+	-- CollisionGroup setzen
+	for _, part in ipairs(unitModel:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.CollisionGroup = "Units"
+		end
 	end
-end
 
 	-- ✅ DamageSystem aktivieren
 	DamageSystem.RegisterTower(unitModel, unitEntry.Id, player)
 
-	print("✅", player.Name, "hat", unitName, "mit UUID", uuid, "bei", adjustedPosition, "platziert.")
+	print(`✅ {player.Name} hat {unitName} bei {adjustedPosition} platziert (TUUID={tuuid})`)
 end)

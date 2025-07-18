@@ -75,6 +75,8 @@ local panelMap = {
 	{ gui = "UnitInventoryGui", panel = "UnitInventoryPanel" },
 	{ gui = "MapTeleportGui", 	panel = "MapTeleportPanel" },
 	{ gui = "TDGui", 		  	panel = "TDPanel" },
+	{ gui = "MoneyGui", 		panel = "MoneyPanel" },
+	{ gui = "UnitActionGui", 	panel = "ActionPanel" },
 }
 
 for _, entry in ipairs(panelMap) do

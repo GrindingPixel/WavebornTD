@@ -710,6 +710,14 @@ IsProfileReady.OnServerInvoke = function(player)
 	return ProfileWrapper:IsLoaded(player)
 end
 
+function ProfileWrapper:Sync(player: Player, key: string)
+	local profile = self:GetProfile(player)
+	if not profile then return end
+	local data = profile.Data[key]
+	if data == nil then return end
+	ProfileSyncService:Send(player, key, data)
+end
+
 
 task.spawn(function()
 	while true do
