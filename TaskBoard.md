@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-15)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-18)
 
 ---
 
@@ -105,7 +105,7 @@
 | UnitPlacer           | ✅      | Raycast-Platzierung mit Vorschau, Highlight, Puls-Kreis, BoundingBox |
 | PlaceTowerHandler    | ✅      | Serverseitige Validierung, Clone + Spawn, Collision-Check       |
 | MatchServerHandler   | ✅      | Startet Waves über Remote, validiert Requests                   |
-| StartMatchScript     | ✅      | Aktiviert Platzierung via Event, startet Countdown              |
+| StartMatchScript     | ✅      | Aktiviert Platzierung, zeigt Countdown, gibt Startgeld          |
 | WaveManager          | ✅      | Definiert Waves, Delay & Spawns via EnemyManager                |
 | EnemyManager         | ✅      | Spawnt Gegner, wandern per Wegpunkte & EndTrigger, HealthBar    |
 | EnemyPath            | ✅      | Enthält Start, Ende + nummerierte Punkte, wird sortiert         |
@@ -113,9 +113,12 @@
 | Enemy CollisionGroup | ✅      | Gegner können durch Spieler laufen via „Enemy“-Group            |
 | Player CollisionGroup| ✅      | Spieler automatisch „Players“-Group zugewiesen                  |
 | Units CollisionGroup | ✅      | Platzierte Türme erhalten automatisch „Units“-Gruppe            |
-| DamageSystem         | ✅      | Tower greifen automatisch Gegner im Range an                    |
+| DamageSystem         | ✅      | Tower greifen automatisch Gegner im Range an + geben TDEclipsium |
 | UnitTargetingModule  | ✅      | Unterstützt Nearest, First, Strongest                           |
 | CombatStatsProvider  | ✅      | Liefert Damage, Range, SPA aus UnitDataModule                   |
+| CurrencySystem TD    | ✅      | TDEclipsium wird gesetzt bei Start, entfernt bei MatchEnd       |
+| SetTDEclipsium Remote| ✅      | Remotesteuert Startgeld-Vergabe                                 |
+| MoneyPanel           | ✅      | Zeigt TDEclipsium-Wert bei LiveSync korrekt an                  |
 
 ---
 
@@ -127,7 +130,7 @@
 | LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert             |
 | LiveSync Units          | ✅      | EquipSlots und Inventar synchron mit Client             |
 | EquipSlots Sync         | ✅      | EquippedSlot1–6 werden automatisch bei Join + Equip gesetzt |
-| ProfileChanged Events   | ✅      | Battlepass, Purchases, Units etc. aktualisieren dynamisch |
+| ProfileChanged Events   | ✅      | Battlepass, Units, TDEclipsium etc. werden dynamisch aktualisiert |
 
 ---
 
@@ -136,29 +139,22 @@
 | Element             | Status | Beschreibung                                    |
 | ------------------- | ------ | ----------------------------------------------- |
 | ProfileStoreWrapper | ✅      | Speichert alle Daten via ProfileStore           |
-| PlayerDataTemplate  | ✅      | Battlepass, Purchases, Units                    |
+| PlayerDataTemplate  | ✅      | Battlepass, Purchases, Units, TDEclipsium       |
 | AutoSave            | ✅      | Speichert Profile regelmäßig                    |
 | MarkerSystem        | ✅      | Alle Systeme setzen Ready-Marker vor ProfilRelease |
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-15)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-18)
 
 - ✅ Platzierung prüft BoundingBox vs. WalkArea mit Blockierung
-- ✅ PlacementCircle (MeshPart) wird unter GhostModel erstellt & gepulst
-- ✅ Highlight-Farbe wird per Tween (Lerp) zwischen grün/rot animiert
-- ✅ Raycast nutzt `Exclude` statt `Blacklist`, inkl. Units und Ghost
-- ✅ Fehler „Modell fliegt zur Kamera“ dauerhaft behoben
-- ✅ Unit-Modelle & Platzierungslogik jetzt in allen Maps funktionsfähig
-- ✅ Workspace.Units als Blockierzone im Raycast & Platzierungsprüfung integriert
-- ✅ Enemies wandern über sortierte Punkte von „Start“ nach „Ende“
-- ✅ EndPart erzeugt Base-Schaden bei Touch
-- ✅ Gegner spawnen korrekt auf Bodenniveau (angepasste Höhe)
-- ✅ Spieler blockieren Gegner nicht mehr (CollisionGroups)
-- ✅ CollisionGroup-Script weist Spielern automatisch „Players“ zu
-- ✅ Gegner erhalten Live-HealthBar + HP-Attribute
-- ✅ DamageSystem zieht korrekt HP ab und zerstört Gegner bei 0 HP
-- ✅ Tower greifen Gegner basierend auf TargetingMode an
+- ✅ CurrencySystem (TDEclipsium) für Match implementiert
+- ✅ TDEclipsium wird korrekt gesetzt, Live-Sync funktioniert
+- ✅ Gegner geben TDEclipsium + EXP, Clientanzeige aktualisiert sich direkt
+- ✅ MatchEnd entfernt TDEclipsium aus Profil
+- ✅ StartMatchScript migriert CurrencyDisplay + verbessert
+- ✅ Remote `SetTDEclipsium` eingeführt für saubere Trennung vom WaveStart
+- ✅ MoneyPanel nur sichtbar bei gültigem Wert (ProfileChanged)
 
 ---
 
@@ -186,6 +182,10 @@
 
 ---
 
-**Q1:** Wie könnte das StatusEffect-System (Burn, Freeze) technisch integriert werden?  
-**Q2:** Wie sollen AirUnits (Type = Flyer) und Bodeneinheiten unterschieden und behandelt werden?  
-**Q3:** Wie soll das TowerUpgrade-Interface strukturiert sein (Kosten, Stat-Vorschau etc.)?
+**Q1:** Wie sollte die Upgrade-Logik bei Türmen mit Goldkosten und Visual Feedback gestaltet werden?  
+**Q2:** Soll das Tower-Zielsystem auch Immunitäten oder Fly/OnlyGround berücksichtigen?  
+**Q3:** Wie könnte das StatusEffect-System effizient per Module erweitert werden?
+
+
+
+

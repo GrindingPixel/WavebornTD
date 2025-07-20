@@ -5,28 +5,31 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local TowerDefense           = ServerScriptService:WaitForChild("TowerDefense")
 
-local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
+--// Module
+local Modules = ServerScriptService:WaitForChild("Modules")
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+
+local WaveManager         = require(TowerDefense:WaitForChild("WaveManager"))
+local EnemyManager        = require(TowerDefense:WaitForChild("EnemyManager"))
+local MatchStateModule    = require(TowerDefense:WaitForChild("MatchStateModule"))
 
 --// Remotes
 local StartWaveRequest    = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("StartWaveRequest")
 local SetTDEclipsium      = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("SetTDEclipsium")
 local ProfileChanged      = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 
---// Module
-local Modules = ServerScriptService:WaitForChild("Modules")
-local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
-
-local WaveManager = require(TowerDefense:WaitForChild("WaveManager"))
-local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
-
---// Settings
+--// Debug
 local DEBUG = true
 local function log(...: any)
 	if DEBUG then
 		print("[MatchServerHandler]", ...)
 	end
 end
+
+--// Modul
+local MatchServerHandler = {}
 
 --// Initialisierung
 if WaveManager and WaveManager.Init then
@@ -53,9 +56,12 @@ SetTDEclipsium.OnServerEvent:Connect(function(player)
 	end
 end)
 
---// StartWaveRequest: Welle starten
+--// StartWaveRequest: Erste Welle starten
 StartWaveRequest.OnServerEvent:Connect(function(player)
 	log("🌊 Match-Start / Wave beginnt von", player.Name)
+
+	-- Spieler registrieren für MatchState (zukünftig auch Gruppen)
+	MatchStateModule.RegisterPlayers({ player })
 
 	if WaveManager and WaveManager.StartWave then
 		WaveManager:StartWave(1)
@@ -64,13 +70,4 @@ StartWaveRequest.OnServerEvent:Connect(function(player)
 	end
 end)
 
---// Match-Ende Logik
-local function MatchEnd(player)
-	local profile = ProfileWrapper:GetProfile(player)
-	if profile then
-		profile.Data.TDEclipsium = nil
-		ProfileChanged:FireClient(player, "TDEclipsium", nil)
-		log("🗑️ TDEclipsium entfernt für", player.Name)
-	end
-	log("🏁 Match-Ende für", player.Name)
-end
+return MatchServerHandler

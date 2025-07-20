@@ -7,8 +7,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
 
---// Module
-local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
+--// Modules
+local EnemyManager = require(TowerDefense.EnemyManager)
+local MatchStateModule = require(TowerDefense.MatchStateModule)
 
 --// Konfiguration
 local EnemyData = require(ReplicatedStorage.Modules.EnemyDataModule)
@@ -42,6 +43,10 @@ local waveConfig: WaveConfig = {
 	},
 }
 
+--// State
+local currentWave = 0
+local waveCount = #waveConfig
+
 --// Modul
 local WaveManager = {}
 
@@ -49,6 +54,7 @@ function WaveManager:Init(): ()
 	log("✅ WaveManager bereit")
 end
 
+-- Starte bestimmte Wave (manuell durch NextWave)
 function WaveManager:StartWave(waveNumber: number): ()
 	local wave = waveConfig[waveNumber]
 	if not wave then
@@ -56,7 +62,9 @@ function WaveManager:StartWave(waveNumber: number): ()
 		return
 	end
 
-	log("🌊 Starte Wave:", waveNumber)
+	currentWave = waveNumber
+	log("🌊 Starte Wave", currentWave, "/", waveCount)
+
 	for _, group in ipairs(wave) do
 		log("→", group.type, "x", group.count)
 	end
@@ -73,7 +81,31 @@ function WaveManager:StartWave(waveNumber: number): ()
 				warn("⚠️ Ungültige Gruppendaten in Wave:", waveNumber)
 			end
 		end
+
+		-- Verzögerung, danach prüfen ob Gegner alle besiegt wurden
+		task.delay(3, function()
+			WaveManager:CheckNextStep()
+		end)
 	end)
+end
+
+function WaveManager:CheckNextStep()
+	local alive = EnemyManager:GetAliveEnemyCount()
+	log("👀 Gegner verbleibend:", alive)
+
+	if alive == 0 then
+		if currentWave < waveCount then
+			self:StartWave(currentWave + 1)
+		else
+			log("🎉 Alle Waves abgeschlossen – Victory!")
+			MatchStateModule.EndMatch("Victory")
+		end
+	else
+		log("⏳ Gegner noch aktiv – warte...")
+		task.delay(2, function()
+			WaveManager:CheckNextStep()
+		end)
+	end
 end
 
 return WaveManager

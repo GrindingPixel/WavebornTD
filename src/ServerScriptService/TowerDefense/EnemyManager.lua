@@ -5,10 +5,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 --// Modules
 local EnemyTypes = require(ReplicatedStorage.TDModules.Enemy.EnemyTypesModule)
 local EnemyUtilities = require(ReplicatedStorage.TDModules.Enemy.EnemyUtilities)
+local MatchStateModule = require(ServerScriptService.TowerDefense.MatchStateModule)
 
 --// Path Setup
 local pathFolder = Workspace:WaitForChild("EnemyPath")
@@ -22,6 +24,7 @@ enemiesFolder.Parent = Workspace
 
 --// Base HP
 local baseHP = 100
+local matchLost = false
 
 --// CollisionGroup Setter
 local function setCollisionGroup(model: Model, groupName: string)
@@ -47,9 +50,15 @@ function EnemyManager:Init()
 		local enemy = hit:FindFirstAncestorWhichIsA("Model")
 		if enemy and enemy:IsDescendantOf(enemiesFolder) and not enemy:GetAttribute("ReachedEnd") then
 			enemy:SetAttribute("ReachedEnd", true)
-			baseHP -= 10
+			baseHP -= 50
 			print("💥", enemy.Name, "reached base. Base HP now:", baseHP)
 			enemy:Destroy()
+
+			if baseHP <= 0 and not matchLost then
+				matchLost = true
+				print("💀 Base destroyed – triggering match loss")
+				MatchStateModule.EndMatch("Defeat")
+			end
 		end
 	end)
 end
@@ -105,7 +114,6 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 		table.sort(pathPoints, function(a, b)
 			return tonumber(a.Name) < tonumber(b.Name)
 		end)
-
 		table.insert(pathPoints, endPoint)
 
 		for i, point in ipairs(pathPoints) do
@@ -125,6 +133,17 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 			enemy:Destroy()
 		end
 	end)
+end
+
+--// Rückgabe der verbleibenden Gegner
+function EnemyManager:GetAliveEnemyCount(): number
+	local count = 0
+	for _, enemy in ipairs(enemiesFolder:GetChildren()) do
+		if enemy:IsA("Model") and not enemy:GetAttribute("ReachedEnd") then
+			count += 1
+		end
+	end
+	return count
 end
 
 return EnemyManager
