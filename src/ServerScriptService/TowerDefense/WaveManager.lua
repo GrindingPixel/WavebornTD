@@ -3,17 +3,23 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
 
-local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
+--// Remotes
+local NextWaveAvailable = Remotes.TowerDefenseEvents:WaitForChild("NextWaveAvailable")
 
 --// Modules
-local EnemyManager = require(TowerDefense.EnemyManager)
-local MatchStateModule = require(TowerDefense.MatchStateModule)
+local EnemyManager = require(ServerScriptService.TowerDefense.EnemyManager)
 
---// Konfiguration
-local EnemyData = require(ReplicatedStorage.Modules.EnemyDataModule)
-local UnitModels = ReplicatedStorage:WaitForChild("UnitModels")
+--// Typen
+export type WaveGroup = {
+	type: string,
+	count: number,
+	delay: number,
+}
+export type WaveData = { [number]: { WaveGroup } }
 
 --// Debug
 local DEBUG = true
@@ -23,89 +29,125 @@ local function log(...: any)
 	end
 end
 
---// Typdefinitionen
-export type WaveGroup = {
-	type: string,
-	count: number,
-	delay: number,
-}
-
-export type WaveConfig = { [number]: { WaveGroup } }
-
---// Wellen-Config
-local waveConfig: WaveConfig = {
-	[1] = {
-		{ type = "Basic", count = 5, delay = 1 },
-	},
-	[2] = {
-		{ type = "Basic", count = 3, delay = 0.5 },
-		{ type = "Fast", count = 4, delay = 0.3 },
-	},
-}
-
---// State
-local currentWave = 0
-local waveCount = #waveConfig
-
 --// Modul
-local WaveManager = {}
+local WaveManager = {
+	GeneratedWaves = {} :: WaveData,
+	CurrentWave = 0,
+	TotalWaves = 0,
+	IsSpawning = false,
+}
 
-function WaveManager:Init(): ()
-	log("✅ WaveManager bereit")
+--// Generator
+local function generateWaveData(config): WaveData
+	local waveCount = config.WaveCount or 10
+	local totalEnemies = config.TotalEnemies or 100
+	local minPerWave = config.MinEnemiesPerWave or 10
+	local bossWaves = config.BossWaves or {}
+	local pool = config.GroupPool or {}
+	local rng = Random.new(config.SpawnRandomSeed or tick())
+
+	local waves: WaveData = {}
+	local enemyTypes = {}
+
+	for _, entry in ipairs(pool) do
+		table.insert(enemyTypes, entry)
+	end
+
+	local enemiesPerWave = math.floor(totalEnemies / waveCount)
+
+	for i = 1, waveCount do
+		local groups = {}
+
+		if table.find(bossWaves, i) then
+			table.insert(groups, { type = "Boss_Stage" .. tostring(i), count = 1, delay = 0 })
+		end
+
+		local left = math.max(enemiesPerWave, minPerWave)
+		while left > 0 do
+			local choice = rng:NextInteger(1, #enemyTypes)
+			local group = enemyTypes[choice]
+			if left - group.count < 0 then break end
+			table.insert(groups, { type = group.type, count = group.count, delay = group.delay })
+			left -= group.count
+		end
+
+		waves[i] = groups
+	end
+
+	return waves
 end
 
--- Starte bestimmte Wave (manuell durch NextWave)
-function WaveManager:StartWave(waveNumber: number): ()
-	local wave = waveConfig[waveNumber]
-	if not wave then
-		warn("❌ Unbekannte Wave:", waveNumber)
+--// Init mit Konfig
+function WaveManager:Init(config)
+	if config and config.AutoGenerate then
+		self.GeneratedWaves = generateWaveData(config.AutoGenerate)
+		self.TotalWaves = #self.GeneratedWaves
+		self.CurrentWave = 0
+		self.IsSpawning = false
+
+		if config.AutoGenerate.DebugWaveOutput then
+			for waveIndex, groups in pairs(self.GeneratedWaves) do
+				log("Welle", waveIndex)
+				for _, g in ipairs(groups) do
+					log(" ", g.count, "x", g.type)
+				end
+			end
+		end
+	else
+		warn("⚠️ Keine AutoGenerate-Konfig gefunden in WaveManager:Init")
+	end
+
+	log("✅ WaveManager initialisiert")
+end
+
+--// Startet nächste Welle
+function WaveManager:StartWave(waveNumber: number?)
+	if self.IsSpawning then return end
+
+	local nextWave = waveNumber or (self.CurrentWave + 1)
+	if nextWave > self.TotalWaves then
+		log("🏁 Alle Wellen abgeschlossen – kein weiterer Start")
 		return
 	end
 
-	currentWave = waveNumber
-	log("🌊 Starte Wave", currentWave, "/", waveCount)
-
-	for _, group in ipairs(wave) do
-		log("→", group.type, "x", group.count)
+	self.CurrentWave = nextWave
+	local wave = self.GeneratedWaves[self.CurrentWave]
+	if not wave then
+		warn("❌ Unbekannte Welle:", self.CurrentWave)
+		return
 	end
+
+	log("🌊 Starte Wave #", self.CurrentWave)
+	self.IsSpawning = true
 
 	task.spawn(function()
 		for _, group in ipairs(wave) do
-			if group and group.type then
-				for _ = 1, group.count do
-					log("🚀 Spawne Gegner:", group.type, waveNumber)
-					EnemyManager:SpawnEnemy(group.type, waveNumber)
-					task.wait(group.delay)
-				end
-			else
-				warn("⚠️ Ungültige Gruppendaten in Wave:", waveNumber)
+			for _ = 1, group.count do
+				local success, err = pcall(function()
+					EnemyManager:SpawnEnemy(group.type, self.CurrentWave)
+				end)
+				if not success then warn("❌ Spawn-Fehler:", err) end
+				task.wait(group.delay)
 			end
 		end
 
-		-- Verzögerung, danach prüfen ob Gegner alle besiegt wurden
-		task.delay(3, function()
-			WaveManager:CheckNextStep()
-		end)
+		self.IsSpawning = false
+		log("✅ Letzter Gegner in Wave #", self.CurrentWave, "gespawnt")
+
+		if self.CurrentWave < self.TotalWaves then
+			log("⏱ Nächste Welle startet automatisch in 5 Sekunden")
+			task.delay(5, function()
+				self:StartWave(self.CurrentWave + 1)
+			end)
+		else
+			log("🏁 Letzte Welle erreicht – kein weiterer Start")
+		end
 	end)
 end
 
-function WaveManager:CheckNextStep()
-	local alive = EnemyManager:GetAliveEnemyCount()
-	log("👀 Gegner verbleibend:", alive)
-
-	if alive == 0 then
-		if currentWave < waveCount then
-			self:StartWave(currentWave + 1)
-		else
-			log("🎉 Alle Waves abgeschlossen – Victory!")
-			MatchStateModule.EndMatch("Victory")
-		end
-	else
-		log("⏳ Gegner noch aktiv – warte...")
-		task.delay(2, function()
-			WaveManager:CheckNextStep()
-		end)
-	end
+--// Dummy für Kompatibilität – wird nicht mehr verwendet
+function WaveManager:OnWaveCleared()
+	log("⚠️ OnWaveCleared wird nicht mehr verwendet (AutoWave deaktiviert)")
 end
 
 return WaveManager

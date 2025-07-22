@@ -5,20 +5,21 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local TowerDefense           = ServerScriptService:WaitForChild("TowerDefense")
+local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
 
---// Module
+--// Modules
 local Modules = ServerScriptService:WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 
-local WaveManager         = require(TowerDefense:WaitForChild("WaveManager"))
-local EnemyManager        = require(TowerDefense:WaitForChild("EnemyManager"))
-local MatchStateModule    = require(TowerDefense:WaitForChild("MatchStateModule"))
+local WaveManager = require(TowerDefense:WaitForChild("WaveManager"))
+local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
+local MatchStateModule = require(TowerDefense:WaitForChild("MatchStateModule"))
+local MapDataUtils = require(ReplicatedStorage.Modules:WaitForChild("MapDataUtils"))
 
 --// Remotes
-local StartWaveRequest    = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("StartWaveRequest")
-local SetTDEclipsium      = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("SetTDEclipsium")
-local ProfileChanged      = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
+local StartWaveRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("StartWaveRequest")
+local SetTDEclipsium = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("SetTDEclipsium")
+local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 
 --// Debug
 local DEBUG = true
@@ -32,17 +33,16 @@ end
 local MatchServerHandler = {}
 
 --// Initialisierung
-if WaveManager and WaveManager.Init then
-	WaveManager:Init()
-else
-	warn("⚠️ WaveManager.Init fehlt oder WaveManager nicht korrekt geladen")
-end
-
 if EnemyManager and EnemyManager.Init then
 	EnemyManager:Init()
 else
 	warn("⚠️ EnemyManager.Init fehlt oder EnemyManager nicht korrekt geladen")
 end
+
+-- Nur noch Match-Ende Callback nötig
+EnemyManager:SetOnBaseDestroyed(function()
+	MatchStateModule.EndMatch("Defeat")
+end)
 
 log("✅ MatchServerHandler bereit")
 
@@ -62,6 +62,18 @@ StartWaveRequest.OnServerEvent:Connect(function(player)
 
 	-- Spieler registrieren für MatchState (zukünftig auch Gruppen)
 	MatchStateModule.RegisterPlayers({ player })
+
+	local stage = MapDataUtils.GetStageById("SpiritRealm", 1)
+	if stage and stage.WaveConfig then
+		local config = stage.WaveConfig
+
+		WaveManager:Init({
+			AutoGenerate = config
+		})
+		log("📦 Wellenplan generiert mit", config.WaveCount, "Wellen")
+	else
+		warn("❌ Ungültige Stage oder WaveConfig in MatchStart")
+	end
 
 	if WaveManager and WaveManager.StartWave then
 		WaveManager:StartWave(1)

@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-18)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-21)
 
 ---
 
@@ -104,16 +104,16 @@
 | -------------------- | ------ | ---------------------------------------------------------------- |
 | UnitPlacer           | ✅      | Raycast-Platzierung mit Vorschau, Highlight, Puls-Kreis, BoundingBox |
 | PlaceTowerHandler    | ✅      | Serverseitige Validierung, Clone + Spawn, Collision-Check       |
-| MatchServerHandler   | ✅      | Startet Waves über Remote, validiert Requests                   |
+| MatchServerHandler   | ✅      | Startet Waves über Remote, initialisiert MatchState             |
 | StartMatchScript     | ✅      | Aktiviert Platzierung, zeigt Countdown, gibt Startgeld          |
-| WaveManager          | ✅      | Definiert Waves, Delay & Spawns via EnemyManager                |
-| EnemyManager         | ✅      | Spawnt Gegner, wandern per Wegpunkte & EndTrigger, HealthBar    |
+| WaveManager          | ✅      | Startet Waves, generiert Daten, triggert Folge-Welle nach letztem Spawn |
+| EnemyManager         | ✅      | Spawnt Gegner, End-Touch-Logik, HealthBar, keine Wellenkontrolle mehr |
 | EnemyPath            | ✅      | Enthält Start, Ende + nummerierte Punkte, wird sortiert         |
 | EnemyDamageToBase    | ✅      | Wenn Gegner „Ende“ berühren → HP-Abzug, Trigger via Part        |
 | Enemy CollisionGroup | ✅      | Gegner können durch Spieler laufen via „Enemy“-Group            |
 | Player CollisionGroup| ✅      | Spieler automatisch „Players“-Group zugewiesen                  |
 | Units CollisionGroup | ✅      | Platzierte Türme erhalten automatisch „Units“-Gruppe            |
-| DamageSystem         | ✅      | Tower greifen automatisch Gegner im Range an + geben TDEclipsium |
+| DamageSystem         | ✅      | Türme greifen automatisch Gegner an, geben TDEclipsium          |
 | UnitTargetingModule  | ✅      | Unterstützt Nearest, First, Strongest                           |
 | CombatStatsProvider  | ✅      | Liefert Damage, Range, SPA aus UnitDataModule                   |
 | CurrencySystem TD    | ✅      | TDEclipsium wird gesetzt bei Start, entfernt bei MatchEnd       |
@@ -145,7 +145,7 @@
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-18)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-21)
 
 - ✅ Platzierung prüft BoundingBox vs. WalkArea mit Blockierung
 - ✅ CurrencySystem (TDEclipsium) für Match implementiert
@@ -155,6 +155,9 @@
 - ✅ StartMatchScript migriert CurrencyDisplay + verbessert
 - ✅ Remote `SetTDEclipsium` eingeführt für saubere Trennung vom WaveStart
 - ✅ MoneyPanel nur sichtbar bei gültigem Wert (ProfileChanged)
+- ✅ AutoWave vollständig entfernt – Wellen starten nun 5s nach dem letzten Spawn
+- ✅ WaveManager kontrolliert allein den Wellenfluss
+- ✅ EnemyManager wurde von Wellenverantwortung entkoppelt
 
 ---
 
@@ -165,7 +168,8 @@
 - TooltipSystem global umsetzbar machen (Traits, Rewards, Items)
 - Upgrade-/Sell-System für platzierte Tower
 - Match-Ende Logik (Victory / Defeat)
-- Wellen-Zähler + nächste Wave Trigger (Auto/Manuell)
+- Wellen-Zähler + GUI-Anzeige der aktuellen Welle
+- Countdown-Anzeige „Next Wave in...“ im Client
 - Region-Validierung für Platzierung (Whitelist-Zonen)
 - StatusEffect-System (Burn, Slow etc.)
 - AirUnit-Support (Type = Flyer)
@@ -185,7 +189,3 @@
 **Q1:** Wie sollte die Upgrade-Logik bei Türmen mit Goldkosten und Visual Feedback gestaltet werden?  
 **Q2:** Soll das Tower-Zielsystem auch Immunitäten oder Fly/OnlyGround berücksichtigen?  
 **Q3:** Wie könnte das StatusEffect-System effizient per Module erweitert werden?
-
-
-
-

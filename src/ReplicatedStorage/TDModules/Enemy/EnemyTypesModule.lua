@@ -8,7 +8,7 @@ EnemyTypes["Basic"] = {
 	Type = "Ground"
 }
 
-EnemyTypes["FastEnemy"] = {
+EnemyTypes["Fast"] = {
 	MaxHealth = 80,
 	BaseSpeed = 14,
 	Type = "Ground"

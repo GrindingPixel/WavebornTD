@@ -5,12 +5,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 --// Modules
 local EnemyTypes = require(ReplicatedStorage.TDModules.Enemy.EnemyTypesModule)
 local EnemyUtilities = require(ReplicatedStorage.TDModules.Enemy.EnemyUtilities)
-local MatchStateModule = require(ServerScriptService.TowerDefense.MatchStateModule)
 
 --// Path Setup
 local pathFolder = Workspace:WaitForChild("EnemyPath")
@@ -26,6 +24,9 @@ enemiesFolder.Parent = Workspace
 local baseHP = 100
 local matchLost = false
 
+--// Callback
+local onBaseDestroyed: (() -> ())? = nil
+
 --// CollisionGroup Setter
 local function setCollisionGroup(model: Model, groupName: string)
 	for _, part in ipairs(model:GetDescendants()) do
@@ -35,13 +36,16 @@ local function setCollisionGroup(model: Model, groupName: string)
 	end
 end
 
---// Module
+--// Modul
 local EnemyManager = {}
+
+function EnemyManager:SetOnBaseDestroyed(callback: () -> ())
+	onBaseDestroyed = callback
+end
 
 function EnemyManager:Init()
 	print("✅ EnemyManager ready")
 
-	-- Base Hit Detection
 	if not endPoint:IsA("BasePart") then
 		error("❌ EndPoint must be a BasePart!")
 	end
@@ -57,7 +61,9 @@ function EnemyManager:Init()
 			if baseHP <= 0 and not matchLost then
 				matchLost = true
 				print("💀 Base destroyed – triggering match loss")
-				MatchStateModule.EndMatch("Defeat")
+				if onBaseDestroyed then
+					onBaseDestroyed()
+				end
 			end
 		end
 	end)
@@ -102,6 +108,12 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 		return
 	end
 
+	humanoid.Died:Connect(function()
+		if not enemy:GetAttribute("ReachedEnd") then
+			enemy:SetAttribute("ReachedEnd", true)
+		end
+	end)
+
 	enemy:MoveTo(startPoint.Position)
 
 	task.spawn(function()
@@ -130,12 +142,12 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 
 		if enemy:IsDescendantOf(workspace) and not enemy:GetAttribute("ReachedEnd") then
 			warn("⚠️ Enemy did not reach End, but path completed:", enemy.Name)
+			enemy:SetAttribute("ReachedEnd", true)
 			enemy:Destroy()
 		end
 	end)
 end
 
---// Rückgabe der verbleibenden Gegner
 function EnemyManager:GetAliveEnemyCount(): number
 	local count = 0
 	for _, enemy in ipairs(enemiesFolder:GetChildren()) do
