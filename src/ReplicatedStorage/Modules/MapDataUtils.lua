@@ -32,6 +32,14 @@ function MapDataUtils.GetStageById(worldName: string, stageId: number)
 	return nil
 end
 
+function MapDataUtils.GetPlaceId(mapName: string): number?
+	local entry = MapData[mapName]
+	if entry and entry.PlaceId then
+		return entry.PlaceId
+	end
+	return nil
+end
+
 --// Interner Generator: erzeugt vollständige Wellenstruktur aus Konfig
 local function generateWaveData(config): WaveData
 	local waveCount = config.WaveCount or 10

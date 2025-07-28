@@ -21,6 +21,7 @@ end
 --// GUI References
 local leftPanel  = menuGui:WaitForChild("LeftButtonPanel")
 local rightPanel = menuGui:WaitForChild("RightButtonPanel")
+local settings   = menuGui:WaitForChild("Settings")
 
 local buttons = {
 	leftPanel.BattlepassButton,
@@ -32,7 +33,8 @@ local buttons = {
 	rightPanel.CodesButton,
 	rightPanel.ProfileButton,
 	rightPanel.TradeButton,
-	rightPanel.NewsButton
+	rightPanel.NewsButton,
+	settings.SettingsButton
 }
 
 --// Hover Tweens
@@ -103,7 +105,8 @@ for _, btn in ipairs(buttons) do
 			CodesButton      = "CodesPanel",
 			ProfileButton    = "ProfilePanel",
 			TradeButton      = "TradePanel",
-			NewsButton       = "NewsPanel"
+			NewsButton       = "NewsPanel",
+			SettingsButton   = "SettingsPanel"
 	 })[btn.Name]
 
 		if targetPanelName then

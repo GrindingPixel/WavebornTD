@@ -2,9 +2,8 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
-local Workspace = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 
 --// Modules
@@ -13,23 +12,35 @@ local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrap
 --// Remotes
 local MatchEndedEvent = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("MatchEnded")
 
---// State
+--// Types
+export type StageData = {
+	StageId: number,
+	Name: string,
+	WaveConfig: any,
+	Rewards: { [number]: { type: string, amount: number, id: string? } }
+}
+
+--// Module
 local MatchStateModule = {}
 
+--// State
 local currentPlayers: { Player } = {}
-local matchEnded = false
+local matchEnded: boolean = false
+local mapStageData: StageData? = nil
 
 --// Spieler registrieren
-function MatchStateModule.RegisterPlayers(players: { Player })
+function MatchStateModule.RegisterPlayers(players: { Player }, stage: StageData?)
 	currentPlayers = {}
-	for _, p in pairs(players) do
+	matchEnded = false
+	mapStageData = stage
+
+	for _, p in ipairs(players) do
 		if typeof(p) == "Instance" and p:IsA("Player") then
 			table.insert(currentPlayers, p)
 		end
 	end
 
-	matchEnded = false
-	print("[MatchStateModule] Spieler registriert:", #currentPlayers)
+	print("[MatchStateModule] ✅ Spieler registriert:", #currentPlayers)
 end
 
 --// Match beenden
@@ -37,40 +48,55 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 	if matchEnded then return end
 	matchEnded = true
 
-	print("[MatchStateModule] Match endet mit:", resultType)
+	print("[MatchStateModule] 🛑 Match endet mit:", resultType)
 
-	-- 🛡 Absicherung: Fallback, falls Spieler nicht registriert wurden
 	if #currentPlayers == 0 then
-		warn("[MatchStateModule] ⚠️ currentPlayers leer – verwende Players:GetPlayers() als Fallback")
+		warn("[MatchStateModule] ⚠️ currentPlayers leer – fallback zu Players:GetPlayers()")
 		currentPlayers = Players:GetPlayers()
 	end
 
-	for _, player in pairs(currentPlayers) do
+	local rewards = if mapStageData and mapStageData.Rewards then mapStageData.Rewards else {}
+
+	for _, player in ipairs(currentPlayers) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			local profile = ProfileStoreWrapper:GetProfile(player)
 			if profile then
+				if resultType == "Victory" and #rewards > 0 then
+					ProfileStoreWrapper:GrantRewards(player, rewards)
+					print("🎁 Rewards an", player.Name, "vergeben.")
+				end
+
+				-- (Optional) Reset von TDEclipsium nur zu Testzwecken
 				profile.Data.TDEclipsium = nil
 			end
 
-			MatchEndedEvent:FireClient(player, resultType)
+			MatchEndedEvent:FireClient(player, {
+				Result = resultType,
+				Rewards = rewards,
+			})
 		else
 			warn("[MatchStateModule] ❌ Ungültiger Player-Eintrag:", player)
 		end
 	end
 
-	local unitFolder = Workspace:FindFirstChild("Units")
-	if unitFolder then
-		for _, unit in ipairs(unitFolder:GetChildren()) do
-			unit:Destroy()
+	-- Cleanup
+	for _, folderName in { "Units", "Enemies" } do
+		local folder = Workspace:FindFirstChild(folderName)
+		if folder then
+			for _, obj in ipairs(folder:GetChildren()) do
+				if obj:IsA("Model") or obj:IsA("BasePart") then
+					obj:Destroy()
+				end
+			end
 		end
 	end
+end
 
-	local enemyFolder = Workspace:FindFirstChild("Enemies")
-	if enemyFolder then
-		for _, enemy in ipairs(enemyFolder:GetChildren()) do
-			enemy:Destroy()
-		end
-	end
+function MatchStateModule.Reset()
+	currentPlayers = {}
+	matchEnded = false
+	mapStageData = nil
+	print("[MatchStateModule] 🔄 MatchState zurückgesetzt")
 end
 
 return MatchStateModule

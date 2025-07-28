@@ -89,9 +89,6 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 	profile.Data.TDEclipsium -= placementCost
 	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.TDEclipsium)
 
-
-
-
 	-- 3. Modell vorbereiten
 	local modelTemplate = UnitModels:FindFirstChild(unitName)
 	if not modelTemplate then

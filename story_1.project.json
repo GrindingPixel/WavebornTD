@@ -46,6 +46,9 @@
       "GuiScripts": {
         "$path": "src/StarterGui/GuiScripts"
       },
+      "Global": {
+        "$path": "src/StarterGui/Global"
+      },
       "TDGuiScripts": {
         "$path": "src/StarterGui/TDGuiScripts"
       }

@@ -156,10 +156,7 @@ for i = 1, 6 do
 			local tpButton = clone:FindFirstChild("TeleportButton")
 			if tpButton and tpButton:IsA("ImageButton") then
 				tpButton.MouseButton1Click:Connect(function()
-					teleportRemote:FireServer({
-						world = currentWorld,
-						stage = stageData.StageId
-						})
+					teleportRemote:FireServer(currentWorld, stageData.StageId)
 				end)
 			end
 

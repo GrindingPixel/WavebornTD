@@ -1,0 +1,7 @@
+ServerScriptService = alles
+ServerStorgae = alles
+StarterGui = Global , TDGuiScripts, GuiSscripts = Mainmenu,Unitclient,unitinfo
+Guis = MainMenu,Matchresult,Money,Settings,TdGui,Unitaction,unitinventory
+StarterPlayer = alles
+RelicatedStorage = alles
+Workspace = Enemies, Units, WalkArea

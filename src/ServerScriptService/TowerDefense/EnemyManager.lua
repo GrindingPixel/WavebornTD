@@ -54,7 +54,7 @@ function EnemyManager:Init()
 		local enemy = hit:FindFirstAncestorWhichIsA("Model")
 		if enemy and enemy:IsDescendantOf(enemiesFolder) and not enemy:GetAttribute("ReachedEnd") then
 			enemy:SetAttribute("ReachedEnd", true)
-			baseHP -= 50
+			baseHP -= 100
 			print("💥", enemy.Name, "reached base. Base HP now:", baseHP)
 			enemy:Destroy()
 
@@ -108,12 +108,6 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 		return
 	end
 
-	humanoid.Died:Connect(function()
-		if not enemy:GetAttribute("ReachedEnd") then
-			enemy:SetAttribute("ReachedEnd", true)
-		end
-	end)
-
 	enemy:MoveTo(startPoint.Position)
 
 	task.spawn(function()
@@ -148,14 +142,12 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 	end)
 end
 
-function EnemyManager:GetAliveEnemyCount(): number
-	local count = 0
-	for _, enemy in ipairs(enemiesFolder:GetChildren()) do
-		if enemy:IsA("Model") and not enemy:GetAttribute("ReachedEnd") then
-			count += 1
+function EnemyManager.ClearEnemies()
+	for _, enemy in ipairs(workspace:FindFirstChild("Enemies"):GetChildren()) do
+		if enemy:IsA("Model") then
+			enemy:Destroy()
 		end
 	end
-	return count
 end
 
 return EnemyManager

@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-21)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-07-29)
 
 ---
 
@@ -24,6 +24,7 @@
 | ProfileLoadedEvent   | ✅      | Wird bei erfolgreichem Profil-Laden gefeuert       |
 | ProfileChangedEvent  | ✅      | Wird bei Änderungen wie Purchases oder BP gesendet |
 | IsProfileReady Remote| ✅      | Clients prüfen Serverstatus vor Ladeaktionen       |
+| ProfileSyncService   | ✅      | LiveSync von `Settings`, `TDEclipsium`, `Units`    |
 
 ---
 
@@ -90,102 +91,86 @@
 
 ## 🗺️ 8. Teleport-System
 
-| Element            | Status | Beschreibung                                     |
-| ------------------ | ------ | ----------------------------------------------- |
-| MapTeleportGui     | ✅      | Welten/Stages mit Rewards                       |
-| TeleportStageHandler | ✅    | Verarbeitet Stage-Teleports                     |
-| FastTravelGui      | ✅      | Buttons zu Story, Raid, Summon etc.             |
+| Element                     | Status | Beschreibung                                                              |
+| ---------------------------|--------|---------------------------------------------------------------------------|
+| MapTeleportGui             | ✅     | Welten/Stages mit Rewards                                                 |
+| TeleportStageHandler       | ✅     | ServerScript, empfängt Remote `TeleportStageRequest` von Lobby-Client     |
+| StageTeleportService       | ✅     | Server-Modul für Match-internen Teleport (Restart, Continue, Leave, Next) |
+| FastTravelGui              | ✅     | Buttons zu Story, Raid, Summon etc.                                       |
 
 ---
 
 ## ⚔️ 9. Tower-Defense Gameplay
 
-| Element              | Status | Beschreibung                                                     |
-| -------------------- | ------ | ---------------------------------------------------------------- |
-| UnitPlacer           | ✅      | Raycast-Platzierung mit Vorschau, Highlight, Puls-Kreis, BoundingBox |
-| PlaceTowerHandler    | ✅      | Serverseitige Validierung, Clone + Spawn, Collision-Check       |
-| MatchServerHandler   | ✅      | Startet Waves über Remote, initialisiert MatchState             |
-| StartMatchScript     | ✅      | Aktiviert Platzierung, zeigt Countdown, gibt Startgeld          |
-| WaveManager          | ✅      | Startet Waves, generiert Daten, triggert Folge-Welle nach letztem Spawn |
-| EnemyManager         | ✅      | Spawnt Gegner, End-Touch-Logik, HealthBar, keine Wellenkontrolle mehr |
-| EnemyPath            | ✅      | Enthält Start, Ende + nummerierte Punkte, wird sortiert         |
-| EnemyDamageToBase    | ✅      | Wenn Gegner „Ende“ berühren → HP-Abzug, Trigger via Part        |
-| Enemy CollisionGroup | ✅      | Gegner können durch Spieler laufen via „Enemy“-Group            |
-| Player CollisionGroup| ✅      | Spieler automatisch „Players“-Group zugewiesen                  |
-| Units CollisionGroup | ✅      | Platzierte Türme erhalten automatisch „Units“-Gruppe            |
-| DamageSystem         | ✅      | Türme greifen automatisch Gegner an, geben TDEclipsium          |
-| UnitTargetingModule  | ✅      | Unterstützt Nearest, First, Strongest                           |
-| CombatStatsProvider  | ✅      | Liefert Damage, Range, SPA aus UnitDataModule                   |
-| CurrencySystem TD    | ✅      | TDEclipsium wird gesetzt bei Start, entfernt bei MatchEnd       |
-| SetTDEclipsium Remote| ✅      | Remotesteuert Startgeld-Vergabe                                 |
-| MoneyPanel           | ✅      | Zeigt TDEclipsium-Wert bei LiveSync korrekt an                  |
+| Element                | Status | Beschreibung                                                                 |
+| ---------------------- | ------ | ---------------------------------------------------------------------------- |
+| MatchServerHandler     | ✅      | Spielstart, Wellenstart, AutoWave, Seamless Restart, MatchResultLogik       |
+| StartMatchScript       | ✅      | PlayButton1 für Matchstart, PlayButton2 für Folge-Wellen                     |
+| WaveManager            | ✅      | Wellen-Generierung, AutoWave, Reset()-Methode eingebaut                      |
+| EnemyManager           | ✅      | Gegnerverwaltung, ClearEnemies() zur Laufzeit entfernt                       |
+| ShowPlayButton Remote  | ✅      | Client zeigt PlayButton2, wenn AutoWave deaktiviert ist                      |
+| ShowStartButton Remote | ✅      | PlayButton1 kann vom Server erneut ausgelöst werden (z. B. bei Restart)       |
+| RestartMode Toggle     | ✅      | Im Settings-Panel aktivierbar, Seamless Restart vermeidet Teleport           |
+| MatchStateModule.Reset | ✅      | Setzt Player, Stage, Workspace (`Units`, `Enemies`) zurück                   |
+| MatchResultAction      | ✅      | Steuerung für Buttons: Leave, Restart, Continue → verwendet StageTeleportService |
+| PlacedUnitManager      | 🔁 entfällt | ClearUnits wurde direkt in MatchStateModule integriert                       |
 
 ---
 
 ## 🔄 10. Live-Sync
 
-| Element                 | Status | Beschreibung                                             |
-| ----------------------- | ------ | ------------------------------------------------------- |
-| ProfileSyncService      | ✅      | Sorgt für Updates von Inventory, Purchases, Battlepass |
-| LiveSync Battlepass     | ✅      | Änderungen werden direkt im UI aktualisiert             |
-| LiveSync Units          | ✅      | EquipSlots und Inventar synchron mit Client             |
-| EquipSlots Sync         | ✅      | EquippedSlot1–6 werden automatisch bei Join + Equip gesetzt |
-| ProfileChanged Events   | ✅      | Battlepass, Units, TDEclipsium etc. werden dynamisch aktualisiert |
+| Element                 | Status | Beschreibung                                                |
+| ----------------------- | ------ | ----------------------------------------------------------- |
+| ProfileSyncService      | ✅      | Methode `Send(key, data, player)` überträgt Settings        |
+| ProfileChanged Events   | ✅      | Erkennt `RestartMode` und `AutoWaveEnabled`                 |
+| SettingsClientScript    | ✅      | Sendet Toggles, zeigt aktuelle Werte bei OnOpen             |
+| SetAutoWaveEnabled      | ✅      | Remote für AutoWave Umschaltung                             |
+| SetSeamlessEnabled      | ✅      | Remote für RestartMode Toggle (true/false → "seamless"/"teleport") |
 
 ---
 
 ## 🔒 11. Persistent PlayerData
 
-| Element             | Status | Beschreibung                                    |
-| ------------------- | ------ | ----------------------------------------------- |
-| ProfileStoreWrapper | ✅      | Speichert alle Daten via ProfileStore           |
-| PlayerDataTemplate  | ✅      | Battlepass, Purchases, Units, TDEclipsium       |
-| AutoSave            | ✅      | Speichert Profile regelmäßig                    |
-| MarkerSystem        | ✅      | Alle Systeme setzen Ready-Marker vor ProfilRelease |
+| Element             | Status | Beschreibung                                        |
+| ------------------- | ------ | --------------------------------------------------- |
+| ProfileStoreWrapper | ✅      | Verwaltet Settings + SelectedStage, Teleportziel etc. |
+| PlayerDataTemplate  | ✅      | Settings-Block enthält `RestartMode`, `AutoWaveEnabled`, `Teleport.SelectedStage` |
+| GetSettings Remote  | ✅      | Panel kann Profilwerte auch beim Öffnen aktiv abfragen      |
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-21)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-07-29)
 
-- ✅ Platzierung prüft BoundingBox vs. WalkArea mit Blockierung
-- ✅ CurrencySystem (TDEclipsium) für Match implementiert
-- ✅ TDEclipsium wird korrekt gesetzt, Live-Sync funktioniert
-- ✅ Gegner geben TDEclipsium + EXP, Clientanzeige aktualisiert sich direkt
-- ✅ MatchEnd entfernt TDEclipsium aus Profil
-- ✅ StartMatchScript migriert CurrencyDisplay + verbessert
-- ✅ Remote `SetTDEclipsium` eingeführt für saubere Trennung vom WaveStart
-- ✅ MoneyPanel nur sichtbar bei gültigem Wert (ProfileChanged)
-- ✅ AutoWave vollständig entfernt – Wellen starten nun 5s nach dem letzten Spawn
-- ✅ WaveManager kontrolliert allein den Wellenfluss
-- ✅ EnemyManager wurde von Wellenverantwortung entkoppelt
+- ✅ RestartMode vollständig implementiert inkl. UI-Animation, Debounce, ServerSync
+- ✅ MatchRestart mit Seamless-Logik korrekt umgesetzt (kein EnemyManager/UnitClear nötig)
+- ✅ MatchResultButtons: Leave, Restart, Continue → mit StageTeleportService verdrahtet
+- ✅ StageTeleportService als Modul eingeführt, ersetzt direkte Remote-Teleports im Match
+- ✅ MatchServerHandler verwendet Teleport-Modul statt FireServer
+- ✅ TeleportStageHandler.server.lua bleibt für Lobby-Remote `TeleportStageRequest` zuständig
+- ✅ Client-Script `MainTeleportScript.client.lua` sendet korrekte Parameterstruktur (`string, number`)
+- ✅ Getrennte Logik für Lobby- vs. Match-Teleport finalisiert
 
 ---
 
 ## 🔜 13. Nächste Schritte
 
-- RewardPopupGui fertigstellen für Quests & Battlepass
-- ClaimAllButton für Battlepass implementieren
-- TooltipSystem global umsetzbar machen (Traits, Rewards, Items)
-- Upgrade-/Sell-System für platzierte Tower
-- Match-Ende Logik (Victory / Defeat)
-- Wellen-Zähler + GUI-Anzeige der aktuellen Welle
-- Countdown-Anzeige „Next Wave in...“ im Client
-- Region-Validierung für Platzierung (Whitelist-Zonen)
-- StatusEffect-System (Burn, Slow etc.)
-- AirUnit-Support (Type = Flyer)
-- Boss-Type Logik (mehr HP, andere Farbe, z. B. via Type = Boss)
-- Tower-Zielmodus durch Spieler änderbar (Dropdown/Buttons pro Tower)
+- Stage 6 → NextMap-Fortsetzung mit `"Next"`-Button
+- RewardPopupGui für Quests & Battlepass anzeigen nicht dringend
+- TowerUpgrade & Sell-System fertigstellen (Refund, FX, Stats)
+- TowerTargetMode (Dropdown: Nearest, First, Strongest etc.)
+- StatusEffects (Burn, Freeze, Slow) über `Enemy.Status` + FX
+- AirUnit-Support über neue Typen und TargetModes
+- BossWave-Typen + Spezialverhalten definieren
+- Countdown-Anzeige im UI ("Nächste Welle in ...")
+- TooltipSystem refactoren (Traits, Rewards, Units)
+- EXP & Battlepass korrekt mit Victory-Screen verrechnen
+
 
 ---
 
 ## 🧪 Known Issues (Live Client)
 
-- Stage-Auswahl im MapTeleport noch ohne Back/Close-Logik
-- Kein Popup für Rewards bei Claims sichtbar
-- Tooltip-System placeholderhaft oder leer
+- ❌ TooltipSystem funktioniert derzeit nicht einheitlich (UI/FX) nicht dringend
+- ❌ Kein RewardPopup bei Claims sichtbar nicht dringend
+- ❌ EXP-Verteilung bei MatchVictory noch nicht implementiert
 
----
-
-**Q1:** Wie sollte die Upgrade-Logik bei Türmen mit Goldkosten und Visual Feedback gestaltet werden?  
-**Q2:** Soll das Tower-Zielsystem auch Immunitäten oder Fly/OnlyGround berücksichtigen?  
-**Q3:** Wie könnte das StatusEffect-System effizient per Module erweitert werden?

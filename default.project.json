@@ -40,6 +40,9 @@
     },
     "StarterGui": {
       "$className": "StarterGui",
+      "Global": {
+        "$path": "src/StarterGui/Global"
+      },
       "GuiScripts": {
         "$path": "src/StarterGui/GuiScripts"
       }

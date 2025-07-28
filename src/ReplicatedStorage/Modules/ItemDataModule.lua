@@ -1,6 +1,18 @@
 -- ItemDataModule.lua
 
 local ItemData = {
+	["exp"] = {
+		displayName = "EXP",
+		iconId = "rbxassetid://90673547927063",
+		category = "Experience",
+		desc = "Used to level up your player profile.",
+	},
+	["bpexp"] = {
+		displayName = "BP EXP",
+		iconId = "rbxassetid://78063301899765",
+		category = "Experience",
+		desc = "Used to level up your Battle Pass.",
+	},
 	["SummonScroll_Common"] = {
 		displayName = "Common Summon Scroll",
 		iconId = "rbxassetid://91235668959527",
@@ -21,6 +33,13 @@ local ItemData = {
 		category = "Token",
 		rarity = "Divine",
 		desc = "Token used to reroll unit traits.",
+	},
+	["Eclipsium"] = {
+		displayName = "Eclipsium",
+		iconId = "rbxassetid://120116668302098",
+		category = "Eclipsium",
+		rarity = "Common",
+		desc = "Currency used for various upgrades and purchases.",
 	},
 	["Universal_Fragment"] = {
 		displayName = "Univversal_Fragment",

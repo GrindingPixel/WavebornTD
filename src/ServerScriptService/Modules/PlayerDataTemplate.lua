@@ -1,20 +1,59 @@
 -- ServerScriptService.Modules.PlayerDataTemplate.lua
 
 local DefaultPlayerData = {
-	-- 💰 Währungen
-	TDEclipsium = 500,
-	Gems = 50,
-	Eclipsium = 10000,
+	-- Spieler-Informationen
+	Player = {
+		Name = "",
+		UserId = "",
+		Level = 1,
+		Exp = 0,
+		-- Currency
+		Eclipsium = 10000,
+		TDEclipsium = 500,
+		Gems = 50,
+			-- 🕒 Statistiken
+		TimePlayed = 0, -- Sekunden
+		LastLogin = os.time(),
+		TotalEclipsium = 0,
+		TotalGems = 0,
+		TotalSummons = 0,
+		TotalReroll_Token = 0,
+		TotalAttribute_Token = 0,
+--[[	TotalMVP = 0,
+		TotalMatches = 0,
+		TotalStages = 0,
+		TotalRaids = 0,
+		TotalTowerClears = 0,
+		TotalQuestsCompleted = 0, 
+		HighestWave = 0, ]]
+		TotalKills = 0,
+		TotalWins = 0,
+		TotalLosses = 0,
+	
+	},
 
 	-- 📦 Items (z. B. Scrolls, EXP-Food)
 	Inventory = {
-	Scroll = {},
-	Token = {},
-	Material = {},
-	Evo = {},
-	Cosmetics = {},
+		Scroll = {},
+		Token = {},
+		Material = {},
+		Evo = {},
+		Cosmetics = {},
 	},
 
+	-- Settings
+	Settings = {
+		AutoWaveEnabled = false,
+		RestartMode = "teleport", -- "seamless" oder "teleport"
+	},
+
+	-- 🗺️ Stage
+	Teleport = {
+		SelectedStage = {
+			MapName = "",
+			StageId = 0,
+		}
+	},
 	-- 🧙‍♂️ Units
 	Units = {
 		-- Beispielstruktur:

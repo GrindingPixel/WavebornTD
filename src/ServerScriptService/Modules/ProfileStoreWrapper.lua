@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local StarterGui = game:GetService("StarterGui")
 local Modules = ServerScriptService:WaitForChild("Modules")
 local Server = ServerScriptService:WaitForChild("Server")
 local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
@@ -22,7 +23,7 @@ local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("B
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
-
+local GetSettings = ReplicatedStorage.Remotes.Profile:WaitForChild("GetSettings")
 
 --// Einstellungen
 local DATASTORE_NAME = "WavebornTDPlayerData"
@@ -39,6 +40,8 @@ local systemsToWaitFor = {}
 local function check(handlerName: string, markerName: string)
 	local scriptObj = Server:FindFirstChild(handlerName)
 		or TowerDefense:FindFirstChild(handlerName)
+		or StarterGui.Global:FindFirstChild(handlerName)
+
 	if scriptObj and scriptObj:IsA("Script") then
 		if scriptObj.Enabled then
 			table.insert(systemsToWaitFor, markerName)
@@ -55,6 +58,7 @@ check("UnitServerHandler", "Units")
 check("BattlepassServerHandler", "Battlepass")
 check("CodesServerHandler", "Codes")
 check("InventoryServerHandler", "Inventory")
+check("SettingsClientScript", "Settings")
 
 local systemReady = {} -- [userId] = { [systemName] = true }
 
@@ -76,6 +80,270 @@ function ProfileWrapper:GetAllLoadedPlayers()
 		if player then table.insert(result, player.Name) end
 	end
 	return result
+end
+
+-- ===================================
+-- PlayerProfile Management
+-- ===================================
+
+-- Holt oder updated das Profil eines Spielers
+function ProfileWrapper:UpdatePlayerIdentity(player)
+	local profile = getProfile(player)
+	if not profile then return end
+
+	profile.Data.Player = profile.Data.Player or {}
+	profile.Data.Player.Name = player.Name
+	profile.Data.Player.UserId = tostring(player.UserId)
+
+	log("📛 Spieler-Identität aktualisiert:", player.Name, "/", player.UserId)
+end
+
+
+--Spieler Exp
+local function getExpForLevelUp(level: number): number
+	return 100 + (level - 1) * 50
+end
+
+function ProfileWrapper:AddPlayerEXP(player, amount: number)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	local data = profile.Data.Player
+	data.Exp = (data.Exp or 0) + amount
+
+	local leveledUp = false
+	while data.Exp >= getExpForLevelUp(data.Level) do
+		data.Exp -= getExpForLevelUp(data.Level)
+		data.Level += 1
+		leveledUp = true
+	end
+
+	log("✨ Player EXP +", amount, "→", data.Exp, "(Level:", data.Level, ")")
+	ProfileSyncService:Send(player, "Player", data)
+
+	return leveledUp
+end
+
+-- Currency
+function ProfileWrapper:GetEclipsium(player)
+	local profile = getProfile(player)
+	return profile and (profile.Data.Player.Eclipsium or 0) or 0
+end
+
+function ProfileWrapper:GetTDEclipsium(player)
+	local profile = getProfile(player)
+	return profile and (profile.Data.Player.TDEclipsium or 0) or 0
+end
+
+function ProfileWrapper:GetGems(player)
+	local profile = getProfile(player)
+	return profile and (profile.Data.Player.Gems or 0) or 0
+end
+
+function ProfileWrapper:AddEclipsium(player, amount)
+	assert(type(amount) == "number", "Eclipsium-Amount muss Zahl sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	profile.Data.Player.Eclipsium = math.max((profile.Data.Player.Eclipsium or 0) + amount, 0)
+	profile.Data.Player.TotalEclipsium = (profile.Data.Player.TotalEclipsium or 0) + amount
+
+	log("Eclipsium für", player.Name, "auf", profile.Data.Player.Eclipsium, "geändert (Delta:", amount, ")")
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:AddTDEclipsium(player, amount)
+	assert(type(amount) == "number", "Amount muss Zahl sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	profile.Data.Player.TDEclipsium = math.max((profile.Data.Player.TDEclipsium or 0) + amount, 0)
+	log("TDEclipsium für", player.Name, "+", amount, "→", profile.Data.Player.TDEclipsium)
+	return true
+end
+
+function ProfileWrapper:AddGems(player, amount)
+	assert(type(amount) == "number", "Gems-Amount muss Zahl sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	profile.Data.Player.Gems = math.max((profile.Data.Player.Gems or 0) + amount, 0)
+	profile.Data.Player.TotalGems = (profile.Data.Player.TotalGems or 0) + amount
+
+	log("Gems für", player.Name, "auf", profile.Data.Player.Gems, "geändert (Delta:", amount, ")")
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:RemoveEclipsium(player, amount)
+	assert(type(amount) == "number" and amount > 0, "Eclipsium-Amount muss >0 sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	if (profile.Data.Player.Eclipsium or 0) < amount then
+		warnf("Nicht genug Eclipsium bei", player.Name)
+		return false
+	end
+	profile.Data.Player.Eclipsium -= amount
+	log("Eclipsium für", player.Name, "- ", amount, "→", profile.Data.Player.Eclipsium)
+	return true
+end
+
+function ProfileWrapper:RemoveTDEclipsium(player, amount)
+	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	if (profile.Data.Player.TDEclipsium or 0) < amount then
+		warnf("Nicht genug TDEclipsium bei", player.Name)
+		return false
+	end
+	profile.Data.Player.TDEclipsium -= amount
+	log("TDEclipsium für", player.Name, "- ", amount, "→", profile.Data.Player.TDEclipsium)
+	return true
+end
+
+function ProfileWrapper:RemoveGems(player, amount)
+	assert(type(amount) == "number" and amount > 0, "Gems-Amount muss >0 sein!")
+	local profile = getProfile(player)
+	if not profile then return false end
+	if (profile.Data.Player.Gems or 0) < amount then
+		warnf("Nicht genug Gems bei", player.Name)
+		return false
+	end
+	profile.Data.Player.Gems = profile.Data.Player.Gems - amount
+	log("Gems für", player.Name, "- ", amount, "→", profile.Data.Player.Gems)
+	return true
+end
+
+--Stat tracking
+function ProfileWrapper:TrackMatchResult(player: Player, isWin: boolean)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	if isWin then
+		profile.Data.Player.TotalWins = (profile.Data.Player.TotalWins or 0) + 1
+	else
+		profile.Data.Player.TotalLosses = (profile.Data.Player.TotalLosses or 0) + 1
+	end
+
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:TrackTokenUse(player, tokenId: string)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	if tokenId == "Reroll_Token" then
+		profile.Data.Player.TotalReroll_Token = (profile.Data.Player.TotalReroll_Token or 0) + 1
+	elseif tokenId == "Attribute_Token" then
+		profile.Data.Player.TotalAttribute_Token = (profile.Data.Player.TotalAttribute_Token or 0) + 1
+	end
+
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:TrackSummon(player)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	profile.Data.Player.TotalSummons = (profile.Data.Player.TotalSummons or 0) + 1
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:TrackKill(player)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	profile.Data.Player.TotalKills = (profile.Data.Player.TotalKills or 0) + 1
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+function ProfileWrapper:TrackTimePlayed(player, seconds: number)
+	local profile = getProfile(player)
+	if not profile then return false end
+
+	profile.Data.Player.TimePlayed += seconds
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
+	return true
+end
+
+
+
+
+-- ===================================
+-- Settings
+-- ===================================
+-- Gibt die gespeicherten Settings eines Spielers zurück
+function ProfileWrapper:GetSettings(player: Player): { [string]: any }
+	local profile = self:GetProfile(player)
+	if profile then
+		profile.Data.Settings = profile.Data.Settings or {}
+
+		-- Standardwerte ergänzen (falls nicht vorhanden)
+		if profile.Data.Settings.AutoWaveEnabled == nil then
+			profile.Data.Settings.AutoWaveEnabled = false
+		end
+		if profile.Data.Settings.RestartMode == nil then
+			profile.Data.Settings.RestartMode = "teleport"
+		end
+
+		return profile.Data.Settings
+	end
+
+	-- Fallback bei fehlendem Profil
+	return {
+		AutoWaveEnabled = false,
+		RestartMode = "teleport"
+	}
+end
+-- Speichert eine einzelne Einstellung dynamisch
+function ProfileWrapper:SetSetting(player: Player, key: string, value: any)
+	local profile = self:GetProfile(player)
+	if not profile then return end
+
+	profile.Data.Settings = profile.Data.Settings or {}
+	profile.Data.Settings[key] = value
+
+	-- 🔁 Live-Sync über ProfileSyncService
+	ProfileSyncService:Send("Settings", profile.Data.Settings, player)
+end
+
+-- RemoteFunction-Handler: gibt Settings an Client zurück
+GetSettings.OnServerInvoke = function(player)
+	return ProfileWrapper:GetSettings(player)
+end
+
+-- ===================================
+-- Teleport Management
+-- ===================================
+-- Gibt die ausgewählte Stage des Spielers zurück
+function ProfileWrapper:GetSelectedStage(player)
+	local profile = self:GetProfile(player)
+	if not profile then return nil end
+
+	local teleport = profile.Data.Teleport or {}
+	return teleport.SelectedStage or { MapName = "", StageId = 0 }
+end
+
+-- Setzt die gewählte Stage für den nächsten Teleport
+function ProfileWrapper:SetSelectedStage(player, mapName: string, stageId: number)
+	assert(type(mapName) == "string" and mapName ~= "", "Ungültiger MapName")
+	assert(type(stageId) == "number" and stageId > 0, "Ungültiger StageId")
+
+	local profile = self:GetProfile(player)
+	if not profile then return false end
+
+	profile.Data.Teleport = profile.Data.Teleport or {}
+	profile.Data.Teleport.SelectedStage = {
+		MapName = mapName,
+		StageId = stageId,
+	}
+
+	log("💾 SelectedStage gesetzt für", player.Name, "→", mapName, "Stage", stageId)
+	return true
 end
 
 -- ===================================
@@ -397,92 +665,6 @@ function ProfileWrapper:SetBattlepassPremium(player, value)
 	return true
 end
 
-
--- ===================================
--- SHOP/WÄHRUNG
--- ===================================
-
-function ProfileWrapper:GetEclipsium(player)
-	local profile = getProfile(player)
-	return profile and (profile.Data.Eclipsium or 0) or 0
-end
-
-function ProfileWrapper:GetTDEclipsium(player)
-	local profile = getProfile(player)
-	return profile and (profile.Data.TDEclipsium or 0) or 0
-end
-
-function ProfileWrapper:GetGems(player)
-	local profile = getProfile(player)
-	return profile and (profile.Data.Gems or 0) or 0
-end
-
-function ProfileWrapper:AddEclipsium(player, amount)
-	assert(type(amount) == "number", "Eclipsium-Amount muss Zahl sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	profile.Data.Eclipsium = math.max((profile.Data.Eclipsium or 0) + amount, 0)
-	log("Eclipsium für", player.Name, "auf", profile.Data.Eclipsium, "geändert (Delta:", amount, ")")
-	return true
-end
-
-function ProfileWrapper:AddTDEclipsium(player, amount)
-	assert(type(amount) == "number", "Amount muss Zahl sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	profile.Data.TDEclipsium = math.max((profile.Data.TDEclipsium or 0) + amount, 0)
-	log("TDEclipsium für", player.Name, "+", amount, "→", profile.Data.TDEclipsium)
-	return true
-end
-
-function ProfileWrapper:AddGems(player, amount)
-	assert(type(amount) == "number", "Gems-Amount muss Zahl sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	profile.Data.Gems = math.max((profile.Data.Gems or 0) + amount, 0)
-	log("Gems für", player.Name, "auf", profile.Data.Gems, "geändert (Delta:", amount, ")")
-	return true
-end
-
-function ProfileWrapper:RemoveEclipsium(player, amount)
-	assert(type(amount) == "number" and amount > 0, "Eclipsium-Amount muss >0 sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	if (profile.Data.Eclipsium or 0) < amount then
-		warnf("Nicht genug Eclipsium bei", player.Name)
-		return false
-	end
-	profile.Data.Eclipsium -= amount
-	log("Eclipsium für", player.Name, "- ", amount, "→", profile.Data.Eclipsium)
-	return true
-end
-
-function ProfileWrapper:RemoveTDEclipsium(player, amount)
-	assert(type(amount) == "number" and amount > 0, "Amount muss >0 sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	if (profile.Data.TDEclipsium or 0) < amount then
-		warnf("Nicht genug TDEclipsium bei", player.Name)
-		return false
-	end
-	profile.Data.TDEclipsium -= amount
-	log("TDEclipsium für", player.Name, "- ", amount, "→", profile.Data.TDEclipsium)
-	return true
-end
-
-function ProfileWrapper:RemoveGems(player, amount)
-	assert(type(amount) == "number" and amount > 0, "Gems-Amount muss >0 sein!")
-	local profile = getProfile(player)
-	if not profile then return false end
-	if (profile.Data.Gems or 0) < amount then
-		warnf("Nicht genug Gems bei", player.Name)
-		return false
-	end
-	profile.Data.Gems = profile.Data.Gems - amount
-	log("Gems für", player.Name, "- ", amount, "→", profile.Data.Gems)
-	return true
-end
-
 -- ===================================
 -- UPGRADES
 -- ===================================
@@ -511,42 +693,43 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 	local profile = activeProfiles[player.UserId]
 	if not profile then return end
 
-for _, reward in ipairs(rewards) do
-	if typeof(reward) ~= "table" or not reward.type or not reward.id then
-		warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
-		continue
-	end
-
-	if reward.type == "Units" then
-		ProfileWrapper:AddUnit(player, reward.id, reward.star) -- optional override
-		log("🎁 UnitReward:", reward.id, "→", player.Name)
-	else
-		local itemId = reward.id
-		local amount = reward.amount or 1
-		local category = reward.type
-
-		local categoryTable = profile.Data.Inventory[category]
-		if not categoryTable then
-			warn("[ProfileWrapper] ❌ Ungültige Reward-Kategorie:", category)
+	for _, reward in ipairs(rewards) do
+		if typeof(reward) ~= "table" or not reward.type then
+			warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
 			continue
 		end
 
-		categoryTable[itemId] = (categoryTable[itemId] or 0) + amount
-		log("🎁 +", amount, "×", itemId, "(", category, ") an", player.Name)
+		local rtype = reward.type
+		local amount = reward.amount or 1
+
+		if rtype == "Eclipsium" then
+			self:AddEclipsium(player, amount)
+		elseif rtype == "TDEclipsium" then
+			self:AddTDEclipsium(player, amount)
+		elseif rtype == "Gems" then
+			self:AddGems(player, amount)
+		elseif rtype == "BattlepassEXP" then
+			self:AddBattlepassEXP(player, amount)
+		elseif rtype == "EXP" then
+			-- Hier kann später das EXP-System ergänzt werden
+			log("✨ EXP +", amount, "→", player.Name, "(noch nicht implementiert)")
+		elseif rtype == "Units" and reward.id then
+			self:AddUnit(player, reward.id, reward.star)
+		elseif reward.id then
+			self:AddItemTyped(player, rtype, reward.id, amount)
+		else
+			warn("[ProfileWrapper] ❌ Reward konnte nicht verarbeitet werden:", reward)
+		end
 	end
-end
 
-
-	-- LiveSync
+	-- Sync
 	ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 	ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
 
-	-- Optional: extra Log für Battlepass
 	if isBattlepass then
 		print("[ProfileWrapper] ✅ Rewards wurden dem Inventar hinzugefügt (Battlepass)")
 	end
 end
-
 
 
 -- ===================================
@@ -589,6 +772,21 @@ local function onPlayerAdded(player)
 
 	log("[DEBUG] onPlayerAdded ausgeführt für", player.Name)
 	profile:Reconcile()
+profile.Data.Teleport = profile.Data.Teleport or {}
+
+-- NEU: Wenn SelectedStage fehlt ODER leer ist → setzen
+if typeof(profile.Data.Teleport.SelectedStage) ~= "table"
+	or profile.Data.Teleport.SelectedStage.MapName == nil
+	or profile.Data.Teleport.SelectedStage.MapName == ""
+	or profile.Data.Teleport.SelectedStage.StageId == nil
+	or profile.Data.Teleport.SelectedStage.StageId <= 0
+then
+	profile.Data.Teleport.SelectedStage = {
+		MapName = "SpiritRealm",
+		StageId = 1
+	}
+	print("✅ Default-Stage gesetzt (Studio-Fallback)")
+end
 
 	-- Quests initialisieren
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
