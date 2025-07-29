@@ -9,6 +9,7 @@ local StarterGui = game:GetService("StarterGui")
 local Modules = ServerScriptService:WaitForChild("Modules")
 local Server = ServerScriptService:WaitForChild("Server")
 local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
+local Enemys = TowerDefense:WaitForChild("Enemys")
 local HttpService = game:GetService("HttpService")
 
 --// Modules
@@ -40,6 +41,7 @@ local systemsToWaitFor = {}
 local function check(handlerName: string, markerName: string)
 	local scriptObj = Server:FindFirstChild(handlerName)
 		or TowerDefense:FindFirstChild(handlerName)
+		or Enemys:FindFirstChild(handlerName)
 		or StarterGui.Global:FindFirstChild(handlerName)
 
 	if scriptObj and scriptObj:IsA("Script") then
@@ -51,14 +53,29 @@ local function check(handlerName: string, markerName: string)
 		end
 	end
 end
+--// Global-Handler
+check("SettingsClientScript", "Settings")
 
+--// Server-Handler
 check("ShopServerHandler", "Shop")
 check("QuestServerHandler", "Quests")
 check("UnitServerHandler", "Units")
 check("BattlepassServerHandler", "Battlepass")
 check("CodesServerHandler", "Codes")
 check("InventoryServerHandler", "Inventory")
-check("SettingsClientScript", "Settings")
+check("TeleportStageHandler", "Teleport")
+check("CollisionGroupAssigner", "CollisionGroups")
+
+--// TowerDefense-spezifische Handler
+Check("UpgradeHandler", "TDUpgrades")
+Check("TargetingHandler", "TDTargeting")
+Check("SellHandler", "TDSell")
+Check("PlaceTowerHandler", "TDPlaceTower")
+Check("MatchServerHandler", "TDMatch")
+check("GetSelectedStageHandler", "TDSelectedStage")
+check("HealthBarUpdater", "TDHealthBar")
+
+
 
 local systemReady = {} -- [userId] = { [systemName] = true }
 
