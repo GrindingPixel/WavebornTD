@@ -62,18 +62,19 @@ end)
 --// Remote Trigger bei MatchEnd
 MatchEndedEvent.OnClientEvent:Connect(function(resultData)
 	if typeof(resultData) == "string" then
-		currentResult = resultData
+		currentResult = resultData :: "Victory" | "Defeat" | "None"
 		currentRewards = {}
 		PanelManager:OpenPanel(panel)
 		return
 	end
 
 	if typeof(resultData) == "table" and resultData.Result then
-		currentResult = resultData.Result
+		currentResult = resultData.Result :: "Victory" | "Defeat" | "None"
 		currentRewards = resultData.Rewards or {}
 		PanelManager:OpenPanel(panel)
 	end
 end)
+
 
 --// PanelManager-Callback
 PanelManager:RegisterPanel(panel, {

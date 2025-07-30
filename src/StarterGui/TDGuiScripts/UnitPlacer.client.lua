@@ -61,14 +61,14 @@ end
 local function isGhostOnWalkArea(): boolean
 	if not ghostModel or not ghostModel.PrimaryPart then return false end
 
-	local cframe = ghostModel:GetPrimaryPartCFrame()
+	local cframe = ghostModel:GetPivot()
 	local size = ghostModel:GetExtentsSize()
 
 	-- Prüfe WalkArea
 	local walkArea = Workspace:FindFirstChild("WalkArea")
 	if walkArea then
 		local params = OverlapParams.new()
-		params.FilterType = Enum.RaycastFilterType.Whitelist
+		params.FilterType = Enum.RaycastFilterType.Include
 		params.FilterDescendantsInstances = walkArea:GetChildren()
 		if #Workspace:GetPartBoundsInBox(cframe, size, params) > 0 then
 			return true
@@ -79,7 +79,7 @@ local function isGhostOnWalkArea(): boolean
 	local unitFolder = Workspace:FindFirstChild("Units")
 	if unitFolder then
 		local params = OverlapParams.new()
-		params.FilterType = Enum.RaycastFilterType.Whitelist
+		params.FilterType = Enum.RaycastFilterType.Include
 		params.FilterDescendantsInstances = unitFolder:GetDescendants()
 		if #Workspace:GetPartBoundsInBox(cframe, size, params) > 0 then
 			return true
@@ -119,7 +119,7 @@ local function updateGhostPosition(position: Vector3)
 	currentValid = isValid
 	setGhostHighlight(isValid)
 	if placementCircle and ghostModel and ghostModel.PrimaryPart then
-		local ghostCF = ghostModel:GetPrimaryPartCFrame()
+		local ghostCF = ghostModel:GetPivot()
 		local ghostSize = ghostModel:GetExtentsSize()
 		local bottomY = ghostCF.Position.Y - (ghostSize.Y / 2)
 		placementCircle.Position = Vector3.new(ghostCF.Position.X, bottomY + 0.05, ghostCF.Position.Z)
@@ -197,13 +197,15 @@ if assets then
 end
 
 	-- Highlight erstellen
-	highlight = Instance.new("Highlight")
-	highlight.Adornee = preview
-	highlight.FillColor = Color3.new(1, 1, 1)
-	highlight.FillTransparency = 0.4
-	highlight.OutlineTransparency = 1
-	highlight.Parent = preview
+	if highlight then
+		highlight.FillColor = Color3.fromRGB(110, 255, 110)
+		highlight.OutlineColor = Color3.new(1, 1, 1)
+		highlight.FillTransparency = 0.4
+		highlight.OutlineTransparency = 1
+		highlight.Adornee = preview
+	end
 end
+
 
 --// Platzierung abbrechen
 local function cancelPlacement()

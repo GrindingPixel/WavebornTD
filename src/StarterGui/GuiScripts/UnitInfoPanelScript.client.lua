@@ -100,7 +100,7 @@ local function updatePages()
 end
 
 local function fillStats(unitName)
-	local data = UnitStats[unitName]
+	local data = UnitStats.GetAllStats(unitName)
 	if not data then
 		warn("⚠️ Keine Stat-Daten für Unit:", unitName)
 		return

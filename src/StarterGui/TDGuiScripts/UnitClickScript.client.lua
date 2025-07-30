@@ -81,7 +81,6 @@ local function updateStats(unitModel: Model)
 		end
 	end
 
-	-- Upgrade-Kosten aktualisieren
 	local baseCost = UnitStatsModule.GetStat(unitId, 0, "PlacementCost") or 0
 	local nextUpgradeCost = math.floor(baseCost * (UpgradeConfig.CostMultiplierPerLevel ^ level))
 
@@ -100,7 +99,7 @@ upgradeButton.MouseButton1Click:Connect(function()
 	UpgradeTowerRequest:FireServer({ tuuid = tuuid, uuid = uuid })
 
 	task.delay(0.1, function()
-		updateStats(currentTarget)
+		updateStats(currentTarget :: Model)
 	end)
 end)
 
@@ -194,8 +193,8 @@ local function openActionGui(unitModel: Model)
 end
 
 --// Hilfsfunktion zur Targets-Suche
-local function findUnitModelFromTarget(part: BasePart): Model?
-	local current = part
+local function findUnitModelFromTarget(part: Instance): Model?
+	local current: Instance? = part
 	while current and current ~= workspace do
 		if current:IsA("Model") and current:GetAttribute("TUUID") and current:GetAttribute("OwnerId") then
 			return current
@@ -235,13 +234,17 @@ UserInputService.InputBegan:Connect(function(input, processed)
 
 	local model = findUnitModelFromTarget(target)
 
-	if model and model:GetAttribute("OwnerId") == LOCAL_PLAYER.UserId then
-		print("Model:", model)
-		openActionGui(model)
-	else
-		print("Model: nil oder fremd")
-		closeActionGui()
+	if model then
+		local ownerId = model:GetAttribute("OwnerId")
+		if ownerId == LOCAL_PLAYER.UserId then
+			print("Model:", model)
+			openActionGui(model)
+			return
+		end
 	end
+
+	print("Model: nil oder fremd")
+	closeActionGui()
 end)
 
 -- Escape schließt das Menü

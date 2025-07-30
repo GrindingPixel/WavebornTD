@@ -114,4 +114,14 @@ function GuiResolver:GetPanel(guiName, panelName, timeout)
 	return nil
 end
 
+function GuiResolver:IsBlocked(guiName: string): boolean
+	for _, name in ipairs(blocklist) do
+		if name == guiName then
+			return true
+		end
+	end
+	return false
+end
+
+
 return GuiResolver

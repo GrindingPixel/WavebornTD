@@ -25,6 +25,25 @@ export type WaveGroup = {
 }
 export type WaveData = { [number]: { WaveGroup } }
 
+type WaveManagerType = {
+	GeneratedWaves: WaveData,
+	CurrentWave: number,
+	TotalWaves: number,
+	IsSpawning: boolean,
+	AutoWaveEnabled: boolean,
+	AliveEnemies: number,
+	EnemiesToSpawn: number,
+	SpawnedEnemies: number,
+	_isResetting: boolean,
+
+	Init: (self: WaveManagerType, config: any) -> (),
+	SetAutoWaveEnabled: (self: WaveManagerType, enabled: boolean) -> (),
+	StartWave: (self: WaveManagerType, waveNumber: number?) -> (),
+	CheckVictoryCondition: (self: WaveManagerType) -> (),
+	OnWaveCleared: (self: WaveManagerType) -> (),
+	Reset: (self: WaveManagerType) -> ()
+}
+
 --// Debug
 local DEBUG = true
 local function log(...: any)
@@ -44,7 +63,8 @@ local WaveManager = {
 	EnemiesToSpawn = 0,
 	SpawnedEnemies = 0,
 	_isResetting = false,
-}
+} :: WaveManagerType
+
 
 --// Generator
 local function generateWaveData(config): WaveData
@@ -167,7 +187,7 @@ function WaveManager:StartWave(waveNumber: number?)
 		for _, group in ipairs(wave) do
 			for _ = 1, group.count do
 				local success, err = pcall(function()
-					local enemy = EnemyManager:SpawnEnemy(group.type, self.CurrentWave)
+					local enemy: Model? = EnemyManager:SpawnEnemy(group.type, self.CurrentWave)
 
 					if enemy and enemy:IsA("Model") then
 						self.SpawnedEnemies += 1

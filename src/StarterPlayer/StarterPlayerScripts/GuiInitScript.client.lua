@@ -81,6 +81,11 @@ local panelMap = {
 }
 
 for _, entry in ipairs(panelMap) do
+	if GuiResolver:IsBlocked(entry.gui) then
+		warn("⛔️ Panel-Skip durch Blocklist:", entry.gui, entry.panel)
+		continue
+	end
+
 	local panel = GuiResolver:GetPanel(entry.gui, entry.panel)
 	if panel then
 		PanelManager:RegisterPanel(panel)
@@ -89,3 +94,4 @@ for _, entry in ipairs(panelMap) do
 		warn("⚠️ Panel NICHT gefunden:", entry.gui, entry.panel)
 	end
 end
+

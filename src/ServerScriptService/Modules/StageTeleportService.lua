@@ -10,7 +10,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local MapData = require(ReplicatedStorage.Modules.MapDataModule)
 local MapDataUtils = require(ReplicatedStorage.Modules.MapDataUtils)
 local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
-local MatchStateModule = require(ServerScriptService.TowerDefense.MatchStateModule)
 
 --// Debug Helper
 local DEBUG = true
@@ -52,10 +51,6 @@ function StageTeleportService.TeleportToStage(player: Player, worldName: string,
 	end
 
 	log("💾 SelectedStage gespeichert für", player.Name, "→", worldName, "Stage", stageId)
-
-	-- MatchState für Matchstart speichern
-	MatchStateModule.CurrentMap = worldName
-	MatchStateModule.CurrentStageId = stageId
 
 	-- Teleport ausführen
 	local ok, result = pcall(function()
