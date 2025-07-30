@@ -58,9 +58,8 @@ SetTDEclipsium.OnServerEvent:Connect(function(player)
 	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then return end
 
-	profile.Data.TDEclipsium = 20000
-	ProfileSyncService:Send("TDEclipsium", profile.Data.Player.TDEclipsium, player)
-	log("💰 TDEclipsium gesetzt für", player.Name)
+	profile.Data.Player.TDEclipsium = 20000
+	ProfileSyncService:Send(player, "TDEclipsium", profile.Data.Player.TDEclipsium)
 end)
 
 --// AutoWave vom Client setzen
@@ -163,7 +162,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 
 			local profile = ProfileWrapper:GetProfile(player)
 			if profile then
-				profile.Data.TDEclipsium = nil
+				profile.Data.Player.TDEclipsium = nil
 			end
 
 			local ShowStartButton = TDRemotes:FindFirstChild("ShowStartButton")

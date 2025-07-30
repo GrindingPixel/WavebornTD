@@ -75,9 +75,9 @@ SellTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tuuid
 	end
 
 	local refund = math.floor((baseCost + totalUpgradeCost) * REFUND_MULTIPLIER)
-	profile.Data.TDEclipsium += refund
+	profile.Data.Player.TDEclipsium += refund
 
-	ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.TDEclipsium)
+	ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.Player.TDEclipsium)
 	model:Destroy()
 
 	print(`[SELL] {player.Name} verkauft {unitId} (Lvl {upgradeLevel}) für +{refund} TDE`)

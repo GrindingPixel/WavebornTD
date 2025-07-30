@@ -18,6 +18,7 @@ local SetTDEclipsium        = TowerDefenseRemotes:WaitForChild("SetTDEclipsium")
 local ShowPlayButton        = TowerDefenseRemotes:WaitForChild("ShowPlayButton")
 local ProfileChanged        = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
 local ShowStartButton 		= TowerDefenseRemotes:WaitForChild("ShowStartButton")
+local IsProfileReady 	  = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 
 --// GUI
 local panel = GuiResolver:GetPanel("TDGui", "TDPanel")
@@ -41,6 +42,11 @@ local unitButton = leftPanel:WaitForChild("UnitsButton")
 
 --// State
 local debounce = false
+local isReady = false
+pcall(function()
+	isReady = IsProfileReady:InvokeServer()
+end)
+
 
 --// Helper
 local function formatNumber(n: number): string
@@ -50,6 +56,7 @@ end
 --// Geldanzeige aktualisieren
 if valueLabel and valueLabel:IsA("TextLabel") then
 	ProfileChanged.OnClientEvent:Connect(function(key, value)
+		print("📩 ProfileChanged:", key, value)
 		if key == "TDEclipsium" and typeof(value) == "number" then
 			valueLabel.Text = formatNumber(value)
 			if moneyPanel then moneyPanel.Visible = true end

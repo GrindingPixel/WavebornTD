@@ -81,13 +81,13 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 		return
 	end
 
-	if profile.Data.TDEclipsium < placementCost then
-		warn(`❌ {player.Name} hat nicht genug TDEclipsium ({profile.Data.TDEclipsium}) für {unitEntry.Id} (Kosten: {placementCost})`)
+	if profile.Data.Player.TDEclipsium < placementCost then
+		warn(`❌ {player.Name} hat nicht genug TDEclipsium ({profile.Data.Player.TDEclipsium}) für {unitEntry.Id} (Kosten: {placementCost})`)
 		return
 	end
 
-	profile.Data.TDEclipsium -= placementCost
-	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.TDEclipsium)
+	profile.Data.Player.TDEclipsium -= placementCost
+	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.Player.TDEclipsium)
 
 	-- 3. Modell vorbereiten
 	local modelTemplate = UnitModels:FindFirstChild(unitName)

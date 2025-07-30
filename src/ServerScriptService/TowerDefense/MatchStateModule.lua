@@ -67,7 +67,7 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 				end
 
 				-- (Optional) Reset von TDEclipsium nur zu Testzwecken
-				profile.Data.TDEclipsium = nil
+				profile.Data.Player.TDEclipsium = nil
 			end
 
 			MatchEndedEvent:FireClient(player, {

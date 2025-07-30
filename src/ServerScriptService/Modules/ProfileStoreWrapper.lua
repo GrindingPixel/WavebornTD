@@ -67,11 +67,11 @@ check("TeleportStageHandler", "Teleport")
 check("CollisionGroupAssigner", "CollisionGroups")
 
 --// TowerDefense-spezifische Handler
-Check("UpgradeHandler", "TDUpgrades")
-Check("TargetingHandler", "TDTargeting")
-Check("SellHandler", "TDSell")
-Check("PlaceTowerHandler", "TDPlaceTower")
-Check("MatchServerHandler", "TDMatch")
+check("UpgradeHandler", "TDUpgrades")
+check("TargetingHandler", "TDTargeting")
+check("SellHandler", "TDSell")
+check("PlaceTowerHandler", "TDPlaceTower")
+check("MatchServerHandler", "TDMatch")
 check("GetSelectedStageHandler", "TDSelectedStage")
 check("HealthBarUpdater", "TDHealthBar")
 

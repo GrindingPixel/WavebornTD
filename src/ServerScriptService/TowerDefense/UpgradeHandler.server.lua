@@ -67,14 +67,14 @@ UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tu
 	local upgradeCost = math.floor(baseCost * (UpgradeConfig.CostMultiplierPerLevel ^ currentLevel))
 	print("📈 UpgradeCost (server):", upgradeCost)
 
-	if profile.Data.TDEclipsium < upgradeCost then
+	if profile.Data.Player.TDEclipsium < upgradeCost then
 		warn(`[Upgrade] ❌ Nicht genug TDEclipsium für Upgrade`)
 		return
 	end
 
 	-- Abziehen & Sync
-	profile.Data.TDEclipsium -= upgradeCost
-	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.TDEclipsium)
+	profile.Data.Player.TDEclipsium -= upgradeCost
+	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "TDEclipsium", profile.Data.Player.TDEclipsium)
 
 
 	-- Upgrade durchführen
