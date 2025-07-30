@@ -23,7 +23,7 @@ local zoneGuiBlocklist = {
 		"MapTeleportGui",
 		"NewsGui",
 		"ProfileGui",
-		"QuestsGui",
+		"QuestGui",
 		"ShopGui",
 	},
 	Lobby = {
