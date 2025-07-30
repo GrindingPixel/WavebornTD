@@ -135,36 +135,38 @@ PanelManager:RegisterPanel(panel, {
 			end
 		end
 
-		-- Rewards anzeigen
-		for _, reward in ipairs(currentRewards) do
-			local clone = rewardsTemplate:Clone()
-			clone.Visible = true
+		-- Rewards nur bei Victory anzeigen
+		if currentResult == "Victory" then
+			for _, reward in ipairs(currentRewards) do
+				local clone = rewardsTemplate:Clone()
+				clone.Visible = true
 
-			local valueLabel = clone:FindFirstChild("RewardValue")
-			local amount = reward.amount or 0
-			local id = reward.id or reward.type or "?"
-			local meta = ItemData.GetMeta(id)
+				local valueLabel = clone:FindFirstChild("RewardValue")
+				local amount = reward.amount or 0
+				local id = reward.id or reward.type or "?"
+				local meta = ItemData.GetMeta(id)
 
-			local displayName = if meta and meta.displayName then meta.displayName
-				elseif id == "Eclipsium" then "Eclipsium"
-				elseif id == "EXP" then "Player EXP"
-				elseif id == "BPEXP" then "BP EXP"
-				else tostring(id)
+				local displayName = if meta and meta.displayName then meta.displayName
+					elseif id == "Eclipsium" then "Eclipsium"
+					elseif id == "EXP" then "Player EXP"
+					elseif id == "BPEXP" then "BP EXP"
+					else tostring(id)
 
-			-- Text setzen
-			if valueLabel and valueLabel:IsA("TextLabel") then
-				valueLabel.Text = "+" .. tostring(amount) .. " " .. displayName
+				if valueLabel and valueLabel:IsA("TextLabel") then
+					valueLabel.Text = "+" .. tostring(amount) .. " " .. displayName
+				end
+
+				if clone:IsA("ImageLabel") then
+					clone.Image = meta and meta.iconId or ""
+					clone.ImageColor3 = Color3.new(1, 1, 1)
+				end
+
+				clone.Parent = rewardsFrame
 			end
 
-			-- Icon setzen
-			if clone:IsA("ImageLabel") then
-				clone.Image = meta and meta.iconId or ""
-				clone.ImageColor3 = Color3.new(1, 1, 1)
-			end
-
-			clone.Parent = rewardsFrame
+			rewardsTemplate.Visible = true
+		else
+			rewardsTemplate.Visible = false
 		end
-
-		rewardsTemplate.Visible = true
 	end,
 })

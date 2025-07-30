@@ -40,7 +40,10 @@ local WaveManager = {
 	TotalWaves = 0,
 	IsSpawning = false,
 	AutoWaveEnabled = false,
-	AliveEnemies = 0, -- ✅ NEU: Eigener Counter
+	AliveEnemies = 0,
+	EnemiesToSpawn = 0,
+	SpawnedEnemies = 0,
+	_isResetting = false,
 }
 
 --// Generator
@@ -107,6 +110,8 @@ function WaveManager:Init(config)
 		self.CurrentWave = 0
 		self.IsSpawning = false
 		self.AliveEnemies = 0
+		self.EnemiesToSpawn = 0
+		self.SpawnedEnemies = 0
 
 		if config.AutoGenerate.DebugWaveOutput then
 			for waveIndex, groups in pairs(self.GeneratedWaves) do
@@ -123,7 +128,6 @@ function WaveManager:Init(config)
 	log("✅ WaveManager initialisiert")
 end
 
---// Setzt AutoWave-Einstellung
 function WaveManager:SetAutoWaveEnabled(enabled: boolean)
 	self.AutoWaveEnabled = enabled
 	log("🔁 AutoWaveEnabled auf", enabled)
@@ -153,6 +157,12 @@ function WaveManager:StartWave(waveNumber: number?)
 	log("🌊 Starte Wave #", self.CurrentWave)
 	self.IsSpawning = true
 
+	self.EnemiesToSpawn = 0
+	for _, group in ipairs(wave) do
+		self.EnemiesToSpawn += group.count
+	end
+	self.SpawnedEnemies = 0
+
 	task.spawn(function()
 		for _, group in ipairs(wave) do
 			for _ = 1, group.count do
@@ -160,15 +170,20 @@ function WaveManager:StartWave(waveNumber: number?)
 					local enemy = EnemyManager:SpawnEnemy(group.type, self.CurrentWave)
 
 					if enemy and enemy:IsA("Model") then
+						self.SpawnedEnemies += 1
+
 						local humanoid = enemy:FindFirstChildOfClass("Humanoid")
 						if humanoid then
-							self.AliveEnemies += 1 -- ✅ Beim Spawn hochzählen
+							self.AliveEnemies += 1
 							log("🧮 AliveEnemies:", self.AliveEnemies)
 
-							humanoid.Died:Connect(function()
-								self.AliveEnemies -= 1
-								log("💀 Gegner besiegt – AliveEnemies:", self.AliveEnemies)
-								self:CheckVictoryCondition()
+							humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+								if humanoid.Health <= 0 and not enemy:GetAttribute("VictoryProcessed") then
+									enemy:SetAttribute("VictoryProcessed", true)
+									self.AliveEnemies -= 1
+									log("💀 Gegner besiegt – AliveEnemies:", self.AliveEnemies)
+									self:CheckVictoryCondition()
+								end
 							end)
 						end
 					end
@@ -206,9 +221,30 @@ function WaveManager:StartWave(waveNumber: number?)
 	end)
 end
 
---// Prüft, ob Match gewonnen ist (nur via AliveEnemies Counter)
 function WaveManager:CheckVictoryCondition()
+	if self._isResetting then
+		log("⚠️ VictoryCheck während Reset blockiert")
+		return
+	end
+
+	if self.SpawnedEnemies < self.EnemiesToSpawn then
+		log("⏳ VictoryCheck geblockt – noch nicht alle Gegner gespawnt")
+		return
+	end
+
 	log("📊 [VictoryCheck] AliveEnemies:", self.AliveEnemies, " | Wave:", self.CurrentWave, "/", self.TotalWaves)
+
+	if self.CurrentWave >= self.TotalWaves then
+		log("🔎 Check 1 ✅ Letzte Welle erreicht")
+	else
+		log("🔎 Check 1 ❌ Noch nicht letzte Welle")
+	end
+
+	if self.AliveEnemies <= 0 then
+		log("🔎 Check 2 ✅ Keine Gegner mehr")
+	else
+		log("🔎 Check 2 ❌ Gegner leben noch")
+	end
 
 	if self.CurrentWave >= self.TotalWaves and self.AliveEnemies <= 0 then
 		log("🏆 MatchVictory-Bedingung erfüllt – sende EndMatch(Victory)")
@@ -222,12 +258,16 @@ end
 
 function WaveManager:Reset()
 	log("🔁 WaveManager Reset gestartet")
+	self._isResetting = true
 
 	self.CurrentWave = 0
 	self.AliveEnemies = 0
 	self.IsSpawning = false
 	self.GeneratedWaves = {}
-end
+	self.EnemiesToSpawn = 0
+	self.SpawnedEnemies = 0
 
+	self._isResetting = false
+end
 
 return WaveManager

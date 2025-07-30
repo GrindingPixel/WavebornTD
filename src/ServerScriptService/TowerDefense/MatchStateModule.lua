@@ -72,7 +72,7 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 
 			MatchEndedEvent:FireClient(player, {
 				Result = resultType,
-				Rewards = rewards,
+				Rewards = if resultType == "Victory" then rewards else {},
 			})
 		else
 			warn("[MatchStateModule] ❌ Ungültiger Player-Eintrag:", player)

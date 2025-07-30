@@ -158,6 +158,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 
 			MatchStateModule.Reset()
 			WaveManager:Reset()
+			EnemyManager:Reset()
 			matchStarted = false
 
 			local profile = ProfileWrapper:GetProfile(player)

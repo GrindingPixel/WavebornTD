@@ -11,6 +11,7 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatStatsProvider)
 local UnitTargetingModule = require(ReplicatedStorage.TDModules.Combat.UnitTargetingModule)
+local WaveManager = require(game.ServerScriptService.TowerDefense.WaveManager)
 
 --// remotes
 local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
@@ -79,12 +80,18 @@ local function beginAttackLoop(towerModel: Model, unitId: string, player: Player
 				health.Value = math.max(health.Value - damage, 0)
 
 				if health.Value <= 0 then
+					if not target:GetAttribute("VictoryProcessed") then
+						target:SetAttribute("VictoryProcessed", true)
+						WaveManager.AliveEnemies -= 1
+						log(`💀 Gegner besiegt (DamageSystem) – AliveEnemies: {WaveManager.AliveEnemies}`)
+						WaveManager:CheckVictoryCondition()
+					end
+
 					log(`☠️ {target.Name} wurde getötet von {tuuid}`)
 					target:Destroy()
 					ProfileWrapper:AddTDEclipsium(player, 20)
 					ProfileWrapper:AddBattlepassEXP(player, 5)
-					ProfileWrapper:IncrementUnitKills(player, uuid, 1, true) -- Profil-relevant
-					-- LiveSync an Client senden
+					ProfileWrapper:IncrementUnitKills(player, uuid, 1, true)
 					ProfileWrapper:Sync(player, "TDEclipsium")
 				end
 			end
@@ -92,7 +99,6 @@ local function beginAttackLoop(towerModel: Model, unitId: string, player: Player
 			task.wait(spa)
 		end
 
-		-- Entfernen aus aktiven Loops
 		activeAttackLoops[tuuid] = nil
 	end)
 end

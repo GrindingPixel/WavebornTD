@@ -36,9 +36,6 @@
       },
       "TowerDefense": {
         "$path": "src/ServerScriptService/TowerDefense"
-      },
-      "Enemys": {
-        "$path": "src/ServerScriptService/TowerDefense/Enemys"
       }
     },
     "StarterGui": {

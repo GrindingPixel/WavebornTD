@@ -140,6 +140,7 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 			enemy:Destroy()
 		end
 	end)
+	return enemy
 end
 
 function EnemyManager.ClearEnemies()
@@ -148,6 +149,11 @@ function EnemyManager.ClearEnemies()
 			enemy:Destroy()
 		end
 	end
+end
+
+function EnemyManager:Reset()
+	matchLost = false
+	baseHP = 100
 end
 
 return EnemyManager
