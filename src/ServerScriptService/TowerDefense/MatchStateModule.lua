@@ -99,4 +99,8 @@ function MatchStateModule.Reset()
 	print("[MatchStateModule] 🔄 MatchState zurückgesetzt")
 end
 
+function MatchStateModule.IsMatchOver(): boolean
+	return matchEnded
+end
+
 return MatchStateModule

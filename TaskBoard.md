@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-01)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-05)
 
 ---
 
@@ -7,9 +7,9 @@
 | Element                      | Status | Beschreibung                                     |
 | ---------------------------- | ------ | ----------------------------------------------- |
 | default.project.json         | ✅      | Konfiguriert, Scripts korrekt zugewiesen        |
+| story_X.project.json         | ✅      | Story-spezifische `.project.json` Templates mit modularer GUI-Einbindung |
 | ModuleScript-Struktur        | ✅      | Einzigartige Module pro Funktion                |
-| Rojo-Setup                   | ✅      | Projektstruktur unter src/                      |
-| Script-Format                | ✅      | UTF-8 + einheitliches Line-Ending               |
+| Rojo-Setup                   | ✅      | Projektstruktur unter `src/`                    |
 
 ---
 
@@ -86,6 +86,7 @@
 | QuestClientScript     | ✅      | Fortschritt, Claim-Buttons, UI-Sync             |
 | QuestServerHandler    | ✅      | ClaimAll verarbeitet Quests                     |
 | ProgressTrackerService| ✅      | Einheitliches Tracking aller Questarten         |
+| QuestDebugScript      | ✅      | P-Taste simuliert Fortschritt im Dev-Modus      |
 
 ---
 
@@ -106,17 +107,18 @@
 | ---------------------- | ------ | ---------------------------------------------------------------------------- |
 | MatchServerHandler     | ✅      | Spielstart, Restart, Continue, Victory/Defeat, AutoWave                     |
 | StartMatchScript       | ✅      | PlayButton1 für Start, PlayButton2 für NextWave                             |
-| WaveManager            | ✅      | EnemyTracking, Victory/Defeat-Check, AutoWave, Spawn-Timing Fix             |
-| EnemyManager           | ✅      | Gegnerbewegung, Pathing, BaseDamage, Reset bei Restart                      |
+| WaveManager            | ✅      | [Update] Harte Abbruchsicherung bei `Defeat`: kein Spawn, kein Autowave     |
+| EnemyManager           | ✅      | Multi-Path-Support (EnemyPathX), Auto-Damage, ReachedEnd-Fix                |
 | ShowPlayButton Remote  | ✅      | PlayButton2 wird clientseitig angezeigt                                     |
 | ShowStartButton Remote | ✅      | Startbutton kann serverseitig neu gesendet werden                           |
 | RestartMode Toggle     | ✅      | Seamless Restart (ohne Teleport) oder Teleport-Variante per Setting        |
-| MatchStateModule       | ✅      | Sieg/Niederlage-Logik, Cleanup, RewardDispatch                              |
+| MatchStateModule       | ✅      | `IsMatchOver()` hinzugefügt, Reset-Versorgung erweitert                     |
 | MatchResultAction      | ✅      | Buttons: Leave, Restart, Continue, Next                                     |
 | TDEclipsium-Sync       | ✅      | Direktes Update und LiveSync beim Start                                     |
-| VictoryFix             | ✅      | `humanoid.Died` ersetzt durch `HealthChanged + VictoryProcessed`            |
-| SpawnTimingFix         | ✅      | Victory wird erst geprüft wenn `SpawnedEnemies == EnemiesToSpawn`          |
-| SeamlessResetFix       | ✅      | `EnemyManager:Reset()` setzt `baseHP` und `matchLost` zurück                |
+| VictoryFix             | ✅      | `HealthChanged` statt `Died`, inkl. `VictoryProcessed`                      |
+| SpawnTimingFix         | ✅      | Victory nur geprüft, wenn alle Gegner gespawnt sind                         |
+| SeamlessResetFix       | ✅      | `EnemyManager:Reset()` + WaveManager:SetAutoWaveEnabled                     |
+| MultiWaveSpawnFix      | ✅      | `WaveManager` bricht SpawnQueue sofort bei MatchEnd ab                      |
 
 ---
 
@@ -142,14 +144,14 @@
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-08-01)
+## ✅ 12. Abgeschlossene Tasks (Stand: 2025-08-05)
 
-- ✅ VictoryTrigger durch SpawnTiming abgesichert (`SpawnedEnemies`, `EnemiesToSpawn`)
-- ✅ DefeatFix beim Seamless Restart (Reset von `baseHP` + `matchLost`)
-- ✅ MatchResultGui zeigt Rewards nur bei Victory
-- ✅ Client & Server wurden gegen Doppel-Victory und verfrühte Checks abgesichert
-- ✅ DamageSystem reduziert AliveEnemies + ruft `CheckVictoryCondition()` bei direktem Kill
-- ✅ Reward-Logik für MatchVictory vollständig sichtbar (ProfileSync, MatchEndedEvent)
+- ✅ Multi-EnemyPathX Support mit globalem Ende-Punkt umgesetzt
+- ✅ Hard-Abbruch bei MatchEnd integriert (SpawnStop, AutoWaveCancel, DamageBlock)
+- ✅ MatchStateModule:IsMatchOver eingeführt
+- ✅ WaveManager Spawn-Schleifen durch MatchEnd sicher beendet
+- ✅ `EnemyManager:SpawnEnemy` prüft Matchstatus
+- ✅ Touch-Events blockieren bei `matchEnded = true`
 
 ---
 
@@ -172,3 +174,6 @@
 - ❌ TooltipSystem funktioniert derzeit nicht einheitlich (UI/FX)
 - ❌ Kein RewardPopup bei QuestClaim sichtbar
 - ❌ EXP-/BPEXP-Verteilung bei Victory noch nicht integriert
+- ⚠️ GUI-Sync via Rojo kann bei falschem `.rbxmx`-Export Icons/Values verlieren (SlotImage etc.)
+
+---

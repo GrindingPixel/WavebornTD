@@ -65,7 +65,6 @@ local WaveManager = {
 	_isResetting = false,
 } :: WaveManagerType
 
-
 --// Generator
 local function generateWaveData(config): WaveData
 	local waveCount = config.WaveCount or 10
@@ -156,6 +155,11 @@ end
 function WaveManager:StartWave(waveNumber: number?)
 	log("📥 StartWave aufgerufen mit:", waveNumber or "nil", "→ Aktuelle Welle:", self.CurrentWave)
 
+	if MatchStateModule.IsMatchOver and MatchStateModule.IsMatchOver() then
+		log("⛔ StartWave blockiert – Match ist beendet")
+		return
+	end
+
 	if self.IsSpawning then
 		log("⚠️ StartWave abgebrochen – IsSpawning = true")
 		return
@@ -186,6 +190,11 @@ function WaveManager:StartWave(waveNumber: number?)
 	task.spawn(function()
 		for _, group in ipairs(wave) do
 			for _ = 1, group.count do
+				if MatchStateModule.IsMatchOver and MatchStateModule.IsMatchOver() then
+					log("⛔ SpawnLoop vollständig abgebrochen – Match ist beendet")
+					return
+				end
+
 				local success, err = pcall(function()
 					local enemy: Model? = EnemyManager:SpawnEnemy(group.type, self.CurrentWave)
 
@@ -208,7 +217,11 @@ function WaveManager:StartWave(waveNumber: number?)
 						end
 					end
 				end)
-				if not success then warn("❌ Spawn-Fehler:", err) end
+
+				if not success then
+					warn("❌ Spawn-Fehler:", err)
+				end
+
 				task.wait(group.delay)
 			end
 		end
@@ -222,6 +235,11 @@ function WaveManager:StartWave(waveNumber: number?)
 
 		if self.CurrentWave < self.TotalWaves then
 			task.delay(5, function()
+				if MatchStateModule.IsMatchOver and MatchStateModule.IsMatchOver() then
+					log("⛔ AutoWave abgebrochen – Match ist beendet")
+					return
+				end
+
 				if self.AutoWaveEnabled then
 					log("⏱ AutoWave aktiv beim Timeout – starte nächste Welle")
 					self:StartWave(self.CurrentWave + 1)

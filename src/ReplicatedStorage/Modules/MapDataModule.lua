@@ -54,12 +54,10 @@ local MapData = {
 					GroupPool = {
 						{ type = "Basic", count = 5, delay = 0.4, weight = 5 },
 						{ type = "Fast", count = 4, delay = 0.3, weight = 3 },
-						{ type = "Tank", count = 2, delay = 0.8, weight = 2 },
-						{ type = "Miniboss", count = 1, delay = 0.0, weight = 1 },
 					},
 				},
 				Rewards = {
-					{ type = "Gold", amount = 150 },
+					{ type = "Eclipsium", amount = 100 },
 					{ type = "Scroll", id = "SummonScroll_Common", amount = 2 },
 				}
 			},
