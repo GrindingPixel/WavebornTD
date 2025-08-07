@@ -54,6 +54,7 @@ local function renderUnitPreview(viewportFrame, modelName)
 	viewportFrame.Ambient = Color3.fromRGB(25, 25, 25)
 	viewportFrame.LightColor = Color3.fromRGB(255, 255, 255)
 	viewportFrame.LightDirection = Vector3.new(0, -1, 1)
+	
 
 	local modelFolder = ReplicatedStorage:WaitForChild("UnitModels")
 	local model = modelFolder:FindFirstChild(modelName)

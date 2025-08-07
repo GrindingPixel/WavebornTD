@@ -19,7 +19,7 @@ local MapData = {
 	--🌍 Spirit Realm
 	["SpiritRealm"] = {
 		DisplayName = "Spirit Realm",
-		PlaceId     = 91395451659768,
+		PlaceId     = 128061510848823,
 
 		Stages = {
 			{

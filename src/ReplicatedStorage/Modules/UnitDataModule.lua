@@ -12,7 +12,7 @@ Units.BaseUnits = {
 		modelName  = "Issoi_HighSchool",
 		type       = "HybridGround",
 		trait      = "DragonKing",
-		BaseStar   = 3,
+		BaseStar   = 5,
 		MaxStar    = 12
 	},
 
@@ -22,7 +22,7 @@ Units.BaseUnits = {
 		modelName  = "test_dummy",
 		type       = "Ground",
 		trait      = "None",
-		BaseStar   = 1,
+		BaseStar   = 4,
 		MaxStar    = 12
 	},
 
@@ -32,7 +32,7 @@ Units.BaseUnits = {
 		modelName  = "rukia",
 		type       = "HybridAir",
 		trait      = "IceQueen",
-		BaseStar   = 4,
+		BaseStar   = 1,
 		MaxStar    = 12
 	},
 
@@ -42,7 +42,7 @@ Units.BaseUnits = {
 		modelName  = "ichigo",
 		type       = "HybridGround",
 		trait      = "SoulReaper",
-		BaseStar   = 5,
+		BaseStar   = 1,
 		MaxStar    = 12
 	},
 }

@@ -1,5 +1,5 @@
 {
-  "name": "WavebornTD",
+  "name": "Sea_of_Valor",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -7,17 +7,17 @@
       "Modules": {
         "$path": "src/ReplicatedStorage/Modules"
       },
+      "TDModules": {
+        "$path": "src/ReplicatedStorage/TDModules"
+      },
       "Shared": {
         "$path": "src/ReplicatedStorage/Shared"
-      },
-      "Configs": {
-        "$path": "src/ReplicatedStorage/Configs"
       },
       "Libs": {
         "$path": "src/ReplicatedStorage/Libs"
       }
     },
-    "StarterPlayer": {
+        "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$path": "src/StarterPlayer/StarterPlayerScripts"
@@ -31,24 +31,34 @@
       "Modules": {
         "$path": "src/ServerScriptService/Modules"
       },
-       "Summoning": {
-        "$path": "src/ServerScriptService/Summoning"
-      },
-       "TowerDefense": {
-        "$path": "src/ServerScriptService/TowerDefense"
-      },
       "Debug": {
         "$path": "src/ServerScriptService/Debug"
+      },
+      "TowerDefense": {
+        "$path": "src/ServerScriptService/TowerDefense"
       }
     },
     "StarterGui": {
       "$className": "StarterGui",
-      "Global": {
+        "GuiScripts": {
+      "$className": "Folder",
+        "MainMenuScript.client.lua": {
+        "$path": "src/StarterGui/GuiScripts/MainMenuScript.client.lua"
+    },
+        "UnitClientScript.client.lua": {
+        "$path": "src/StarterGui/GuiScripts/UnitClientScript.client.lua"
+    },
+        "UnitInfoPanelScript.client.lua": {
+        "$path": "src/StarterGui/GuiScripts/UnitInfoPanelScript.client.lua"
+    }
+      },
+        "Global": {
         "$path": "src/StarterGui/Global"
       },
-      "GuiScripts": {
-        "$path": "src/StarterGui/GuiScripts"
+        "TDGuiScripts": {
+        "$path": "src/StarterGui/TDGuiScripts"
       }
     }
+
   }
 }

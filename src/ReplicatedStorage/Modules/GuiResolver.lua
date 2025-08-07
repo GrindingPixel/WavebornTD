@@ -25,12 +25,13 @@ local zoneGuiBlocklist = {
 		"ProfileGui",
 		"QuestGui",
 		"ShopGui",
+		"SummonGui",
 	},
 	Lobby = {
 		"MatchResultsGui",
 		"MoneyGui",
 		"TDGui",
-		"UnitActionsGui",
+		"UnitActionGui",
 	}
 }
 
