@@ -6,16 +6,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
---// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local QuestData = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
+local DebugLogger = require(Modules:WaitForChild("DebugLogger"))
 
---// Debug
-local DEBUG = true
-local function log(...)   if DEBUG then print("[QuestServerHandler]", ...) end end
-local function warnf(...) if DEBUG then warn("[QuestServerHandler]", ...) end end
+local log, warnf = DebugLogger.new("QuestServerHandler", true)
 
 --// Remotes
 local claimQuestEvent     = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimQuest")
