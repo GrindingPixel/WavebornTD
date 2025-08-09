@@ -22,9 +22,9 @@ local canvas         = panel:WaitForChild("CanvasGroup")
 local scrollingFrame = canvas:WaitForChild("TeleportAreas"):WaitForChild("ScrollingFrame")
 local closeButton    = canvas:WaitForChild("FastTravelCloseButton")
 
-local storyButton    = scrollingFrame:WaitForChild("Story")
-local raidButton     = scrollingFrame:WaitForChild("Raid")
-local summonButton   = scrollingFrame:WaitForChild("Summoning")
+local storyButton    = scrollingFrame:WaitForChild("StoryArea")
+local raidButton     = scrollingFrame:WaitForChild("RaidArea")
+local summonButton   = scrollingFrame:WaitForChild("SummoningArea")
 local marketButton   = scrollingFrame:WaitForChild("Market")
 
 --// Init

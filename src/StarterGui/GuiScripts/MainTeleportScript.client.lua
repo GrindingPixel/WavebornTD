@@ -10,10 +10,14 @@ local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
 local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 local TooltipModule  = require(ReplicatedStorage.Modules.TooltipModule)
+local ItemData       = require(ReplicatedStorage.Modules.ItemDataModule)
 
 --// Remotes
 local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportStageRequest")
 local timeoutRemote  = ReplicatedStorage.Remotes.Teleport:WaitForChild("TimeoutReturn")
+
+--// Constants
+local FALLBACK_IMAGE_ID = "rbxassetid://12345678"
 
 --// GUI
 local gui             = GuiResolver:Get("MapTeleportGui")
@@ -31,7 +35,7 @@ local currentWorld = nil
 --// Init
 PanelManager:RegisterPanel(panel)
 
--- Beim Öffnen initial alles verstecken
+-- Hide everything initially when opening
 panel:GetPropertyChangedSignal("Visible"):Connect(function()
 	if panel.Visible then
 		currentWorld = nil
@@ -49,13 +53,23 @@ panel:GetPropertyChangedSignal("Visible"):Connect(function()
 	end
 end)
 
--- Tooltip aus Reward-Daten erzeugen
 local function rewardTooltip(reward)
-	if reward.id then
-		return "[b]" .. reward.id .. "\\n[img:12345678] x" .. reward.amount
-	else
-		return "[b]" .. reward.type .. "\\n+" .. reward.amount
-	end
+        local meta
+        if reward.id then
+                meta = ItemData[reward.id]
+        elseif reward.type then
+                meta = ItemData[reward.type]
+        end
+
+        local name = meta and meta.displayName or (reward.id or reward.type)
+        local iconId = meta and meta.iconId
+		local rawId = iconId and iconId:match("rbxassetid://(%d+)") or FALLBACK_IMAGE_ID:match("rbxassetid://(%d+)")
+
+        if reward.id then
+                return "[b]" .. name .. "\\n[img:" .. rawId .. "] x" .. reward.amount
+        else
+                return "[b]" .. name .. "\\n[img:" .. rawId .. "] +" .. reward.amount
+        end
 end
 
 -- Welt-Auswahl
@@ -120,38 +134,51 @@ for i = 1, 6 do
 			-- Rewards anzeigen
 			local rewardList = clone:FindFirstChild("RewardList")
 			if rewardList then
-				for _, reward in ipairs(stageData.Rewards) do
-					local entry = Instance.new("Frame")
-					entry.Name = "RewardEntry"
-					entry.Size = UDim2.new(1, 0, 0, 28)
-					entry.BackgroundTransparency = 1
-					entry.Active = true
+								for _, reward in ipairs(stageData.Rewards) do
+										local entry = Instance.new("Frame")
+										entry.Name = "RewardEntry"
+										entry.Size = UDim2.new(1, 0, 0, 28)
+										entry.BackgroundTransparency = 1
+										entry.Active = true
 
-					local icon = Instance.new("ImageLabel")
-					icon.Size = UDim2.new(0, 24, 0, 24)
-					icon.Position = UDim2.new(0, 0, 0, 2)
-					icon.BackgroundTransparency = 1
-					icon.Image = reward.image or "rbxassetid://12345678"
-					icon.Parent = entry
+										local meta
+										if reward.id then
+												meta = ItemData[reward.id]
+										elseif reward.type then
+												meta = ItemData[reward.type]
+										end
 
-					local label = Instance.new("TextLabel")
-					label.Size = UDim2.new(1, -30, 1, 0)
-					label.Position = UDim2.new(0, 30, 0, 0)
-					label.BackgroundTransparency = 1
-					label.Font = Enum.Font.Gotham
-					label.TextSize = 14
-					label.TextColor3 = Color3.fromRGB(220, 220, 220)
-					label.TextXAlignment = Enum.TextXAlignment.Left
-					label.Text = reward.amount .. "x " .. (reward.id or reward.type)
-					label.Parent = entry
+										local icon = Instance.new("ImageLabel")
+										icon.Size = UDim2.new(0, 24, 0, 24)
+										icon.Position = UDim2.new(0, 0, 0, 2)
+										icon.BackgroundTransparency = 1
+										icon.Image = reward.image or (meta and meta.iconId) or FALLBACK_IMAGE_ID
+										icon.Parent = entry
 
-					TooltipModule:Attach(entry, function()
-						return rewardTooltip(reward)
-					end)
+										local label = Instance.new("TextLabel")
+										label.Size = UDim2.new(1, -30, 1, 0)
+										label.Position = UDim2.new(0, 30, 0, 0)
+										label.BackgroundTransparency = 1
+										label.Font = Enum.Font.Gotham
+										local displayName = meta and meta.displayName or (reward.id or reward.type)
+										if reward.id then
+											label.Text = displayName .. " x" .. reward.amount
+										else
+											label.Text = displayName .. " +" .. reward.amount
+										end
+										label.Parent = entry
+										local displayName = meta and meta.displayName or (reward.id or reward.type)
+										label.Text = reward.amount .. "x " .. displayName
+										label.Parent = entry
 
-					entry.Parent = rewardList
-				end
+										-- Set tooltip text using TooltipModule so TooltipController can display it
+										TooltipModule.AttachTooltip(entry, { text = rewardTooltip(reward) })
+
+										entry.Parent = rewardList
+								end
+						end
 			end
+
 
 			local tpButton = clone:FindFirstChild("TeleportButton")
 			if tpButton and tpButton:IsA("ImageButton") then
@@ -161,12 +188,8 @@ for i = 1, 6 do
 			end
 
 			rewardFrame.Visible = true
-		end)
+		end) -- Close stageButton.MouseButton1Click:Connect
 	end
 end
-
--- Panel schließen + Rückteleport
-closeBtn.MouseButton1Click:Connect(function()
-	PanelManager:ClosePanel(panel)
-	timeoutRemote:FireServer({ action = "ReturnToLobby" })
-end)
+							end
+						end
