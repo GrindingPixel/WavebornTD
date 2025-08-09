@@ -16,6 +16,9 @@ local ItemData       = require(ReplicatedStorage.Modules.ItemDataModule)
 local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportStageRequest")
 local timeoutRemote  = ReplicatedStorage.Remotes.Teleport:WaitForChild("TimeoutReturn")
 
+--// Constants
+local FALLBACK_IMAGE_ID = "rbxassetid://12345678"
+
 --// GUI
 local gui             = GuiResolver:Get("MapTeleportGui")
 local panel           = GuiResolver:GetPanel("MapTeleportGui", "MapTeleportPanel")
@@ -60,7 +63,8 @@ local function rewardTooltip(reward)
 
         local name = meta and meta.displayName or (reward.id or reward.type)
         local iconId = meta and meta.iconId
-        local rawId = iconId and iconId:match("rbxassetid://(%d+)") or "12345678"
+        local rawId = iconId and iconId:match("rbxassetid://(%d+)")
+                or FALLBACK_IMAGE_ID:match("rbxassetid://(%d+)")
 
         if reward.id then
                 return "[b]" .. name .. "\\n[img:" .. rawId .. "] x" .. reward.amount
@@ -159,7 +163,7 @@ for i = 1, 6 do
                                         icon.Size = UDim2.new(0, 24, 0, 24)
                                         icon.Position = UDim2.new(0, 0, 0, 2)
                                         icon.BackgroundTransparency = 1
-                                        icon.Image = reward.image or (meta and meta.iconId) or "rbxassetid://12345678"
+                                        icon.Image = reward.image or (meta and meta.iconId) or FALLBACK_IMAGE_ID
                                         icon.Parent = entry
 
                                         local label = Instance.new("TextLabel")
@@ -171,7 +175,11 @@ for i = 1, 6 do
                                         label.TextColor3 = Color3.fromRGB(220, 220, 220)
                                         label.TextXAlignment = Enum.TextXAlignment.Left
                                         local displayName = meta and meta.displayName or (reward.id or reward.type)
-                                        label.Text = reward.amount .. "x " .. displayName
+                                        if reward.id then
+                                                label.Text = reward.amount .. "x " .. displayName
+                                        else
+                                                label.Text = displayName .. " +" .. reward.amount
+                                        end
                                         label.Parent = entry
 
                                        -- Set tooltip text using TooltipModule so TooltipController can display it
