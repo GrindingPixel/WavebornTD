@@ -18,6 +18,7 @@ local timeoutRemote  = ReplicatedStorage.Remotes.Teleport:WaitForChild("TimeoutR
 
 --// Constants
 local FALLBACK_IMAGE_ID = "rbxassetid://12345678"
+local FALLBACK_RAW_ID = FALLBACK_IMAGE_ID:match("rbxassetid://(%d+)")
 
 --// GUI
 local gui             = GuiResolver:Get("MapTeleportGui")
@@ -63,8 +64,7 @@ local function rewardTooltip(reward)
 
         local name = meta and meta.displayName or (reward.id or reward.type)
         local iconId = meta and meta.iconId
-        local rawId = iconId and iconId:match("rbxassetid://(%d+)")
-                or FALLBACK_IMAGE_ID:match("rbxassetid://(%d+)")
+        local rawId = iconId and iconId:match("rbxassetid://(%d+)") or FALLBACK_RAW_ID
 
         if reward.id then
                 return "[b]" .. name .. "\\n[img:" .. rawId .. "] x" .. reward.amount
