@@ -9,8 +9,9 @@ local GuiResolver = {}
 --// Map-Zonen anhand von PlaceId
 local placeZones = {
 	[84670806766416] = "Lobby",         -- Lobby
-	[91395451659768] = "TowerDefense",  -- Story_1
-	[111057724598845] = "TowerDefense", -- Story_4
+	[128061510848823] = "TowerDefense",  -- Story_1
+	[92355255451335] = "TowerDefense",  -- Story_2
+	[111057724598845] = "TowerDefense", -- Story_3
 }
 
 -- Blockierte GUIs pro Zone
@@ -24,8 +25,10 @@ local zoneGuiBlocklist = {
 		"NewsGui",
 		"ProfileGui",
 		"QuestGui",
+		"MoneyLobbyGui",
 		"ShopGui",
 		"SummonGui",
+		
 	},
 	Lobby = {
 		"MatchResultsGui",

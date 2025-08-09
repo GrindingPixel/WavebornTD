@@ -11,9 +11,8 @@ local QuestData = {
 			type = "Summon",
 			goal = 3,
 			rewards = {
-				{ type = "Gold", amount = 100 },
-				{ type = "Scroll", id = "SummonScroll_Common", amount = 10 },
-				{ type = "Units", id = "Issoi_HighSchool"}
+				{ type = "Eclipsium", amount = 100000 },
+				{ type = "Scroll", id = "SummonScroll_Common", amount = 100 }
 			}
 		},
 		{
@@ -37,7 +36,7 @@ local QuestData = {
 			type = "RaidWin",
 			goal = 3,
 			rewards = {
-				{ type = "Gold", amount = 500 }
+				{ type = "Eclipsium", amount = 500 }
 			}
 		},
 		{
@@ -61,7 +60,7 @@ local QuestData = {
 			type = "WorldUnlock",
 			goal = 1,
 			rewards = {
-				{ type = "Gold", amount = 300 }
+				{ type = "Eclipsium", amount = 300 }
 			}
 		}
 	},
@@ -85,7 +84,7 @@ local QuestData = {
 			type = "PlayerLevel",
 			goal = 15,
 			rewards = {
-				{ type = "Gold", amount = 250 },
+				{ type = "Eclipsium", amount = 250 },
 				{ type = "Scroll", id = "SummonScroll_Common", amount = 1 }
 			}
 		}

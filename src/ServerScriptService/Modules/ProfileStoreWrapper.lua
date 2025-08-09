@@ -895,7 +895,14 @@ function ProfileWrapper:MarkSystemReady(player, system)
 			end
 		end
 
+		-- 💰 Sicherer Snapshot-Push: Profil holen, dann senden
+		local profile = activeProfiles[userId] or getProfile(player)
+		if profile and profile.Data and profile.Data.Player then
+			ProfileSyncService:Send(player, "Player", profile.Data.Player)
+		end
+
 		ProfileLoadedEvent:FireClient(player)
+		-- nach dem FireClient:
 		log("✅ Alle Systeme bereit, ProfileLoadedEvent gesendet für", player.Name)
 		systemReady[userId] = nil
 	else
