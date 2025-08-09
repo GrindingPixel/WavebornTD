@@ -11,17 +11,28 @@ local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("Teleport
 --// Targets
 local targetFolder = Workspace:WaitForChild("FastTeleport")
 
---// Event Handler
-teleportRemote.OnServerEvent:Connect(function(player, areaName)
-	local character = player.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+-- Expected data from client: { area = "<AreaName>" }
+teleportRemote.OnServerEvent:Connect(function(player, areaData)
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
 
-	local target = targetFolder:FindFirstChild(areaName)
-	if not target then
-		warn("[TeleportLobbyHandler] ⚠️ Ungültiges Zielgebiet:", areaName)
-		return
-	end
+        -- Extract area name from table payload
+        local areaName = areaData
+        if typeof(areaData) == "table" then
+                areaName = areaData.area
+        end
 
-	print("[TeleportLobbyHandler] 📦 Teleportiere", player.Name, "nach", areaName)
-	character:PivotTo(target.CFrame + Vector3.new(0, 3, 0))
+        if typeof(areaName) ~= "string" then
+                warn("[TeleportLobbyHandler] ⚠️ Ungültige Teleport-Anfrage:", areaData)
+                return
+        end
+
+        local target = targetFolder:FindFirstChild(areaName)
+        if not target then
+                warn("[TeleportLobbyHandler] ⚠️ Ungültiges Zielgebiet:", areaName)
+                return
+        end
+
+        print("[TeleportLobbyHandler] 📦 Teleportiere", player.Name, "nach", areaName)
+        character:PivotTo(target.CFrame + Vector3.new(0, 3, 0))
 end)
