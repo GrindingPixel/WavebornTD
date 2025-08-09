@@ -155,6 +155,7 @@ for i = 1, 6 do
 										icon.Image = reward.image or (meta and meta.iconId) or FALLBACK_IMAGE_ID
 										icon.Parent = entry
 
+<<<<<<< HEAD
 										local label = Instance.new("TextLabel")
 										label.Size = UDim2.new(1, -30, 1, 0)
 										label.Position = UDim2.new(0, 30, 0, 0)
@@ -170,6 +171,10 @@ for i = 1, 6 do
 										local displayName = meta and meta.displayName or (reward.id or reward.type)
 										label.Text = reward.amount .. "x " .. displayName
 										label.Parent = entry
+=======
+                                       -- Set tooltip text using TooltipModule so TooltipController can display it
+                                       TooltipModule.AttachTooltip(entry, { text = rewardTooltip(reward) })
+>>>>>>> 0e2b4d2 (Fix tooltip attachment in teleport GUI)
 
 										-- Set tooltip text using TooltipModule so TooltipController can display it
 										TooltipModule.AttachTooltip(entry, { text = rewardTooltip(reward) })
