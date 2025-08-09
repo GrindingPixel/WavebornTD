@@ -33,7 +33,6 @@ local cachedPool = nil
 local lastSeed = nil
 
 --// Utilities
-
 local function getSeed()
 	return math.floor(os.time() / 3600)
 end
@@ -52,15 +51,13 @@ local function filterUnitsByStar(star)
 	for _, unitId in ipairs(UnitDataModule.GetAllUnitIds()) do
 		local data = UnitDataModule.GetUnitData(unitId)
 		if data and data.BaseStar == star then
-			table.insert(results, {UnitId = unitId, Star = star})
+			table.insert(results, { UnitId = unitId, Star = star })
 		end
 	end
 	return results
 end
 
-
 --// Main
-
 function SummonPoolModule:GetActivePool()
 	local seed = getSeed()
 	if cachedPool and lastSeed == seed then
@@ -108,16 +105,16 @@ function SummonPoolModule:GetActivePool()
 		r.Weight += RateUpBonus
 	end
 
-	-- Endgültiger Pool
+	-- ✅ Kosten: getypte Inventarstruktur (Kategorie "Scroll")
 	cachedPool = {
 		Name = "Standard",
 		Seed = seed,
 		Units = poolUnits,
 		Costs = {
-			SingleSummon = {Type = "SummonTicket", Amount = 1},
-			MultiSummon = {Type = "TDEclipsium", Amount = 500},
+			SingleSummon = { Type = "Scroll", Id = "SummonScroll_Common", Amount = 1 },
+			MultiSummon  = { Type = "Scroll", Id = "SummonScroll_Common", Amount = 10 },
 		},
-		ExpiresAt = (seed + 1) * 3600
+		ExpiresAt = (seed + 1) * 3600,
 	}
 	lastSeed = seed
 
@@ -128,9 +125,10 @@ function SummonPoolModule:GetCost(summonType)
 	local pool = self:GetActivePool()
 	local cost = pool.Costs[summonType]
 	if cost then
-		return cost.Type, cost.Amount
+		-- Rückgabe: Type (Inventar-Kategorie), Id (ItemId), Amount
+		return cost.Type, cost.Id, cost.Amount
 	end
-	return nil, 0
+	return nil, nil, 0
 end
 
 return SummonPoolModule

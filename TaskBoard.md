@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-05)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-09)
 
 ---
 
@@ -98,6 +98,7 @@
 | TeleportStageHandler       | ✅     | ServerScript, verarbeitet `TeleportStageRequest`                          |
 | StageTeleportService       | ✅     | Zentraler Service für Match-interne Teleports                             |
 | FastTravelGui              | ✅     | Verlinkung zu Story, Raid, Summon                                         |
+| TeleportPortalHandler      | ✅     | Erweiterung: `"ReturnToSummon"`-Command für CloseButton SummonPanel       |
 
 ---
 
@@ -107,7 +108,7 @@
 | ---------------------- | ------ | ---------------------------------------------------------------------------- |
 | MatchServerHandler     | ✅      | Spielstart, Restart, Continue, Victory/Defeat, AutoWave                     |
 | StartMatchScript       | ✅      | PlayButton1 für Start, PlayButton2 für NextWave                             |
-| WaveManager            | ✅      | [Update] Harte Abbruchsicherung bei `Defeat`: kein Spawn, kein Autowave     |
+| WaveManager            | ✅      | Harte Abbruchsicherung bei `Defeat`, AutoWave-Spawn nur nach Spawnende      |
 | EnemyManager           | ✅      | Multi-Path-Support (EnemyPathX), Auto-Damage, ReachedEnd-Fix                |
 | ShowPlayButton Remote  | ✅      | PlayButton2 wird clientseitig angezeigt                                     |
 | ShowStartButton Remote | ✅      | Startbutton kann serverseitig neu gesendet werden                           |
@@ -122,7 +123,22 @@
 
 ---
 
-## 🔄 10. Live-Sync
+## 🎯 10. Summon-System
+
+| Element                    | Status     | Beschreibung                                                                 |
+| -------------------------- | ---------- | --------------------------------------------------------------------------- |
+| SummonClientScript         | ✅          | Öffnet Panel bei Touch SummonCircle, Buttons für Single/Multi Summon        |
+| SummonPreviewModule        | ✅          | Zeigt 1× 5★ + 2× 4★ Units im GUI-Preview, ViewportFrame mit Kamera-Setup    |
+| SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, sendet Result an Client       |
+| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation                             |
+| SummonRemoteHandler        | ✅          | Leitet Requests, liefert Pool an Client (GetSummonPool)                     |
+| SpriteAnimator             | ✅          | Animierter GUI-Hintergrund (SummonOverlay)                                  |
+| TeleportReturn Integration | ✅          | CloseButton kann `"ReturnToSummon"`-Teleport auslösen                       |
+| Kamera & RenderFix         | ✅          | Ausrichtung, Transparenz, Schattenfix für Preview-Modelle                   |
+
+---
+
+## 🔄 11. Live-Sync
 
 | Element                 | Status | Beschreibung                                                |
 | ----------------------- | ------ | ----------------------------------------------------------- |
@@ -134,7 +150,7 @@
 
 ---
 
-## 🔒 11. Persistent PlayerData
+## 🔒 12. Persistent PlayerData
 
 | Element             | Status | Beschreibung                                        |
 | ------------------- | ------ | --------------------------------------------------- |
@@ -144,7 +160,7 @@
 
 ---
 
-## ✅ 12. Abgeschlossene Tasks (Stand: 2025-08-05)
+## ✅ 13. Abgeschlossene Tasks (Stand: 2025-08-09)
 
 - ✅ Multi-EnemyPathX Support mit globalem Ende-Punkt umgesetzt
 - ✅ Hard-Abbruch bei MatchEnd integriert (SpawnStop, AutoWaveCancel, DamageBlock)
@@ -152,10 +168,13 @@
 - ✅ WaveManager Spawn-Schleifen durch MatchEnd sicher beendet
 - ✅ `EnemyManager:SpawnEnemy` prüft Matchstatus
 - ✅ Touch-Events blockieren bei `matchEnded = true`
+- ✅ Summon-GUI funktionsfähig mit animiertem Hintergrund und Preview-Units
+- ✅ Teleport `"ReturnToSummon"` in CloseButton integriert
+- ✅ Kamera- und Renderfix für Preview-Models
 
 ---
 
-## 🔜 13. Nächste Schritte
+## 🔜 14. Nächste Schritte
 
 - [ ] EXP & Battlepass korrekt mit Victory-Screen verrechnen
 - [ ] TooltipSystem refactoren (Traits, Rewards, Units)
@@ -166,6 +185,9 @@
 - [ ] AirUnit-Support über neue Typen und TargetModes
 - [ ] BossWave-Typen + Spezialverhalten definieren
 - [ ] Countdown-Anzeige im UI ("Nächste Welle in ...")
+- [ ] Kosten- und Inventarprüfung für Summons (Tickets, TDEclipsium)
+- [ ] Garantiesystem / Pity für Summons
+- [ ] RateUp-Hervorhebung im Summon-Preview
 
 ---
 
@@ -175,5 +197,5 @@
 - ❌ Kein RewardPopup bei QuestClaim sichtbar
 - ❌ EXP-/BPEXP-Verteilung bei Victory noch nicht integriert
 - ⚠️ GUI-Sync via Rojo kann bei falschem `.rbxmx`-Export Icons/Values verlieren (SlotImage etc.)
-
----
+- ❌ Preview-Slots bleiben leer, wenn `GetSummonPool`-Serverhandler fehlt oder fehlerhaft antwortet
+- ❌ Summon-Kostenprüfung noch nicht implementiert

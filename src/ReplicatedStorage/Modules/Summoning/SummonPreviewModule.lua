@@ -15,60 +15,100 @@ local GetSummonPool = SummonRemotes:WaitForChild("GetSummonPool")
 --// Modul
 local SummonPreviewModule = {}
 
--- Lokales Rendern einer Einheit im ViewportFrame (Summon-Style)
-local function renderUnitPreview(viewportFrame, modelName)
+-- === Intern: Render einer Unit im Viewport (mit Body/Cloth-Regeln) ===
+local function renderUnitPreview(viewportFrame: ViewportFrame, modelName: string)
+	if not viewportFrame or not viewportFrame:IsA("ViewportFrame") then return end
+	if not modelName or modelName == "" then return end
+
 	viewportFrame:ClearAllChildren()
 	viewportFrame.BackgroundTransparency = 1
 	viewportFrame.Ambient = Color3.fromRGB(25, 25, 25)
 	viewportFrame.LightColor = Color3.fromRGB(255, 255, 255)
 	viewportFrame.LightDirection = Vector3.new(0, -1, 1)
-	
+	pcall(function() viewportFrame.ResolutionScale = 2 end)
 
-	local modelFolder = ReplicatedStorage:WaitForChild("UnitModels")
-	local model = modelFolder:FindFirstChild(modelName)
+	local models = ReplicatedStorage:WaitForChild("UnitModels")
+	local model = models:FindFirstChild(modelName)
 	if not model then
-		warn("❌ Modell nicht gefunden:", modelName)
+		warn("[SummonPreview] ❌ Modell nicht gefunden:", modelName)
 		return
 	end
 
 	local clone = model:Clone()
 	if not clone.PrimaryPart then
-		warn("❌ Kein PrimaryPart in:", modelName)
+		warn("[SummonPreview] ❌ Kein PrimaryPart in:", modelName)
 		return
 	end
 
+	-- Kamera konfigurieren (fixe Orientation)
 	local camera = Instance.new("Camera")
 	camera.Name = "PreviewCamera"
 	camera.FieldOfView = 80
-	camera.CFrame = CFrame.new(Vector3.new(0, 2, -3.175), Vector3.new(0, 2, 0))
+	camera.CFrame = CFrame.new(0, 0, -5.175) * CFrame.Angles(0, math.rad(-174.481), 0)
 	camera.Parent = viewportFrame
 	viewportFrame.CurrentCamera = camera
 
-	clone:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+	-- Modell drehen/positionieren
+	local rotation = CFrame.Angles(0, math.rad(325), 0)
+	local offset = CFrame.new(0, 0, 0)
+	clone:SetPrimaryPartCFrame(offset * rotation)
+
+	-- Transparenz nach Folder-Regel
+	local bodyFolder = clone:FindFirstChild("Body")
+	if bodyFolder then
+		for _, part in ipairs(bodyFolder:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Transparency = 0
+				part.CastShadow = false
+			end
+		end
+	end
+
+	local clothFolder = clone:FindFirstChild("Cloth")
+	if clothFolder then
+		for _, part in ipairs(clothFolder:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Transparency = 0.5
+				part.CastShadow = false
+			end
+		end
+	end
+
+	-- Rest leicht transparent
+	for _, part in ipairs(clone:GetDescendants()) do
+		if part:IsA("BasePart")
+			and (not bodyFolder or not part:IsDescendantOf(bodyFolder))
+			and (not clothFolder or not part:IsDescendantOf(clothFolder)) then
+			part.Transparency = 0.1
+			part.CastShadow = false
+		end
+	end
+
 	clone.Parent = viewportFrame
 end
 
-
--- Setzt alle UI-Komponenten für eine Vorschau-Einheit
-local function applyUnitToSlot(unitData, slotFrame)
-	if not unitData or not slotFrame then return end
+-- === Intern: Slot befüllen (Viewport + Labels) ===
+local function applyUnitToSlot(baseUnit, slotFrame: Instance)
+	if not baseUnit or not slotFrame then return end
 
 	local display = slotFrame:FindFirstChild("UnitDisplay")
 	local nameLabel = slotFrame:FindFirstChild("UnitName")
 	local stroke = slotFrame:FindFirstChild("UIStroke")
 
-	if display and unitData.modelName then
-		renderUnitPreview(display, unitData.modelName or unitData.Id)
+	if display and display:IsA("ViewportFrame") then
+		local modelName = baseUnit.modelName or baseUnit.id or baseUnit.Name
+		renderUnitPreview(display, modelName)
 	end
 
-	if nameLabel then
-		nameLabel.Text = unitData.name or unitData.Id or "???"
+	if nameLabel and nameLabel:IsA("TextLabel") then
+		nameLabel.Text = baseUnit.name or baseUnit.id or "???"
 	end
 
-	if stroke then
-		if unitData.BaseStar >= 5 then
+	if stroke and stroke:IsA("UIStroke") then
+		local star = tonumber(baseUnit.BaseStar) or 0
+		if star >= 5 then
 			stroke.Color = Color3.fromRGB(255, 215, 0) -- Gold
-		elseif unitData.BaseStar == 4 then
+		elseif star == 4 then
 			stroke.Color = Color3.fromRGB(80, 170, 255) -- Blau
 		else
 			stroke.Color = Color3.fromRGB(180, 180, 180) -- Grau
@@ -76,49 +116,65 @@ local function applyUnitToSlot(unitData, slotFrame)
 	end
 end
 
--- Hauptfunktion: Befüllt Vorschau-Slots mit aktuellen Pool-Daten
-function SummonPreviewModule.UpdatePreviewSlots(previewFrame)
+-- === Public: Preview-Slots aktualisieren ===
+function SummonPreviewModule.UpdatePreviewSlots(root: Instance)
+	-- root kann entweder das CanvasGroup (mit Child "UnitPreviewFrame")
+	-- oder direkt der "UnitPreviewFrame" sein.
+	local previewFrame: Instance? = nil
+	if root and root:IsA("Frame") and root.Name == "UnitPreviewFrame" then
+		previewFrame = root
+	elseif root and root:IsA("GuiObject") then
+		previewFrame = root:FindFirstChild("UnitPreviewFrame")
+	end
 	if not previewFrame then
-		warn("[SummonPreview] ❌ Kein PreviewFrame übergeben.")
+		warn("[SummonPreview] Kein UnitPreviewFrame gefunden (Parameter ist:", root and root.Name or "nil", ")")
 		return
 	end
 
-	local pool
-	local success, result = pcall(function()
+	local slot1 = previewFrame:FindFirstChild("UnitSlot1")
+	local slot2 = previewFrame:FindFirstChild("UnitSlot2")
+	local slot3 = previewFrame:FindFirstChild("UnitSlot3")
+	if not (slot1 and slot2 and slot3) then
+		warn("[SummonPreview] Slots fehlen (UnitSlot1/2/3).")
+		return
+	end
+
+	-- Pool vom Server holen (robust gegen zwei Formate)
+	local ok, poolOrList = pcall(function()
 		return GetSummonPool:InvokeServer()
 	end)
-
-	if success then
-		pool = result
-	else
-		warn("[SummonPreview] ❌ Fehler beim Pool-Abruf:", result)
+	if not ok or not poolOrList then
+		warn("[SummonPreview] Pool konnte nicht abgerufen werden:", poolOrList)
 		return
 	end
 
-	if not pool or #pool == 0 then
-		warn("[SummonPreview] ⚠️ Pool ist leer.")
-		return
+	-- In Liste von UnitIds normalisieren
+	local unitIds: {string} = {}
+	if typeof(poolOrList) == "table" and poolOrList.Units then
+		for _, e in ipairs(poolOrList.Units) do
+			table.insert(unitIds, e.UnitId)
+		end
+	elseif typeof(poolOrList) == "table" then
+		unitIds = poolOrList
 	end
 
-	-- Stars zuordnen
-	local fives = {}
-	local fours = {}
-
-	for _, entry in ipairs(pool) do
-		local unit = UnitDataModule.GetUnitData(entry.UnitId)
-		if unit then
-			if entry.Star == 5 then
-				table.insert(fives, unit)
-			elseif entry.Star == 4 then
-				table.insert(fours, unit)
+	-- 4★ / 5★ herausfiltern
+	local fives, fours = {}, {}
+	for _, unitId in ipairs(unitIds) do
+		local base = UnitDataModule.GetUnitData(unitId)
+		if base then
+			if base.BaseStar == 5 then
+				table.insert(fives, base)
+			elseif base.BaseStar == 4 then
+				table.insert(fours, base)
 			end
 		end
 	end
 
-	-- Slots befüllen
-	applyUnitToSlot(fives[1], previewFrame:FindFirstChild("UnitSlot1"))
-	applyUnitToSlot(fours[1], previewFrame:FindFirstChild("UnitSlot2"))
-	applyUnitToSlot(fours[2], previewFrame:FindFirstChild("UnitSlot3"))
+	-- Belegen: 1×5★ + 2×4★ (sofern vorhanden)
+	applyUnitToSlot(fives[1], slot1)
+	applyUnitToSlot(fours[1], slot2)
+	applyUnitToSlot(fours[2], slot3)
 end
 
 return SummonPreviewModule
