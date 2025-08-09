@@ -13,6 +13,7 @@ local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
+local DebugLogger = require(Modules:WaitForChild("DebugLogger"))
 
 --// Remotes
 local InventoryFolder = ReplicatedStorage.Remotes:WaitForChild("Inventory")
@@ -20,9 +21,7 @@ local getInventoryFunction = InventoryFolder:WaitForChild("GetInventoryData")
 local addItemEvent        = InventoryFolder:WaitForChild("AddItemRequest")
 local removeItemEvent     = InventoryFolder:WaitForChild("RemoveItemRequest")
 
-local DEBUG = true
-local function log(...) if DEBUG then print("[InventoryServerHandler]", ...) end end
-local function warnf(...) if DEBUG then warn("[InventoryServerHandler]", ...) end end
+local log, warnf = DebugLogger.new("InventoryServerHandler", true)
 
 -- GetInventoryData: Inventory als Array an Client
 getInventoryFunction.OnServerInvoke = function(player)
