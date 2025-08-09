@@ -129,8 +129,8 @@
 | -------------------------- | ---------- | --------------------------------------------------------------------------- |
 | SummonClientScript         | ✅          | Öffnet Panel bei Touch SummonCircle, Buttons für Single/Multi Summon        |
 | SummonPreviewModule        | ✅          | Zeigt 1× 5★ + 2× 4★ Units im GUI-Preview, ViewportFrame mit Kamera-Setup    |
-| SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, sendet Result an Client       |
-| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation                             |
+| SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, sendet Result an Client, prüft & bucht jetzt `SummonScroll_Common` aus `Inventory.Scroll` ab |
+| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation, enthält Kostendefinition für Single/Multi Summon (typed Inventory: `Type="Scroll"`, `Id="SummonScroll_Common"`) |
 | SummonRemoteHandler        | ✅          | Leitet Requests, liefert Pool an Client (GetSummonPool)                     |
 | SpriteAnimator             | ✅          | Animierter GUI-Hintergrund (SummonOverlay)                                  |
 | TeleportReturn Integration | ✅          | CloseButton kann `"ReturnToSummon"`-Teleport auslösen                       |
@@ -143,7 +143,7 @@
 | Element                 | Status | Beschreibung                                                |
 | ----------------------- | ------ | ----------------------------------------------------------- |
 | ProfileSyncService      | ✅      | `Send(player, key, data)` für alle Änderungen               |
-| ProfileChanged Events   | ✅      | Events für Settings, Units, TDEclipsium                     |
+| ProfileChanged Events   | ✅      | Events für Settings, Units, TDEclipsium, Inventory          |
 | SettingsClientScript    | ✅      | Aktive Einstellungen abrufen & setzen                       |
 | SetAutoWaveEnabled      | ✅      | Remote zur Umschaltung                                      |
 | SetSeamlessEnabled      | ✅      | Umschaltung RestartMode                                     |
@@ -154,7 +154,7 @@
 
 | Element             | Status | Beschreibung                                        |
 | ------------------- | ------ | --------------------------------------------------- |
-| ProfileStoreWrapper | ✅      | Settings, TeleportData, Units, Inventory            |
+| ProfileStoreWrapper | ✅      | Settings, TeleportData, Units, Inventory (inkl. typed Inventory-System) |
 | PlayerDataTemplate  | ✅      | Settings enthalten: RestartMode, AutoWave, StageId  |
 | GetSettings Remote  | ✅      | Client kann aktiven Status abfragen                 |
 
@@ -171,6 +171,7 @@
 - ✅ Summon-GUI funktionsfähig mit animiertem Hintergrund und Preview-Units
 - ✅ Teleport `"ReturnToSummon"` in CloseButton integriert
 - ✅ Kamera- und Renderfix für Preview-Models
+- ✅ Summon-Kostenprüfung & Inventarabbuchung für `SummonScroll_Common` implementiert
 
 ---
 
@@ -185,7 +186,6 @@
 - [ ] AirUnit-Support über neue Typen und TargetModes
 - [ ] BossWave-Typen + Spezialverhalten definieren
 - [ ] Countdown-Anzeige im UI ("Nächste Welle in ...")
-- [ ] Kosten- und Inventarprüfung für Summons (Tickets, TDEclipsium)
 - [ ] Garantiesystem / Pity für Summons
 - [ ] RateUp-Hervorhebung im Summon-Preview
 
@@ -198,4 +198,3 @@
 - ❌ EXP-/BPEXP-Verteilung bei Victory noch nicht integriert
 - ⚠️ GUI-Sync via Rojo kann bei falschem `.rbxmx`-Export Icons/Values verlieren (SlotImage etc.)
 - ❌ Preview-Slots bleiben leer, wenn `GetSummonPool`-Serverhandler fehlt oder fehlerhaft antwortet
-- ❌ Summon-Kostenprüfung noch nicht implementiert

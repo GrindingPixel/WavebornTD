@@ -791,7 +791,7 @@ local function onPlayerAdded(player)
 	profile:Reconcile()
 profile.Data.Teleport = profile.Data.Teleport or {}
 
--- NEU: Wenn SelectedStage fehlt ODER leer ist → setzen
+---[[ NEU: Wenn SelectedStage fehlt ODER leer ist → setzen
 if typeof(profile.Data.Teleport.SelectedStage) ~= "table"
 	or profile.Data.Teleport.SelectedStage.MapName == nil
 	or profile.Data.Teleport.SelectedStage.MapName == ""
@@ -803,7 +803,7 @@ then
 		StageId = 1
 	}
 	print("✅ Default-Stage gesetzt (Studio-Fallback)")
-end
+end --]]
 
 	-- Quests initialisieren
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
