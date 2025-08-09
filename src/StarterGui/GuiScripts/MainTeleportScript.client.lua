@@ -163,13 +163,45 @@ for i = 1, 6 do
                                         local displayName = meta and meta.displayName or (reward.id or reward.type)
                                         label.Text = reward.amount .. "x " .. displayName
                                         label.Parent = entry
+=======
+				for _, reward in ipairs(stageData.Rewards) do
+					local entry = Instance.new("Frame")
+					entry.Name = "RewardEntry"
+					entry.Size = UDim2.new(1, 0, 0, 28)
+					entry.BackgroundTransparency = 1
+					entry.Active = true
+
+					local icon = Instance.new("ImageLabel")
+					icon.Size = UDim2.new(0, 24, 0, 24)
+					icon.Position = UDim2.new(0, 0, 0, 2)
+					icon.BackgroundTransparency = 1
+					icon.Image = reward.image or "rbxassetid://12345678"
+					icon.Parent = entry
+
+					local label = Instance.new("TextLabel")
+					label.Size = UDim2.new(1, -30, 1, 0)
+					label.Position = UDim2.new(0, 30, 0, 0)
+					label.BackgroundTransparency = 1
+					label.Font = Enum.Font.Gotham
+					label.TextSize = 14
+					label.TextColor3 = Color3.fromRGB(220, 220, 220)
+					label.TextXAlignment = Enum.TextXAlignment.Left
+					label.Text = reward.amount .. "x " .. (reward.id or reward.type)
+					label.Parent = entry
+ main
 
                                        -- Set tooltip text using TooltipModule so TooltipController can display it
                                        TooltipModule.AttachTooltip(entry, { text = rewardTooltip(reward) })
 
+
                                         entry.Parent = rewardList
                                 end
                         end
+=======
+					entry.Parent = rewardList
+				end
+			end
+ main
 
 			local tpButton = clone:FindFirstChild("TeleportButton")
 			if tpButton and tpButton:IsA("ImageButton") then
