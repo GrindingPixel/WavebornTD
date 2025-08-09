@@ -145,9 +145,8 @@ for i = 1, 6 do
 					label.Text = reward.amount .. "x " .. (reward.id or reward.type)
 					label.Parent = entry
 
-					TooltipModule:Attach(entry, function()
-						return rewardTooltip(reward)
-					end)
+                                       -- Set tooltip text using TooltipModule so TooltipController can display it
+                                       TooltipModule.AttachTooltip(entry, { text = rewardTooltip(reward) })
 
 					entry.Parent = rewardList
 				end
