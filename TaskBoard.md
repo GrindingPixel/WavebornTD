@@ -62,6 +62,7 @@
 | GrantRewards          | ✅      | Items & Units werden korrekt ins Inventar eingefügt    |
 | InventoryClientScript | ✅      | Live-Sync & Anzeige der Items                         |
 | ItemDataModule        | ✅      | Icons, Namen, Metadaten                               |
+| LiveSync Scrolls      | ✅      | SummonScroll-Bestand wird hier bei Änderungen aktualisiert |
 
 ---
 
@@ -130,11 +131,12 @@
 | SummonClientScript         | ✅          | Öffnet Panel bei Touch SummonCircle, Buttons für Single/Multi Summon        |
 | SummonPreviewModule        | ✅          | Zeigt 1× 5★ + 2× 4★ Units im GUI-Preview, ViewportFrame mit Kamera-Setup    |
 | SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, sendet Result an Client, prüft & bucht jetzt `SummonScroll_Common` aus `Inventory.Scroll` ab |
-| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation, enthält Kostendefinition für Single/Multi Summon (typed Inventory: `Type="Scroll"`, `Id="SummonScroll_Common"`) |
+| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation, enthält Kostendefinition für Single/Multi Summon |
 | SummonRemoteHandler        | ✅          | Leitet Requests, liefert Pool an Client (GetSummonPool)                     |
 | SpriteAnimator             | ✅          | Animierter GUI-Hintergrund (SummonOverlay)                                  |
 | TeleportReturn Integration | ✅          | CloseButton kann `"ReturnToSummon"`-Teleport auslösen                       |
 | Kamera & RenderFix         | ✅          | Ausrichtung, Transparenz, Schattenfix für Preview-Modelle                   |
+| Scroll-Anzeige             | ✅          | `SummonsLeft` in SummonGui zeigt Live die Anzahl `SummonScroll_Common` aus Inventory an, aktualisiert bei jedem Kauf/Verbrauch |
 
 ---
 
@@ -172,6 +174,7 @@
 - ✅ Teleport `"ReturnToSummon"` in CloseButton integriert
 - ✅ Kamera- und Renderfix für Preview-Models
 - ✅ Summon-Kostenprüfung & Inventarabbuchung für `SummonScroll_Common` implementiert
+- ✅ Live-Anzeige der Scroll-Anzahl im SummonPanel (`SummonsLeft`) implementiert
 
 ---
 
