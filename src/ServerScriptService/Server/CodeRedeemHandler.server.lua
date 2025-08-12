@@ -10,11 +10,8 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local CodesDataModule = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
-
---// Debug
-local DEBUG = true
-local function log(...) if DEBUG then print("[CodeRedeemHandler]", ...) end end
-local function warnf(...) if DEBUG then warn("[CodeRedeemHandler]", ...) end end
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log, warnf = DebugLogger.new("CodeRedeemHandler")
 
 --// Remotes
 local redeemCodeEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode")

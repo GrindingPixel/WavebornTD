@@ -5,6 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
 local Workspace         = game:GetService("Workspace")
 
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log = DebugLogger.new("TeleportPortalHandler")
+
 --// Teleport-Ziele
 local portals     = Workspace:WaitForChild("Portals")
 local Summon      = Workspace:WaitForChild("Summon")
@@ -62,14 +65,14 @@ end)
 
 -- TimeoutRemote: Rückteleport zu Story-Lobby
 timeoutRemote.OnServerEvent:Connect(function(player, command)
-	print("🛑 Server: TimeoutRemote empfangen:", player.Name, command)
+        log("🛑 TimeoutRemote empfangen:", player.Name, command)
 
 	if command == "ReturnToLobby" then
 		local backFolder = portals:WaitForChild("BacktoLobby")
 		local destination = backFolder:WaitForChild("BackToStory")
-		local ok = teleportTo(player, destination.CFrame + Vector3.new(0, 3, 0))
-		if ok then
-			print("🔁 Spieler zurückteleportiert (Story):", player.Name)
+                local ok = teleportTo(player, destination.CFrame + Vector3.new(0, 3, 0))
+                if ok then
+                        log("🔁 Spieler zurückteleportiert (Story):", player.Name)
 		else
 			warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Story).")
 		end
@@ -78,14 +81,14 @@ end)
 
 -- Close Summon → Rückteleport leicht vom Kreis weg
 TeleportBack.OnServerEvent:Connect(function(player, command)
-	print("🛑 Server: TeleportBack empfangen:", player.Name, command)
+        log("🛑 TeleportBack empfangen:", player.Name, command)
 
 	if command == "ReturnToSummon" then
 		local backFolder  = Summon:WaitForChild("BacktoLobby")
 		local destination = backFolder:WaitForChild("BackToSummon")
-		local ok = teleportTo(player, destination.CFrame + Vector3.new(0, 3, 0))
-		if ok then
-			print("🔁 Spieler zurückteleportiert (Summon):", player.Name)
+                local ok = teleportTo(player, destination.CFrame + Vector3.new(0, 3, 0))
+                if ok then
+                        log("🔁 Spieler zurückteleportiert (Summon):", player.Name)
 		else
 			warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Summon).")
 		end
