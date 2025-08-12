@@ -6,8 +6,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local ProfileService = require(game.ServerScriptService.Modules:WaitForChild("ProfileService"))
-local RewardService = require(game.ServerScriptService.Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(game.ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
 local PremiumShop = require(ReplicatedStorage.Modules:WaitForChild("PremiumShopModule"))
 local ProfileSyncService = require(game.ServerScriptService.Modules:WaitForChild("ProfileSyncService"))
 
@@ -17,7 +16,7 @@ local GetPurchases = ReplicatedStorage.Remotes.Profile:WaitForChild("GetPurchase
 
 -- Prüfe, ob der Spieler bereits gekauft hat
 	GetPurchases.OnServerInvoke = function(player)
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if profile then
 		return profile.Data.Purchases
 	else
@@ -31,7 +30,7 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
 	if not player then return Enum.ProductPurchaseDecision.NotProcessedYet end
 
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then return Enum.ProductPurchaseDecision.NotProcessedYet end
 
 	local productId = receiptInfo.ProductId
@@ -63,13 +62,13 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 
 	-- Premium-Status aktivieren, wenn BattlepassPremium gekauft wurde
 	if data.productKey == "BattlepassPremium" then
-                ProfileService:SetBattlepassPremium(player, true)
-                ProfileSyncService:Send(player, "Battlepass", ProfileService:GetBattlepass(player))
+		ProfileWrapper:SetBattlepassPremium(player, true)
+		ProfileSyncService:Send(player, "Battlepass", ProfileWrapper:GetBattlepass(player))
 		print("[SHOP] 🎫 Premium-Status sofort aktiviert für", player.Name)
 	end
 
 	-- Belohnung vergeben (falls vorhanden)
-        RewardService.GrantRewards(player, data.rewards)
+	ProfileWrapper:GrantRewards(player, data.rewards)
 
 	print("[SHOP] ✅ Kauf abgeschlossen:", productId, "→", data.productKey)
 	return Enum.ProductPurchaseDecision.PurchaseGranted

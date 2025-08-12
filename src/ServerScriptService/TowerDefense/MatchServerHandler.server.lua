@@ -13,7 +13,7 @@ local Modules = ServerScriptService:WaitForChild("Modules")
 local TowerDefense = ServerScriptService:WaitForChild("TowerDefense")
 
 --// Module
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local WaveManager = require(TowerDefense:WaitForChild("WaveManager"))
 local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
 local MatchStateModule = require(TowerDefense:WaitForChild("MatchStateModule"))
@@ -55,7 +55,7 @@ log("✅ MatchServerHandler bereit")
 
 --// Startgeld setzen (Debug oder Tutorial)
 SetTDEclipsium.OnServerEvent:Connect(function(player)
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then return end
 
 	profile.Data.Player.TDEclipsium = 20000
@@ -65,7 +65,7 @@ end)
 --// AutoWave vom Client setzen
 SetAutoWaveEnabled.OnServerEvent:Connect(function(player, enabled: boolean)
 	log("🔁 AutoWave von", player.Name, "→", enabled)
-        ProfileService:SetSetting(player, "AutoWaveEnabled", enabled)
+	ProfileWrapper:SetSetting(player, "AutoWaveEnabled", enabled)
 
 	if matchStarted then
 		WaveManager:SetAutoWaveEnabled(enabled)
@@ -75,7 +75,7 @@ end)
 SetSeamlessEnabled.OnServerEvent:Connect(function(player, enabled: boolean)
 	log("⚙️ SeamlessRestart von", player.Name, "→", enabled)
 	local mode = enabled and "seamless" or "teleport"
-        ProfileService:SetSetting(player, "RestartMode", mode)
+	ProfileWrapper:SetSetting(player, "RestartMode", mode)
 end)
 
 --// Wellenstart (Initial oder Folge-Welle)
@@ -101,13 +101,13 @@ StartWaveRequest.OnServerEvent:Connect(function(player, mode)
 	matchStarted = true
 
 	-- Profil laden
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then
 		warn("❌ Kein Profil für", player.Name)
 		return
 	end
 
-        local teleportData = ProfileService:GetSelectedStage(player)
+	local teleportData = ProfileWrapper:GetSelectedStage(player)
 	print("📦 teleportData =", teleportData)
 	if not teleportData or teleportData.MapName == "" or teleportData.StageId <= 0 then
 		warn("❌ Kein gültiger SelectedStage im Profil:", player.Name)
@@ -130,7 +130,7 @@ StartWaveRequest.OnServerEvent:Connect(function(player, mode)
 	log("📦 Wellenplan generiert mit", stage.WaveConfig.WaveCount, "Wellen")
 
 	-- AutoWave synchronisieren
-        local settings = ProfileService:GetSettings(player)
+	local settings = ProfileWrapper:GetSettings(player)
 	WaveManager:SetAutoWaveEnabled(settings.AutoWaveEnabled == true)
 
 	-- Erste Welle starten
@@ -138,7 +138,7 @@ StartWaveRequest.OnServerEvent:Connect(function(player, mode)
 end)
 
 MatchResultAction.OnServerEvent:Connect(function(player, action)
-        local selectedStage = ProfileService:GetSelectedStage(player)
+	local selectedStage = ProfileWrapper:GetSelectedStage(player)
 	local mapName = selectedStage.MapName
 	local stageId = selectedStage.StageId
 
@@ -151,7 +151,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 		return
 
 	elseif action == "Restart" then
-                local restartMode = ProfileService:GetSettings(player).RestartMode or "teleport"
+		local restartMode = ProfileWrapper:GetSettings(player).RestartMode or "teleport"
 
 		if restartMode == "seamless" then
 			log("🔁 Seamless Restart – Reset MatchState in aktueller Instanz für", player.Name)
@@ -161,7 +161,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 			EnemyManager:Reset()
 			matchStarted = false
 
-                        local profile = ProfileService:GetProfile(player)
+			local profile = ProfileWrapper:GetProfile(player)
 			if profile then
 				profile.Data.Player.TDEclipsium = nil
 			end
@@ -179,7 +179,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 		return
 
 	elseif action == "Continue" then
-                local profile = ProfileService:GetProfile(player)
+		local profile = ProfileWrapper:GetProfile(player)
 		if not profile then return end
 
 		if mapName == "" or stageId == 0 then
@@ -191,7 +191,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 		local mapInfo = MapData[mapName]
 
 		if mapInfo and mapInfo.Stages and mapInfo.Stages[nextStage] then
-                        ProfileService:SetSelectedStage(player, mapName, nextStage)
+			ProfileWrapper:SetSelectedStage(player, mapName, nextStage)
 			StageTeleportService.TeleportToStage(player, mapName, nextStage)
 			return
 		else
@@ -217,7 +217,7 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 			local nextStageId = stageInfo.NextStage.StageId
 			log("➡️ NextStage: teleportiere", player.Name, "→", nextMap, "Stage", nextStageId)
 
-                        ProfileService:SetSelectedStage(player, nextMap, nextStageId)
+			ProfileWrapper:SetSelectedStage(player, nextMap, nextStageId)
 			StageTeleportService.TeleportToStage(player, nextMap, nextStageId)
 		else
 			warn("[Next] Kein NextStage definiert für", mapName, "Stage", stageId)

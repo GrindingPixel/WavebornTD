@@ -4,12 +4,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Modules
-local ProfileService = require(game.ServerScriptService.Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(game.ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
 
 -- Remotes
 local GetSelectedStage = ReplicatedStorage.Remotes.Profile:WaitForChild("GetSelectedStage")
 
 
 GetSelectedStage.OnServerInvoke = function(player)
-        return ProfileService:GetSelectedStage(player)
+	return ProfileWrapper:GetSelectedStage(player)
 end

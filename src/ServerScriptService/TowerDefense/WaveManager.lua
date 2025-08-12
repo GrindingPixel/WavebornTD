@@ -14,7 +14,7 @@ local NextWaveAvailable = TDRemotes:WaitForChild("NextWaveAvailable")
 
 --// Modules
 local EnemyManager = require(ServerScriptService.TowerDefense.EnemyManager)
-local ProfileService = require(ServerScriptService.Modules.ProfileService)
+local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
 local MatchStateModule = require(ServerScriptService.TowerDefense.MatchStateModule)
 
 --// Typen
@@ -246,7 +246,7 @@ function WaveManager:StartWave(waveNumber: number?)
 				else
 					log("⏹ AutoWave deaktiviert beim Timeout – Spielerstart erforderlich")
 					for _, player in ipairs(Players:GetPlayers()) do
-                                            local profile = ProfileService:GetProfile(player)
+						local profile = ProfileStoreWrapper:GetProfile(player)
 						if profile then
 							ShowPlayButton:FireClient(player)
 						end

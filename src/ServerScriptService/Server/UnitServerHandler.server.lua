@@ -7,7 +7,7 @@ local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local UnitData = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
 
@@ -23,19 +23,19 @@ local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileCh
 
 --// Units für Client abrufen (UUID-System)
 getUnitsFunction.OnServerInvoke = function(player)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("GetPlayerUnits abgelehnt für", player and player.Name)
 		return {}
 	end
 
-        local result = ProfileService:GetUnits(player)
+	local result = ProfileWrapper:GetUnits(player)
 	log("📦 Units gesendet für", player.Name, "(Anzahl:", #result, ")")
 	return result
 end
 
 --// Unit ausrüsten
 equipUnitEvent.OnServerEvent:Connect(function(player, slot, unitUUID)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("EquipUnit abgelehnt – Profil nicht geladen für", player and player.Name)
 		return
 	end
@@ -52,13 +52,13 @@ end
 		return
 	end
 
-        local equipped = ProfileService:EquipUnit(player, slot, unitUUID)
+	local equipped = ProfileWrapper:EquipUnit(player, slot, unitUUID)
 	if equipped then
 		log("🎮 Unit", unitUUID, "auf Slot", slot, "für", player.Name)
 
 		-- 🔧 EquipSlots & LiveSync senden
-                local updated = ProfileService:GetUnits(player)
-                local equippedSlots = ProfileService:GetEquippedUnits(player)
+		local updated = ProfileWrapper:GetUnits(player)
+		local equippedSlots = ProfileWrapper:GetEquippedUnits(player)
 
 		for s = 1, 6 do
 			local uuid = equippedSlots[s]

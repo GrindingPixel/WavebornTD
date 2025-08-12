@@ -8,8 +8,7 @@ local Workspace = game:GetService("Workspace")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatStatsProvider)
 local UnitTargetingModule = require(ReplicatedStorage.TDModules.Combat.UnitTargetingModule)
 local WaveManager = require(game.ServerScriptService.TowerDefense.WaveManager)
@@ -90,10 +89,10 @@ local function beginAttackLoop(towerModel: Model, unitId: string, player: Player
 
 					log(`☠️ {target.Name} wurde getötet von {tuuid}`)
 					target:Destroy()
-                                        RewardService.AddTDEclipsium(player, 20)
-                                        RewardService.AddBattlepassEXP(player, 5)
-                                        ProfileService:IncrementUnitKills(player, uuid, 1, true)
-                                        ProfileService:Sync(player, "TDEclipsium")
+					ProfileWrapper:AddTDEclipsium(player, 20)
+					ProfileWrapper:AddBattlepassEXP(player, 5)
+					ProfileWrapper:IncrementUnitKills(player, uuid, 1, true)
+					ProfileWrapper:Sync(player, "TDEclipsium")
 				end
 			end
 

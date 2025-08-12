@@ -7,7 +7,7 @@ local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 
 --// Debug
@@ -25,18 +25,18 @@ local getUpgradesFunction = ReplicatedStorage.Remotes.Upgrades:WaitForChild("Get
 
 --// Upgrades für Client abrufen (Read-Only)
 getUpgradesFunction.OnServerInvoke = function(player)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("GetPlayerUpgrades abgelehnt für", player and player.Name)
 		return {}
 	end
-        local upgrades = ProfileService:GetUpgrades(player)
+	local upgrades = ProfileWrapper:GetUpgrades(player)
 	log("Upgrades für", player.Name, "abgerufen")
 	return upgrades
 end
 
 --// Inventargröße upgraden
 upgradeInventoryEvent.OnServerEvent:Connect(function(player, newSize)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("UpgradeInventory abgelehnt (Profil nicht geladen) für", player and player.Name)
 		return
 	end
@@ -49,6 +49,6 @@ upgradeInventoryEvent.OnServerEvent:Connect(function(player, newSize)
 		return
 	end
 
-        ProfileService:UpgradeInventory(player, newSize)
+	ProfileWrapper:UpgradeInventory(player, newSize)
 	log("Inventargröße auf", newSize, "für", player.Name, "gesetzt")
 end)

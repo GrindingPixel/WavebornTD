@@ -7,8 +7,7 @@ local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("BattlepassInfoProvider"))
 BattlepassInfoProvider.Regenerate()
 
@@ -25,9 +24,9 @@ local function warnf(...) if DEBUG then warn("[BattlepassServerHandler]", ...) e
 
 --// Battlepass Info abrufen
 GetBattlepassInfo.OnServerInvoke = function(player)
-        if not ProfileService:IsLoaded(player) then return nil end
+	if not ProfileWrapper:IsLoaded(player) then return nil end
 
-        local playerBP = ProfileService:GetBattlepass(player)
+	local playerBP = ProfileWrapper:GetBattlepass(player)
 	local levelData = {}
 
 	for i = 1, BattlepassInfoProvider.GetMaxLevel() do
@@ -62,10 +61,10 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 end
 
 ClaimFree.OnServerEvent:Connect(function(player, level)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(level) ~= "number" then return end
 
-        local playerBP = ProfileService:GetBattlepass(player)
+	local playerBP = ProfileWrapper:GetBattlepass(player)
 	local claimed = playerBP.Claimed or {}
 	local claimKey = tostring(level) .. "_free"
 
@@ -79,11 +78,11 @@ ClaimFree.OnServerEvent:Connect(function(player, level)
 		return
 	end
 
-        RewardService.GrantRewards(player, { entry.free }, true)
-        ProfileService:ClaimBattlepassReward(player, level, "free")
+	ProfileWrapper:GrantRewards(player, { entry.free }, true)
+	ProfileWrapper:ClaimBattlepassReward(player, level, "free")
 
 	-- 🔥 Hier Battlepass-Daten syncen:
-        local updatedBP = ProfileService:GetBattlepass(player)
+	local updatedBP = ProfileWrapper:GetBattlepass(player)
 	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "Battlepass", updatedBP)
 
 	log(player.Name, "hat FREE Battlepass-Level", level, "beansprucht")
@@ -91,10 +90,10 @@ end)
 
 --// Premium Belohnung beanspruchen
 ClaimPremium.OnServerEvent:Connect(function(player, level)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(level) ~= "number" then return end
 
-        local playerBP = ProfileService:GetBattlepass(player)
+	local playerBP = ProfileWrapper:GetBattlepass(player)
 	if not playerBP.HasPremium then
 		log(player.Name, "hat keinen Premium-Pass – Zugriff verweigert")
 		return
@@ -119,11 +118,11 @@ ClaimPremium.OnServerEvent:Connect(function(player, level)
 		return
 	end
 
-        RewardService.GrantRewards(player, { entry.premium }, true)
-        ProfileService:ClaimBattlepassReward(player, level, "premium")
+	ProfileWrapper:GrantRewards(player, { entry.premium }, true)
+	ProfileWrapper:ClaimBattlepassReward(player, level, "premium")
 
 	-- 🔥 Hier Battlepass-Daten syncen:
-        local updatedBP = ProfileService:GetBattlepass(player)
+	local updatedBP = ProfileWrapper:GetBattlepass(player)
 	ReplicatedStorage.Remotes.Profile.ProfileChanged:FireClient(player, "Battlepass", updatedBP)
 
 	log(player.Name, "hat PREMIUM Battlepass-Level", level, "beansprucht")
