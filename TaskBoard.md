@@ -1,4 +1,4 @@
-# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-09)
+# 📋 Waveborn TD – TaskBoard (Stand: 2025-08-12)
 
 ---
 
@@ -24,7 +24,9 @@
 | ProfileLoadedEvent   | ✅      | Wird bei erfolgreichem Profil-Laden gefeuert       |
 | ProfileChangedEvent  | ✅      | Wird bei Änderungen wie Purchases oder BP gesendet |
 | IsProfileReady Remote| ✅      | Clients prüfen Serverstatus vor Ladeaktionen       |
-| ProfileSyncService   | ✅      | LiveSync von `Settings`, `TDEclipsium`, `Units`    |
+| ProfileSyncService   | ✅      | LiveSync von `Settings`, `Eclipsium`, `TDEclipsium`, `Units` |
+| ProfileReadyService  | ✅      | Blockiert GUI-Init bis Profil geladen, Integration mit MoneyLobbyGui und anderen Lobby-GUIs |
+| GetProfile Remote    | ✅      | RemoteFunction für atomaren Profil-Snapshot (Eclipsium, Gems) |
 
 ---
 
@@ -88,6 +90,7 @@
 | QuestServerHandler    | ✅      | ClaimAll verarbeitet Quests                     |
 | ProgressTrackerService| ✅      | Einheitliches Tracking aller Questarten         |
 | QuestDebugScript      | ✅      | P-Taste simuliert Fortschritt im Dev-Modus      |
+| VictoryRewardService  | 🆕      | Modul für EXP- und Battlepass-EXP-Vergabe bei Victory, Livesync an Client |
 
 ---
 
@@ -116,7 +119,7 @@
 | RestartMode Toggle     | ✅      | Seamless Restart (ohne Teleport) oder Teleport-Variante per Setting        |
 | MatchStateModule       | ✅      | `IsMatchOver()` hinzugefügt, Reset-Versorgung erweitert                     |
 | MatchResultAction      | ✅      | Buttons: Leave, Restart, Continue, Next                                     |
-| TDEclipsium-Sync       | ✅      | Direktes Update und LiveSync beim Start                                     |
+| Currency-Sync          | ✅      | GetProfile RemoteFunction liefert Eclipsium & Gems zuverlässig beim Join   |
 | VictoryFix             | ✅      | `HealthChanged` statt `Died`, inkl. `VictoryProcessed`                      |
 | SpawnTimingFix         | ✅      | Victory nur geprüft, wenn alle Gegner gespawnt sind                         |
 | SeamlessResetFix       | ✅      | `EnemyManager:Reset()` + WaveManager:SetAutoWaveEnabled                     |
@@ -129,14 +132,14 @@
 | Element                    | Status     | Beschreibung                                                                 |
 | -------------------------- | ---------- | --------------------------------------------------------------------------- |
 | SummonClientScript         | ✅          | Öffnet Panel bei Touch SummonCircle, Buttons für Single/Multi Summon        |
-| SummonPreviewModule        | ✅          | Zeigt 1× 5★ + 2× 4★ Units im GUI-Preview, ViewportFrame mit Kamera-Setup    |
-| SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, sendet Result an Client, prüft & bucht jetzt `SummonScroll_Common` aus `Inventory.Scroll` ab |
-| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation, enthält Kostendefinition für Single/Multi Summon |
+| SummonPreviewModule        | ✅          | Zeigt 1× 5★ + 2× 4★ Units im GUI-Preview                                    |
+| SummonServiceModule        | ✅          | Verarbeitet Summons, fügt Units ins Inventar, prüft & bucht Scrolls ab      |
+| SummonPoolModule           | ✅          | Dynamische Poolgenerierung, stündliche Rotation, enthält Kostendefinition   |
 | SummonRemoteHandler        | ✅          | Leitet Requests, liefert Pool an Client (GetSummonPool)                     |
 | SpriteAnimator             | ✅          | Animierter GUI-Hintergrund (SummonOverlay)                                  |
 | TeleportReturn Integration | ✅          | CloseButton kann `"ReturnToSummon"`-Teleport auslösen                       |
 | Kamera & RenderFix         | ✅          | Ausrichtung, Transparenz, Schattenfix für Preview-Modelle                   |
-| Scroll-Anzeige             | ✅          | `SummonsLeft` in SummonGui zeigt Live die Anzahl `SummonScroll_Common` aus Inventory an, aktualisiert bei jedem Kauf/Verbrauch |
+| Scroll-Anzeige             | ✅          | Live-Anzeige `SummonsLeft` im SummonGui                                     |
 
 ---
 
@@ -145,7 +148,7 @@
 | Element                 | Status | Beschreibung                                                |
 | ----------------------- | ------ | ----------------------------------------------------------- |
 | ProfileSyncService      | ✅      | `Send(player, key, data)` für alle Änderungen               |
-| ProfileChanged Events   | ✅      | Events für Settings, Units, TDEclipsium, Inventory          |
+| ProfileChanged Events   | ✅      | Events für Settings, Units, Eclipsium, TDEclipsium, Inventory|
 | SettingsClientScript    | ✅      | Aktive Einstellungen abrufen & setzen                       |
 | SetAutoWaveEnabled      | ✅      | Remote zur Umschaltung                                      |
 | SetSeamlessEnabled      | ✅      | Umschaltung RestartMode                                     |
@@ -156,15 +159,15 @@
 
 | Element             | Status | Beschreibung                                        |
 | ------------------- | ------ | --------------------------------------------------- |
-| ProfileStoreWrapper | ✅      | Settings, TeleportData, Units, Inventory (inkl. typed Inventory-System) |
+| ProfileStoreWrapper | ✅      | Settings, TeleportData, Units, Inventory (inkl. typed Inventory-System), Currency-Methoden |
 | PlayerDataTemplate  | ✅      | Settings enthalten: RestartMode, AutoWave, StageId  |
 | GetSettings Remote  | ✅      | Client kann aktiven Status abfragen                 |
 
 ---
 
-## ✅ 13. Abgeschlossene Tasks (Stand: 2025-08-09)
+## ✅ 13. Abgeschlossene Tasks (Stand: 2025-08-12)
 
-- ✅ Multi-EnemyPathX Support mit globalem Ende-Punkt umgesetzt
+- ✅ Multi-EnemyPathX Support mit globalem Ende-Punkt
 - ✅ Hard-Abbruch bei MatchEnd integriert (SpawnStop, AutoWaveCancel, DamageBlock)
 - ✅ MatchStateModule:IsMatchOver eingeführt
 - ✅ WaveManager Spawn-Schleifen durch MatchEnd sicher beendet
@@ -173,31 +176,35 @@
 - ✅ Summon-GUI funktionsfähig mit animiertem Hintergrund und Preview-Units
 - ✅ Teleport `"ReturnToSummon"` in CloseButton integriert
 - ✅ Kamera- und Renderfix für Preview-Models
-- ✅ Summon-Kostenprüfung & Inventarabbuchung für `SummonScroll_Common` implementiert
-- ✅ Live-Anzeige der Scroll-Anzahl im SummonPanel (`SummonsLeft`) implementiert
+- ✅ Summon-Kostenprüfung & Inventarabbuchung für `SummonScroll_Common`
+- ✅ Live-Anzeige der Scroll-Anzahl im SummonPanel (`SummonsLeft`)
+- ✅ ProfileReadyService blockiert GUI-Init bis Profil geladen
+- ✅ GetProfile RemoteFunction implementiert und im Client eingebunden
+- ✅ Currency-Anzeige in MoneyLobbyGui zeigt Werte zuverlässig ab erstem Join
 
 ---
 
-## 🔜 14. Nächste Schritte
+## 🔜 14. Nächste Schritte (not now)
 
-- [ ] EXP & Battlepass korrekt mit Victory-Screen verrechnen
+- [ ] EXP & Battlepass korrekt mit Victory-Screen verrechnen (VictoryRewardService → MatchServerHandler)
 - [ ] TooltipSystem refactoren (Traits, Rewards, Units)
-- [ ] RewardPopupGui für Quests & Battlepass anzeigen (optional)
-- [ ] TowerUpgrade & Sell-System fertigstellen (Refund, FX, Stats)
-- [ ] TowerTargetMode (Dropdown: Nearest, First, Strongest etc.)
-- [ ] StatusEffects (Burn, Freeze, Slow) über `Enemy.Status` + FX
-- [ ] AirUnit-Support über neue Typen und TargetModes
-- [ ] BossWave-Typen + Spezialverhalten definieren
-- [ ] Countdown-Anzeige im UI ("Nächste Welle in ...")
+- [ ] RewardPopupGui für Quests & Battlepass anzeigen
+- [ ] TowerUpgrade & Sell-System fertigstellen
+- [ ] TowerTargetMode (Dropdown)
+- [ ] StatusEffects (Burn, Freeze, Slow)
+- [ ] AirUnit-Support
+- [ ] BossWave-Typen + Spezialverhalten
+- [ ] Countdown-Anzeige im UI
 - [ ] Garantiesystem / Pity für Summons
 - [ ] RateUp-Hervorhebung im Summon-Preview
+- [ ] Erweiterter GetProfile-Snapshot für alle UI-Elemente
 
 ---
 
-## 🧪 Known Issues (Live Client)
+## 🧪 Known Issues (Live Client) (not now)
 
-- ❌ TooltipSystem funktioniert derzeit nicht einheitlich (UI/FX)
+- ❌ TooltipSystem uneinheitlich (UI/FX)
 - ❌ Kein RewardPopup bei QuestClaim sichtbar
 - ❌ EXP-/BPEXP-Verteilung bei Victory noch nicht integriert
-- ⚠️ GUI-Sync via Rojo kann bei falschem `.rbxmx`-Export Icons/Values verlieren (SlotImage etc.)
-- ❌ Preview-Slots bleiben leer, wenn `GetSummonPool`-Serverhandler fehlt oder fehlerhaft antwortet
+- ⚠️ GUI-Sync via Rojo kann Assets verlieren (SlotImage etc.)
+- ❌ Preview-Slots leer, wenn `GetSummonPool` nicht antwortet
