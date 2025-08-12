@@ -25,6 +25,7 @@ local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("B
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
 local IsProfileReady = ReplicatedStorage.Remotes.Profile:WaitForChild("IsProfileReady")
 local GetSettings = ReplicatedStorage.Remotes.Profile:WaitForChild("GetSettings")
+local GetProfileRF = ReplicatedStorage.Remotes.Profile:WaitForChild("GetProfile")
 
 --// Einstellungen
 local DATASTORE_NAME = "WavebornTDPlayerData"
@@ -75,10 +76,7 @@ check("MatchServerHandler", "TDMatch")
 check("GetSelectedStageHandler", "TDSelectedStage")
 check("HealthBarUpdater", "TDHealthBar")
 
-
-
 local systemReady = {} -- [userId] = { [systemName] = true }
-
 
 local function log(...) if DEBUG then print("[ProfileStoreWrapper]", ...) end end
 local function warnf(...) if DEBUG then warn("[ProfileStoreWrapper]", ...) end end
@@ -103,7 +101,6 @@ end
 -- PlayerProfile Management
 -- ===================================
 
--- Holt oder updated das Profil eines Spielers
 function ProfileWrapper:UpdatePlayerIdentity(player)
 	local profile = getProfile(player)
 	if not profile then return end
@@ -115,8 +112,7 @@ function ProfileWrapper:UpdatePlayerIdentity(player)
 	log("📛 Spieler-Identität aktualisiert:", player.Name, "/", player.UserId)
 end
 
-
---Spieler Exp
+-- Spieler-EXP
 local function getExpForLevelUp(level: number): number
 	return 100 + (level - 1) * 50
 end
@@ -130,6 +126,8 @@ function ProfileWrapper:AddPlayerEXP(player, amount: number)
 
 	local leveledUp = false
 	while data.Exp >= getExpForLevelUp(data.Level) do
+		-- Falls dein Studio ' -=' nicht mag, nimm die nächste Zeile statt der oberen:
+		-- data.Exp = data.Exp - getExpForLevelUp(data.Level)
 		data.Exp -= getExpForLevelUp(data.Level)
 		data.Level += 1
 		leveledUp = true
@@ -137,11 +135,10 @@ function ProfileWrapper:AddPlayerEXP(player, amount: number)
 
 	log("✨ Player EXP +", amount, "→", data.Exp, "(Level:", data.Level, ")")
 	ProfileSyncService:Send(player, "Player", data)
-
 	return leveledUp
 end
 
--- Currency
+-- Currency (GETTER NIE synchen!)
 function ProfileWrapper:GetEclipsium(player)
 	local profile = getProfile(player)
 	return profile and (profile.Data.Player.Eclipsium or 0) or 0
@@ -165,7 +162,7 @@ function ProfileWrapper:AddEclipsium(player, amount)
 	profile.Data.Player.Eclipsium = math.max((profile.Data.Player.Eclipsium or 0) + amount, 0)
 	profile.Data.Player.TotalEclipsium = (profile.Data.Player.TotalEclipsium or 0) + amount
 
-	log("Eclipsium für", player.Name, "auf", profile.Data.Player.Eclipsium, "geändert (Delta:", amount, ")")
+	log("Eclipsium für", player.Name, "auf", profile.Data.Player.Eclipsium, "geändert (Δ:", amount, ")")
 	ProfileSyncService:Send(player, "Player", profile.Data.Player)
 	return true
 end
@@ -176,6 +173,7 @@ function ProfileWrapper:AddTDEclipsium(player, amount)
 	if not profile then return false end
 	profile.Data.Player.TDEclipsium = math.max((profile.Data.Player.TDEclipsium or 0) + amount, 0)
 	log("TDEclipsium für", player.Name, "+", amount, "→", profile.Data.Player.TDEclipsium)
+	ProfileSyncService:Send(player, "Player", profile.Data.Player)
 	return true
 end
 
@@ -187,7 +185,7 @@ function ProfileWrapper:AddGems(player, amount)
 	profile.Data.Player.Gems = math.max((profile.Data.Player.Gems or 0) + amount, 0)
 	profile.Data.Player.TotalGems = (profile.Data.Player.TotalGems or 0) + amount
 
-	log("Gems für", player.Name, "auf", profile.Data.Player.Gems, "geändert (Delta:", amount, ")")
+	log("Gems für", player.Name, "auf", profile.Data.Player.Gems, "geändert (Δ:", amount, ")")
 	ProfileSyncService:Send(player, "Player", profile.Data.Player)
 	return true
 end
@@ -200,6 +198,7 @@ function ProfileWrapper:RemoveEclipsium(player, amount)
 		warnf("Nicht genug Eclipsium bei", player.Name)
 		return false
 	end
+	-- data.Player.Eclipsium = data.Player.Eclipsium - amount, falls ' -=' Probleme macht
 	profile.Data.Player.Eclipsium -= amount
 	log("Eclipsium für", player.Name, "- ", amount, "→", profile.Data.Player.Eclipsium)
 	return true
@@ -231,7 +230,7 @@ function ProfileWrapper:RemoveGems(player, amount)
 	return true
 end
 
---Stat tracking
+-- Stat tracking
 function ProfileWrapper:TrackMatchResult(player: Player, isWin: boolean)
 	local profile = getProfile(player)
 	if not profile then return false end
@@ -280,26 +279,34 @@ end
 
 function ProfileWrapper:TrackTimePlayed(player, seconds: number)
 	local profile = getProfile(player)
-	if not profile then return false end
-
+	if not profile then return end
 	profile.Data.Player.TimePlayed += seconds
 	ProfileSyncService:Send(player, "Player", profile.Data.Player)
-	return true
 end
 
-
-
+-- ### GetProfile RemoteFunction (kein zirkuläres require!)
+GetProfileRF.OnServerInvoke = function(player: Player)
+	local profile = getProfile(player) -- direkt aus diesem Modul, KEIN require auf sich selbst
+	if profile and profile.Data and profile.Data.Player then
+		local p = profile.Data.Player
+		return {
+			Player = {
+				Eclipsium = tonumber(p.Eclipsium) or 0,
+				Gems      = tonumber(p.Gems)      or 0,
+			}
+		}
+	end
+	return { Player = { Eclipsium = 0, Gems = 0 } }
+end
 
 -- ===================================
 -- Settings
 -- ===================================
--- Gibt die gespeicherten Settings eines Spielers zurück
 function ProfileWrapper:GetSettings(player: Player): { [string]: any }
 	local profile = self:GetProfile(player)
 	if profile then
 		profile.Data.Settings = profile.Data.Settings or {}
 
-		-- Standardwerte ergänzen (falls nicht vorhanden)
 		if profile.Data.Settings.AutoWaveEnabled == nil then
 			profile.Data.Settings.AutoWaveEnabled = false
 		end
@@ -310,13 +317,12 @@ function ProfileWrapper:GetSettings(player: Player): { [string]: any }
 		return profile.Data.Settings
 	end
 
-	-- Fallback bei fehlendem Profil
 	return {
 		AutoWaveEnabled = false,
 		RestartMode = "teleport"
 	}
 end
--- Speichert eine einzelne Einstellung dynamisch
+
 function ProfileWrapper:SetSetting(player: Player, key: string, value: any)
 	local profile = self:GetProfile(player)
 	if not profile then return end
@@ -324,11 +330,10 @@ function ProfileWrapper:SetSetting(player: Player, key: string, value: any)
 	profile.Data.Settings = profile.Data.Settings or {}
 	profile.Data.Settings[key] = value
 
-	-- 🔁 Live-Sync über ProfileSyncService
-	ProfileSyncService:Send("Settings", profile.Data.Settings, player)
+	-- Live-Sync korrekt (player, key, data)
+	ProfileSyncService:Send(player, "Settings", profile.Data.Settings)
 end
 
--- RemoteFunction-Handler: gibt Settings an Client zurück
 GetSettings.OnServerInvoke = function(player)
 	return ProfileWrapper:GetSettings(player)
 end
@@ -336,7 +341,6 @@ end
 -- ===================================
 -- Teleport Management
 -- ===================================
--- Gibt die ausgewählte Stage des Spielers zurück
 function ProfileWrapper:GetSelectedStage(player)
 	local profile = self:GetProfile(player)
 	if not profile then return nil end
@@ -345,7 +349,6 @@ function ProfileWrapper:GetSelectedStage(player)
 	return teleport.SelectedStage or { MapName = "", StageId = 0 }
 end
 
--- Setzt die gewählte Stage für den nächsten Teleport
 function ProfileWrapper:SetSelectedStage(player, mapName: string, stageId: number)
 	assert(type(mapName) == "string" and mapName ~= "", "Ungültiger MapName")
 	assert(type(stageId) == "number" and stageId > 0, "Ungültiger StageId")
@@ -386,7 +389,6 @@ function ProfileWrapper:AddItemTyped(player, itemType, itemId, amount, noSync)
 	log("[Inventory] +", amount, "x", itemId, "(", itemType, ") an", player.Name)
 end
 
-
 function ProfileWrapper:RemoveItemTyped(player, itemType, itemId, amount, noSync)
 	local profile = getProfile(player)
 	if not profile then return false end
@@ -404,7 +406,6 @@ function ProfileWrapper:RemoveItemTyped(player, itemType, itemId, amount, noSync
 	log("[Inventory] -", amount, "x", itemId, "(", itemType, ") bei", player.Name)
 	return true
 end
-
 
 function ProfileWrapper:GetInventory(player)
 	local profile = getProfile(player)
@@ -434,7 +435,6 @@ function ProfileWrapper:IncrementQuest(player, questType, questId, amount, autoS
 		return false
 	end
 
-	-- Fortschritt erhöhen
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
 	profile.Data.QuestProgress[questType] = profile.Data.QuestProgress[questType] or {}
 	local qTab = profile.Data.QuestProgress[questType]
@@ -442,14 +442,12 @@ function ProfileWrapper:IncrementQuest(player, questType, questId, amount, autoS
 
 	log("✅ QuestProgress geschrieben:", questType, questId, "+", amount, "→", qTab[questId], "für", player.Name)
 
-	-- Optionaler Live-Sync
 	if autoSync then
 		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
 	end
 
 	return true
 end
-
 
 function ProfileWrapper:ClaimQuest(player, questType, questId)
 	assert(type(questType) == "string" and questType ~= "", "QuestType ungültig!")
@@ -473,7 +471,6 @@ function ProfileWrapper:GetUnits(player)
 	local equippedOrder = {}
 	local equippedSet = {}
 
-	-- 🔁 Erst Equipped Units in Slot-Reihenfolge einfügen
 	for i = 1, 6 do
 		local uuid = profile.Data.EquippedUnits[i]
 		if uuid and profile.Data.Units[uuid] then
@@ -488,7 +485,6 @@ function ProfileWrapper:GetUnits(player)
 		end
 	end
 
-	-- 🔁 Danach alle unequipped Units einfügen (sortiert)
 	local otherUnits = {}
 	for uuid, unit in pairs(profile.Data.Units or {}) do
 		if not equippedSet[uuid] then
@@ -501,19 +497,16 @@ function ProfileWrapper:GetUnits(player)
 		end
 	end
 
-	-- 📊 Nach BaseStar sortieren
 	table.sort(otherUnits, function(a, b)
 		return a.BaseStar > b.BaseStar
 	end)
 
-	-- 🔗 Kombinieren: Equipped zuerst, dann Rest
 	for _, entry in ipairs(otherUnits) do
 		table.insert(equippedOrder, entry)
 	end
 
 	return equippedOrder
 end
-
 
 function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 	assert(type(unitId) == "string" and unitId ~= "", "UnitId ungültig!")
@@ -542,7 +535,6 @@ function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 
 	log("✅ Unit", unitId, "hinzugefügt als", uuid, "für", player.Name)
 
-	-- LiveSync an Client
 	local updated = ProfileWrapper:GetUnits(player)
 	ProfileSyncService:Send(player, "Units", updated)
 
@@ -569,32 +561,27 @@ function ProfileWrapper:EquipUnit(player, slot, unitUUID)
 	local profile = getProfile(player)
 	if not profile then return false end
 
-	-- 🔧 UNEQUIP → Slot leeren
 	if unitUUID == "" then
 		profile.Data.EquippedUnits[slot] = nil
 		log("❌ Slot", slot, "geleert bei", player.Name)
 		return true
 	end
 
-	-- 🔒 Prüfen, ob Unit existiert
 	if not profile.Data.Units[unitUUID] then
 		warn("[Units] ❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
 		return false
 	end
 
-	-- 🧹 Vorherige Vorkommen entfernen (1x UUID = 1 Slot)
 	for s = 1, 6 do
 		if profile.Data.EquippedUnits[s] == unitUUID then
 			profile.Data.EquippedUnits[s] = nil
 		end
 	end
 
-	-- ✅ Equip in gewünschten Slot
 	profile.Data.EquippedUnits[slot] = unitUUID
 	log("🎮 Unit", unitUUID, "auf Slot", slot, "equippt bei", player.Name)
 	return true
 end
-
 
 function ProfileWrapper:GetEquippedUnits(player)
 	local profile = getProfile(player)
@@ -624,7 +611,6 @@ function ProfileWrapper:IncrementUnitKills(player, uuid, amount, sync)
 	end
 end
 
-
 -- ===================================
 -- BATTLEPASS
 -- ===================================
@@ -653,7 +639,6 @@ function ProfileWrapper:AddBattlepassEXP(player, amount)
 		expRequired = BattlepassInfoProvider.GetEXPRequirement(bp.Level + 1)
 	end
 
-	-- EXP-Überschuss bei MaxLevel löschen (optional)
 	if bp.Level >= maxLevel then
 		bp.EXP = 0
 	end
@@ -661,7 +646,6 @@ function ProfileWrapper:AddBattlepassEXP(player, amount)
 	log("Battlepass EXP +", amount, "→", bp.EXP, "für", player.Name)
 	return true
 end
-
 
 function ProfileWrapper:ClaimBattlepassReward(player, level, rewardType)
 	assert(type(level) == "number" and level > 0, "Level ungültig!")
@@ -728,7 +712,6 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 		elseif rtype == "BattlepassEXP" then
 			self:AddBattlepassEXP(player, amount)
 		elseif rtype == "EXP" then
-			-- Hier kann später das EXP-System ergänzt werden
 			log("✨ EXP +", amount, "→", player.Name, "(noch nicht implementiert)")
 		elseif rtype == "Units" and reward.id then
 			self:AddUnit(player, reward.id, reward.star)
@@ -739,7 +722,6 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 		end
 	end
 
-	-- Sync
 	ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 	ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
 
@@ -747,7 +729,6 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 		print("[ProfileWrapper] ✅ Rewards wurden dem Inventar hinzugefügt (Battlepass)")
 	end
 end
-
 
 -- ===================================
 -- SESSION MANAGEMENT
@@ -789,21 +770,20 @@ local function onPlayerAdded(player)
 
 	log("[DEBUG] onPlayerAdded ausgeführt für", player.Name)
 	profile:Reconcile()
-profile.Data.Teleport = profile.Data.Teleport or {}
+	profile.Data.Teleport = profile.Data.Teleport or {}
 
----[[ NEU: Wenn SelectedStage fehlt ODER leer ist → setzen
-if typeof(profile.Data.Teleport.SelectedStage) ~= "table"
-	or profile.Data.Teleport.SelectedStage.MapName == nil
-	or profile.Data.Teleport.SelectedStage.MapName == ""
-	or profile.Data.Teleport.SelectedStage.StageId == nil
-	or profile.Data.Teleport.SelectedStage.StageId <= 0
-then
-	profile.Data.Teleport.SelectedStage = {
-		MapName = "SpiritRealm",
-		StageId = 1
-	}
-	print("✅ Default-Stage gesetzt (Studio-Fallback)")
-end --]]
+	-- Default-Stage (Studio-Fallback)
+	if typeof(profile.Data.Teleport.SelectedStage) ~= "table"
+		or profile.Data.Teleport.SelectedStage.MapName == nil
+		or profile.Data.Teleport.SelectedStage.MapName == ""
+		or profile.Data.Teleport.SelectedStage.StageId == nil
+		or profile.Data.Teleport.SelectedStage.StageId <= 0
+	then
+		profile.Data.Teleport.SelectedStage = {
+			MapName = "SpiritRealm",
+			StageId = 1
+		}
+	end
 
 	-- Quests initialisieren
 	profile.Data.QuestProgress = profile.Data.QuestProgress or {}
@@ -816,14 +796,12 @@ end --]]
 	local currentSeed = require(ReplicatedStorage.Modules.BattlepassInfoProvider).GetSeasonSeed()
 
 	if not profile.Data.Battlepass.Seed then
-		-- Erst-Initialisierung
 		profile.Data.Battlepass.Level = 0
 		profile.Data.Battlepass.EXP = 0
 		profile.Data.Battlepass.Claimed = {}
 		profile.Data.Battlepass.HasPremium = false
 		profile.Data.Battlepass.Seed = currentSeed
 	elseif profile.Data.Battlepass.Seed ~= currentSeed then
-		-- Season-Wechsel → Battlepass zurücksetzen
 		profile.Data.Battlepass = {
 			Level = 0,
 			EXP = 0,
@@ -833,32 +811,47 @@ end --]]
 		}
 		log("🎯 Battlepass zurückgesetzt für neue Season:", currentSeed, "bei", player.Name)
 
-		-- Purchases-Tabelle komplett neu aufsetzen
 		profile.Data.Purchases = {}
 		log("🗑️ Purchases-Tabelle vollständig geleert für", player.Name)
 
-		-- 🔥 Direktes Sync nach Reset → schickt den sauberen Stand an den Client
 		ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
 		profile:Save()
 	end
 
 	activeProfiles[userId] = profile
 
--- Marker für alle aktiven Systeme setzen
-for _, system in ipairs(systemsToWaitFor) do
-	if DEBUG then
-		print("[ProfileStoreWrapper] ✅ Setze Marker für aktives System:", system)
+	-- 🔥 WICHTIG: Unbedingter Grund-Snapshot direkt nach Profil-Load
+	if profile.Data and profile.Data.Player then
+		ProfileSyncService:Send(player, "Player", profile.Data.Player)
 	end
-	ProfileWrapper:MarkSystemReady(player, system)
-end
+	if profile.Data and profile.Data.Inventory then
+		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
+	end
+	-- und sicherheitshalber erneut leicht verzögert (Listener-Bindings)
+	task.defer(function()
+		local p = activeProfiles[userId]
+		if p and p.Data and p.Data.Player then
+			ProfileSyncService:Send(player, "Player", p.Data.Player)
+		end
+		if p and p.Data and p.Data.Inventory then
+			ProfileSyncService:Send(player, "Inventory", p.Data.Inventory)
+		end
+	end)
 
--- GUI-Sync auslösen
-ProfileLoadedEvent:FireClient(player)
+	-- Marker für alle aktiven Systeme setzen (bestehendes Verhalten bleibt)
+	for _, system in ipairs(systemsToWaitFor) do
+		if DEBUG then
+			print("[ProfileStoreWrapper] ✅ Setze Marker für aktives System:", system)
+		end
+		ProfileWrapper:MarkSystemReady(player, system)
+	end
 
-if DEBUG then
-	print("[ProfileStoreWrapper] ✅ ProfileLoadedEvent gesendet für", player.Name)
-end
+	-- GUI-Sync auslösen
+	ProfileLoadedEvent:FireClient(player)
 
+	if DEBUG then
+		print("[ProfileStoreWrapper] ✅ ProfileLoadedEvent gesendet für", player.Name)
+	end
 
 	profile.OnSessionEnd:Connect(function()
 		activeProfiles[userId] = nil
@@ -884,7 +877,6 @@ function ProfileWrapper:MarkSystemReady(player, system)
 	end
 
 	if allReady then
-		-- 🔧 EquippedSlots direkt setzen
 		local equippedSlots = ProfileWrapper:GetEquippedUnits(player)
 		for s = 1, 6 do
 			local uuid = equippedSlots[s]
@@ -895,21 +887,18 @@ function ProfileWrapper:MarkSystemReady(player, system)
 			end
 		end
 
-		-- 💰 Sicherer Snapshot-Push: Profil holen, dann senden
 		local profile = activeProfiles[userId] or getProfile(player)
 		if profile and profile.Data and profile.Data.Player then
 			ProfileSyncService:Send(player, "Player", profile.Data.Player)
 		end
 
 		ProfileLoadedEvent:FireClient(player)
-		-- nach dem FireClient:
 		log("✅ Alle Systeme bereit, ProfileLoadedEvent gesendet für", player.Name)
 		systemReady[userId] = nil
 	else
 		log("⏳ System-Ready für", system, "gesetzt – noch nicht alle Systeme fertig bei", player.Name)
 	end
 end
-
 
 local function onPlayerRemoving(player)
 	ProfileWrapper:ReleaseProfile(player)
@@ -939,7 +928,6 @@ function ProfileWrapper:Sync(player: Player, key: string)
 	if data == nil then return end
 	ProfileSyncService:Send(player, key, data)
 end
-
 
 task.spawn(function()
 	while true do
