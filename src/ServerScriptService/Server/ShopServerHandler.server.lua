@@ -5,6 +5,9 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log = DebugLogger.new("ShopServerHandler")
+
 --// Modules
 local ProfileWrapper = require(game.ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
 local PremiumShop = require(ReplicatedStorage.Modules:WaitForChild("PremiumShopModule"))
@@ -62,14 +65,14 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 
 	-- Premium-Status aktivieren, wenn BattlepassPremium gekauft wurde
 	if data.productKey == "BattlepassPremium" then
-		ProfileWrapper:SetBattlepassPremium(player, true)
-		ProfileSyncService:Send(player, "Battlepass", ProfileWrapper:GetBattlepass(player))
-		print("[SHOP] 🎫 Premium-Status sofort aktiviert für", player.Name)
+                ProfileWrapper:SetBattlepassPremium(player, true)
+                ProfileSyncService:Send(player, "Battlepass", ProfileWrapper:GetBattlepass(player))
+                log("🎫 Premium-Status sofort aktiviert für", player.Name)
 	end
 
 	-- Belohnung vergeben (falls vorhanden)
 	ProfileWrapper:GrantRewards(player, data.rewards)
 
-	print("[SHOP] ✅ Kauf abgeschlossen:", productId, "→", data.productKey)
+        log("✅ Kauf abgeschlossen:", productId, "→", data.productKey)
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end

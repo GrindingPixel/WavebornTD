@@ -5,6 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
 local Workspace         = game:GetService("Workspace")
 
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log = DebugLogger.new("TeleportLobbyHandler")
+
 --// Remotes
 local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportToAreaRequest")
 
@@ -33,6 +36,6 @@ teleportRemote.OnServerEvent:Connect(function(player, areaData)
                 return
         end
 
-        print("[TeleportLobbyHandler] 📦 Teleportiere", player.Name, "nach", areaName)
+        log("📦 Teleportiere", player.Name, "nach", areaName)
         character:PivotTo(target.CFrame + Vector3.new(0, 3, 0))
 end)

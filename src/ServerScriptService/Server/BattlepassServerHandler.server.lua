@@ -10,6 +10,8 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("BattlepassInfoProvider"))
 BattlepassInfoProvider.Regenerate()
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log, warnf = DebugLogger.new("BattlepassServerHandler")
 
 --// Remotes
 local BattlepassFolder = ReplicatedStorage.Remotes:WaitForChild("Battlepass")
@@ -18,10 +20,6 @@ local ClaimFree = BattlepassFolder:WaitForChild("ClaimFreeRewards")
 local ClaimPremium = BattlepassFolder:WaitForChild("ClaimPremiumRewards")
 
 --// Debug
-local DEBUG = true
-local function log(...)   if DEBUG then print("[BattlepassServerHandler]", ...) end end
-local function warnf(...) if DEBUG then warn("[BattlepassServerHandler]", ...) end end
-
 --// Battlepass Info abrufen
 GetBattlepassInfo.OnServerInvoke = function(player)
 	if not ProfileWrapper:IsLoaded(player) then return nil end
