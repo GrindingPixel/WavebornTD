@@ -4,55 +4,61 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      },
       "TDModules": {
         "$path": "src/ReplicatedStorage/TDModules"
       },
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
       "Libs": {
         "$path": "src/ReplicatedStorage/Libs"
-      },
-      "$path": "src/shared"
+      }
     },
-    "StarterPlayer": {
+        "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
-        "$path": "src/client/StarterPlayerScripts"
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "Server": {
-        "$path": "src/server/Server"
+        "$path": "src/ServerScriptService/Server"
       },
       "Modules": {
-        "$path": "src/server/Modules"
+        "$path": "src/ServerScriptService/Modules"
       },
       "Debug": {
-        "$path": "src/server/Debug"
+        "$path": "src/ServerScriptService/Debug"
       },
       "TowerDefense": {
-        "$path": "src/server/TowerDefense"
+        "$path": "src/ServerScriptService/TowerDefense"
       }
     },
     "StarterGui": {
       "$className": "StarterGui",
-      "GuiScripts": {
-        "$className": "Folder",
+        "GuiScripts": {
+      "$className": "Folder",
         "MainMenuScript.client.lua": {
-          "$path": "src/client/StarterGui/GuiScripts/MainMenuScript.client.lua"
-        },
+        "$path": "src/StarterGui/GuiScripts/MainMenuScript.client.lua"
+    },
         "UnitClientScript.client.lua": {
-          "$path": "src/client/StarterGui/GuiScripts/UnitClientScript.client.lua"
-        },
+        "$path": "src/StarterGui/GuiScripts/UnitClientScript.client.lua"
+    },
         "UnitInfoPanelScript.client.lua": {
-          "$path": "src/client/StarterGui/GuiScripts/UnitInfoPanelScript.client.lua"
-        }
+        "$path": "src/StarterGui/GuiScripts/UnitInfoPanelScript.client.lua"
+    }
       },
-      "Global": {
-        "$path": "src/client/StarterGui/Global"
+        "Global": {
+        "$path": "src/StarterGui/Global"
       },
-      "TDGuiScripts": {
-        "$path": "src/client/StarterGui/TDGuiScripts"
+        "TDGuiScripts": {
+        "$path": "src/StarterGui/TDGuiScripts"
       }
     }
+
   }
 }
