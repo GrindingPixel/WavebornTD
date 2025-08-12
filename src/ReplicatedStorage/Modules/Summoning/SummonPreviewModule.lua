@@ -4,6 +4,7 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Modules
 local UnitDataModule = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
@@ -14,6 +15,7 @@ local GetSummonPool = SummonRemotes:WaitForChild("GetSummonPool")
 
 --// Modul
 local SummonPreviewModule = {}
+local log = DebugLogger.new("SummonPreview")
 
 -- === Intern: Render einer Unit im Viewport (mit Body/Cloth-Regeln) ===
 local function renderUnitPreview(viewportFrame: ViewportFrame, modelName: string)
@@ -28,17 +30,17 @@ local function renderUnitPreview(viewportFrame: ViewportFrame, modelName: string
 	pcall(function() viewportFrame.ResolutionScale = 2 end)
 
 	local models = ReplicatedStorage:WaitForChild("UnitModels")
-	local model = models:FindFirstChild(modelName)
-	if not model then
-		warn("[SummonPreview] ❌ Modell nicht gefunden:", modelName)
-		return
-	end
+        local model = models:FindFirstChild(modelName)
+        if not model then
+                log:Warn("❌ Modell nicht gefunden:", modelName)
+                return
+        end
 
 	local clone = model:Clone()
-	if not clone.PrimaryPart then
-		warn("[SummonPreview] ❌ Kein PrimaryPart in:", modelName)
-		return
-	end
+        if not clone.PrimaryPart then
+                log:Warn("❌ Kein PrimaryPart in:", modelName)
+                return
+        end
 
 	-- Kamera konfigurieren (fixe Orientation)
 	local camera = Instance.new("Camera")
@@ -126,27 +128,27 @@ function SummonPreviewModule.UpdatePreviewSlots(root: Instance)
 	elseif root and root:IsA("GuiObject") then
 		previewFrame = root:FindFirstChild("UnitPreviewFrame")
 	end
-	if not previewFrame then
-		warn("[SummonPreview] Kein UnitPreviewFrame gefunden (Parameter ist:", root and root.Name or "nil", ")")
-		return
-	end
+        if not previewFrame then
+                log:Warn("Kein UnitPreviewFrame gefunden (Parameter ist:", root and root.Name or "nil", ")")
+                return
+        end
 
 	local slot1 = previewFrame:FindFirstChild("UnitSlot1")
 	local slot2 = previewFrame:FindFirstChild("UnitSlot2")
 	local slot3 = previewFrame:FindFirstChild("UnitSlot3")
-	if not (slot1 and slot2 and slot3) then
-		warn("[SummonPreview] Slots fehlen (UnitSlot1/2/3).")
-		return
-	end
+        if not (slot1 and slot2 and slot3) then
+                log:Warn("Slots fehlen (UnitSlot1/2/3).")
+                return
+        end
 
 	-- Pool vom Server holen (robust gegen zwei Formate)
 	local ok, poolOrList = pcall(function()
 		return GetSummonPool:InvokeServer()
 	end)
-	if not ok or not poolOrList then
-		warn("[SummonPreview] Pool konnte nicht abgerufen werden:", poolOrList)
-		return
-	end
+        if not ok or not poolOrList then
+                log:Warn("Pool konnte nicht abgerufen werden:", poolOrList)
+                return
+        end
 
 	-- In Liste von UnitIds normalisieren
 	local unitIds: {string} = {}

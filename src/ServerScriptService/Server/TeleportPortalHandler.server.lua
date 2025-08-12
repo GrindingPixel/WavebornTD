@@ -74,7 +74,7 @@ timeoutRemote.OnServerEvent:Connect(function(player, command)
                 if ok then
                         log("🔁 Spieler zurückteleportiert (Story):", player.Name)
 		else
-			warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Story).")
+                        log:Warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Story).")
 		end
 	end
 end)
@@ -90,7 +90,7 @@ TeleportBack.OnServerEvent:Connect(function(player, command)
                 if ok then
                         log("🔁 Spieler zurückteleportiert (Summon):", player.Name)
 		else
-			warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Summon).")
+                        log:Warn("❌ Rückkehrziel oder HumanoidRootPart fehlt (Summon).")
 		end
 	end
 end)

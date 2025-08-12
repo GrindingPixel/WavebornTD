@@ -16,6 +16,7 @@ local NextWaveAvailable = TDRemotes:WaitForChild("NextWaveAvailable")
 local EnemyManager = require(ServerScriptService.TowerDefense.EnemyManager)
 local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
 local MatchStateModule = require(ServerScriptService.TowerDefense.MatchStateModule)
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Typen
 export type WaveGroup = {
@@ -45,12 +46,7 @@ type WaveManagerType = {
 }
 
 --// Debug
-local DEBUG = true
-local function log(...: any)
-	if DEBUG then
-		print("[WaveManager]", ...)
-	end
-end
+local log = DebugLogger.new("WaveManager")
 
 --// Modul
 local WaveManager = {
@@ -141,7 +137,7 @@ function WaveManager:Init(config)
 			end
 		end
 	else
-		warn("⚠️ Keine AutoGenerate-Konfig gefunden in WaveManager:Init")
+                log:Warn("⚠️ Keine AutoGenerate-Konfig gefunden in WaveManager:Init")
 	end
 
 	log("✅ WaveManager initialisiert")
@@ -174,7 +170,7 @@ function WaveManager:StartWave(waveNumber: number?)
 	self.CurrentWave = nextWave
 	local wave = self.GeneratedWaves[self.CurrentWave]
 	if not wave then
-		warn("❌ Unbekannte Welle:", self.CurrentWave)
+                log:Warn("❌ Unbekannte Welle:", self.CurrentWave)
 		return
 	end
 
@@ -219,7 +215,7 @@ function WaveManager:StartWave(waveNumber: number?)
 				end)
 
 				if not success then
-					warn("❌ Spawn-Fehler:", err)
+                                        log:Warn("❌ Spawn-Fehler:", err)
 				end
 
 				task.wait(group.delay)

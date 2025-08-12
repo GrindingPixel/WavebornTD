@@ -12,7 +12,7 @@ local QuestData = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModul
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 local DebugLogger = require(Modules:WaitForChild("DebugLogger"))
 
-local log, warnf = DebugLogger.new("QuestServerHandler", true)
+local log = DebugLogger.new("QuestServerHandler", true)
 
 --// Remotes
 local claimQuestEvent     = ReplicatedStorage.Remotes.Quests:WaitForChild("ClaimQuest")
@@ -106,18 +106,18 @@ end)
 --// Quests abrufen
 getQuestsFunction.OnServerInvoke = function(player, questType)
 	if not ProfileWrapper:IsLoaded(player) then
-		warnf("GetPlayerQuests abgelehnt für", player and player.Name)
+                log:Warn("GetPlayerQuests abgelehnt für", player and player.Name)
 		return nil
 	end
 
 	if type(questType) ~= "string" or questType == "" then
-		warnf("GetPlayerQuests: Ungültiger Typ", questType)
+                log:Warn("GetPlayerQuests: Ungültiger Typ", questType)
 		return nil
 	end
 
 	local questList = QuestData[questType]
 	if not questList then
-		warnf("GetPlayerQuests: Unbekannter Typ", questType)
+                log:Warn("GetPlayerQuests: Unbekannter Typ", questType)
 		return nil
 	end
 

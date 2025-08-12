@@ -2,9 +2,11 @@
 
 --// Services
 local Players = game:GetService("Players")
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Module
 local GuiResolver = {}
+local log = DebugLogger.new("GuiResolver")
 
 --// Map-Zonen anhand von PlaceId
 local placeZones = {
@@ -55,28 +57,28 @@ end
 
 -- Gibt ein ScreenGui zurück (wenn vorhanden)
 function GuiResolver:Get(guiName)
-	if isBlocked(guiName) then
-		warn("❌ Zugriff auf '" .. guiName .. "' ist in Zone '" .. currentZone .. "' blockiert (PlaceId: " .. PLACE_ID .. ").")
-		return nil
-	end
+        if isBlocked(guiName) then
+                log:Warn("❌ Zugriff auf '" .. guiName .. "' ist in Zone '" .. currentZone .. "' blockiert (PlaceId: " .. PLACE_ID .. ").")
+                return nil
+        end
 
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	local gui = playerGui:FindFirstChild(guiName)
 
-	if gui and gui:IsA("ScreenGui") then
-		return gui
-	else
-		warn("⚠️ Gui '" .. guiName .. "' konnte nicht gefunden werden.")
-		return nil
-	end
+        if gui and gui:IsA("ScreenGui") then
+                return gui
+        else
+                log:Warn("⚠️ Gui '" .. guiName .. "' konnte nicht gefunden werden.")
+                return nil
+        end
 end
 
 -- Wartet auf ein ScreenGui für max. Timeout Sekunden
 function GuiResolver:WaitFor(guiName, timeout)
-	if isBlocked(guiName) then
-		warn("❌ Zugriff auf '" .. guiName .. "' ist in Zone '" .. currentZone .. "' blockiert (PlaceId: " .. PLACE_ID .. ").")
-		return nil
-	end
+        if isBlocked(guiName) then
+                log:Warn("❌ Zugriff auf '" .. guiName .. "' ist in Zone '" .. currentZone .. "' blockiert (PlaceId: " .. PLACE_ID .. ").")
+                return nil
+        end
 
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	local elapsed = 0
@@ -91,16 +93,16 @@ function GuiResolver:WaitFor(guiName, timeout)
 		elapsed += 0.05
 	end
 
-	warn("⚠️ Gui '" .. guiName .. "' nicht innerhalb von " .. timeout .. " Sekunden gefunden.")
+        log:Warn("⚠️ Gui '" .. guiName .. "' nicht innerhalb von " .. timeout .. " Sekunden gefunden.")
 	return nil
 end
 
 -- Holt ein Panel aus einem bestimmten Gui
 function GuiResolver:GetPanel(guiName, panelName, timeout)
-	if isBlocked(guiName) then
-		warn("❌ Panel-Zugriff blockiert: " .. guiName .. "." .. panelName .. " in Zone '" .. currentZone .. "' (PlaceId: " .. PLACE_ID .. ").")
-		return nil
-	end
+        if isBlocked(guiName) then
+                log:Warn("❌ Panel-Zugriff blockiert: " .. guiName .. "." .. panelName .. " in Zone '" .. currentZone .. "' (PlaceId: " .. PLACE_ID .. ").")
+                return nil
+        end
 
 	timeout = timeout or 5
 	local gui = self:WaitFor(guiName, timeout)
@@ -114,7 +116,7 @@ function GuiResolver:GetPanel(guiName, panelName, timeout)
 		elapsed += 0.05
 	end
 
-	warn("⚠️ Panel NICHT gefunden: " .. guiName .. " → " .. panelName)
+        log:Warn("⚠️ Panel NICHT gefunden: " .. guiName .. " → " .. panelName)
 	return nil
 end
 

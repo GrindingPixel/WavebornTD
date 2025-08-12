@@ -3,6 +3,7 @@
 
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Modules
 local MapData = require(ReplicatedStorage.Modules.MapDataModule)
@@ -17,6 +18,7 @@ export type WaveData = { [number]: { WaveGroup } }
 
 --// Module
 local MapDataUtils = {}
+local log = DebugLogger.new("MapDataUtils")
 
 --// Hilfsfunktion: Holt eine Stage anhand von Weltname + StageId
 function MapDataUtils.GetStageById(worldName: string, stageId: number)
@@ -87,10 +89,10 @@ end
 
 --// Hauptfunktion: Erzeugt Wellenplan aus einer Stage
 function MapDataUtils.BuildWavePlan(stage: any): WaveData
-	if not stage or not stage.WaveConfig then
-		warn("⚠️ BuildWavePlan: Ungültige Stage oder fehlende WaveConfig")
-		return {}
-	end
+        if not stage or not stage.WaveConfig then
+                log:Warn("⚠️ BuildWavePlan: Ungültige Stage oder fehlende WaveConfig")
+                return {}
+        end
 
 	return generateWaveData(stage.WaveConfig)
 end

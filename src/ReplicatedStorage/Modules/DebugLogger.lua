@@ -1,25 +1,28 @@
--- DebugLogger.lua
--- Shared debug logging utility
+-- Provides simple structured logging with an optional warning method.
 
-local function new(prefix, enabled)
+local DebugLogger = {}
+
+function DebugLogger.new(prefix, enabled)
     enabled = enabled ~= false
 
-    local function log(...)
-        if enabled then
-            print("[" .. prefix .. "]", ...)
-        end
-    end
+    local logger = {}
 
-    local function warnf(...)
+    function logger:Warn(...)
         if enabled then
             warn("[" .. prefix .. "]", ...)
         end
     end
 
-    return log, warnf
+    setmetatable(logger, {
+        __call = function(_, ...)
+            if enabled then
+                print("[" .. prefix .. "]", ...)
+            end
+        end,
+    })
+
+    return logger
 end
 
-return {
-    new = new,
-}
+return DebugLogger
 

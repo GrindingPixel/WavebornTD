@@ -13,9 +13,11 @@ local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatSta
 local UnitsDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
 local UpgradeConfig = require(ReplicatedStorage.TDModules.Systems.UpgradeConfig)
 local UnitStatModule = require(ReplicatedStorage.Modules.UnitStatsModule)
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Remotes
 local UpgradeTowerRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("UpgradeTowerRequest")
+local log = DebugLogger.new("UpgradeHandler")
 
 --// Hauptlogik
 UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tuuid: string, uuid: string }?)
@@ -35,42 +37,42 @@ UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tu
 		end
 	end
 
-	if not model then
-		warn(`[Upgrade] ❌ Kein Modell mit TUUID {tuuid} gefunden`)
-		return
-	end
+        if not model then
+                log:Warn(`❌ Kein Modell mit TUUID {tuuid} gefunden`)
+                return
+        end
 
-	if model:GetAttribute("OwnerId") ~= player.UserId then
-		warn(`[Upgrade] ❌ Spieler {player.Name} versucht fremden Tower zu upgraden`)
-		return
-	end
+        if model:GetAttribute("OwnerId") ~= player.UserId then
+                log:Warn(`❌ Spieler {player.Name} versucht fremden Tower zu upgraden`)
+                return
+        end
 
 	local unitId = model:GetAttribute("UnitId")
-	if not unitId then
-		warn(`[Upgrade] ❌ Modell hat kein UnitId-Attribut`)
-		return
-	end
+        if not unitId then
+                log:Warn(`❌ Modell hat kein UnitId-Attribut`)
+                return
+        end
 
 	local currentLevel = model:GetAttribute("UpgradeLevel") or 0
-	print("🔍 Server-UpgradeLevel:", currentLevel)
+        log("🔍 Server-UpgradeLevel:", currentLevel)
 	local maxLevel = UnitStatModule.GetStat(unitId, 0, "MaxUpgradeLevel")
 
-		if currentLevel >= maxLevel then
-		warn(`[Upgrade] ❌ Tower bereits auf Max-Level ({currentLevel} >= {maxLevel})`)
-		return
-	end
+        if currentLevel >= maxLevel then
+                log:Warn(`❌ Tower bereits auf Max-Level ({currentLevel} >= {maxLevel})`)
+                return
+        end
 
 	local baseData = UnitsDataModule.GetUnitData(unitId)
 	local baseCost = UnitStatModule.GetStat(unitId, 0, "PlacementCost") or 0
-	print("💰 BaseCost (server):", baseCost)
+        log("💰 BaseCost (server):", baseCost)
 
-	local upgradeCost = math.floor(baseCost * (UpgradeConfig.CostMultiplierPerLevel ^ currentLevel))
-	print("📈 UpgradeCost (server):", upgradeCost)
+        local upgradeCost = math.floor(baseCost * (UpgradeConfig.CostMultiplierPerLevel ^ currentLevel))
+        log("📈 UpgradeCost (server):", upgradeCost)
 
-	if profile.Data.Player.TDEclipsium < upgradeCost then
-		warn(`[Upgrade] ❌ Nicht genug TDEclipsium für Upgrade`)
-		return
-	end
+        if profile.Data.Player.TDEclipsium < upgradeCost then
+                log:Warn(`❌ Nicht genug TDEclipsium für Upgrade`)
+                return
+        end
 
 	-- Abziehen & Sync
 	profile.Data.Player.TDEclipsium -= upgradeCost
@@ -92,5 +94,5 @@ UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tu
 		ProfileStoreWrapper:IncrementUnitKills(player, uuid, 0, true) -- für eventuelle Upgrade-Tracker
 	end
 
-	print(`[Upgrade] {player.Name} upgraded {unitId} (Level {newLevel}) für {upgradeCost} TDE`)
+        log(`[Upgrade] {player.Name} upgraded {unitId} (Level {newLevel}) für {upgradeCost} TDE`)
 end)
