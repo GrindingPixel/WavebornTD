@@ -12,6 +12,7 @@ local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatStatsProvider)
 local UnitTargetingModule = require(ReplicatedStorage.TDModules.Combat.UnitTargetingModule)
 local WaveManager = require(game.ServerScriptService.TowerDefense.WaveManager)
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// remotes
 local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
@@ -21,10 +22,7 @@ local UnitsFolder = Workspace:WaitForChild("Units")
 local EnemiesFolder = Workspace:WaitForChild("Enemies")
 
 --// Debug
-local DEBUG = true
-local function log(...)
-	if DEBUG then print(...) end
-end
+local log = DebugLogger.new("DamageSystem")
 
 --// Module
 local DamageSystem = {}
@@ -56,8 +54,8 @@ local function beginAttackLoop(towerModel: Model, unitId: string, player: Player
 	local uuid = towerModel:GetAttribute("UUID")
 	local tuuid = towerModel:GetAttribute("TUUID")
 
-	if not uuid then warn("[DamageSystem] ❌ Kein UUID auf Tower-Modell!") return end
-	if not tuuid then warn("[DamageSystem] ❌ Kein TUUID auf Tower-Modell!") return end
+        if not uuid then log:Warn("❌ Kein UUID auf Tower-Modell!") return end
+        if not tuuid then log:Warn("❌ Kein TUUID auf Tower-Modell!") return end
 
 	if activeAttackLoops[tuuid] then return end
 	activeAttackLoops[tuuid] = true
@@ -106,9 +104,9 @@ end
 --// Tower registrieren
 function DamageSystem.RegisterTower(towerModel: Model, unitId: string, player: Player)
 	if not towerModel:IsDescendantOf(UnitsFolder) then
-		warn("[DamageSystem] ❌ Tower nicht im UnitsFolder!")
-		return
-	end
+                log:Warn("❌ Tower nicht im UnitsFolder!")
+                return
+        end
 
 	beginAttackLoop(towerModel, unitId, player)
 end

@@ -26,13 +26,13 @@ teleportRemote.OnServerEvent:Connect(function(player, areaData)
         end
 
         if typeof(areaName) ~= "string" then
-                warn("[TeleportLobbyHandler] ⚠️ Ungültige Teleport-Anfrage:", areaData)
+                log:Warn("⚠️ Ungültige Teleport-Anfrage:", areaData)
                 return
         end
 
         local target = targetFolder:FindFirstChild(areaName)
         if not target then
-                warn("[TeleportLobbyHandler] ⚠️ Ungültiges Zielgebiet:", areaName)
+                log:Warn("⚠️ Ungültiges Zielgebiet:", areaName)
                 return
         end
 

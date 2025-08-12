@@ -9,9 +9,11 @@ local Modules = ServerScriptService:WaitForChild("Modules")
 
 --// Modules
 local ProfileStoreWrapper = require(Modules.ProfileStoreWrapper)
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Remote
 local SetTargetingModeRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("SetTargetingModeRequest")
+local log = DebugLogger.new("TargetingHandler")
 
 --// Logik
 SetTargetingModeRequest.OnServerEvent:Connect(function(player: Player, payload: { tuuid: string, mode: string }?)
@@ -34,16 +36,16 @@ SetTargetingModeRequest.OnServerEvent:Connect(function(player: Player, payload: 
 		end
 	end
 
-	if not model then
-		warn(`[Targeting] ❌ Kein Modell mit TUUID {tuuid} gefunden`)
-		return
-	end
+        if not model then
+                log:Warn(`❌ Kein Modell mit TUUID {tuuid} gefunden`)
+                return
+        end
 
-	if model:GetAttribute("OwnerId") ~= player.UserId then
-		warn(`[Targeting] ❌ Spieler {player.Name} versucht fremden Tower zu ändern`)
-		return
-	end
+        if model:GetAttribute("OwnerId") ~= player.UserId then
+                log:Warn(`❌ Spieler {player.Name} versucht fremden Tower zu ändern`)
+                return
+        end
 
-	model:SetAttribute("TargetingMode", mode)
-	print(`[Targeting] {player.Name} setzt {model.Name} ({tuuid}) auf '{mode}'`)
+        model:SetAttribute("TargetingMode", mode)
+        log(`[Targeting] {player.Name} setzt {model.Name} ({tuuid}) auf '{mode}'`)
 end)
