@@ -43,11 +43,11 @@ for groupA, rules in pairs(matrix) do
 			local ok, err = pcall(function()
 				PhysicsService:CollisionGroupSetCollidable(groupA, groupB, shouldCollide)
 			end)
-                        if ok then
+			if ok then
                                 log("🔧 Regel gesetzt:", groupA, "<->", groupB, "=", shouldCollide)
-                        else
-                                log:Warn("⚠️ Fehler bei Regel:", groupA, groupB, err)
-                        end
+			else
+				warn("⚠️ Fehler bei Regel:", groupA, groupB, err)
+			end
 		end
 	end
 end

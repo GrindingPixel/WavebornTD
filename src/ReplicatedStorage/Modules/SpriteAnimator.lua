@@ -3,7 +3,6 @@
 -- Funktioniert exakt wie dein Originalscript, aber modularisiert für Start/Stop
 
 local RunService = game:GetService("RunService")
-local DebugLogger = require(game:GetService("ReplicatedStorage").Modules:WaitForChild("DebugLogger"))
 
 --// Einstellungen
 local fps = 24
@@ -14,10 +13,9 @@ local rows = math.ceil(totalFrames / columns)
 local connection = nil
 
 local SpriteAnimator = {}
-local log = DebugLogger.new("SpriteAnimator")
 
 function SpriteAnimator.Start(loop: ImageLabel)
-        if not loop then log:Warn("❌ SpriteAnimator: Kein gültiges Ziel übergeben"); return end
+	if not loop then warn("❌ SpriteAnimator: Kein gültiges Ziel übergeben"); return end
 
 	if connection then connection:Disconnect() end
 

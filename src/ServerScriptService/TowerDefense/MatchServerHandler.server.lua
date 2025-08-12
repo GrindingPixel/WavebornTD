@@ -19,7 +19,6 @@ local EnemyManager = require(TowerDefense:WaitForChild("EnemyManager"))
 local MatchStateModule = require(TowerDefense:WaitForChild("MatchStateModule"))
 local MapDataUtils = require(ReplicatedStorage.Modules:WaitForChild("MapDataUtils"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 
 --// Remotes
@@ -30,16 +29,22 @@ local ShowStartButton 		= TDRemotes:WaitForChild("ShowStartButton")
 local SetAutoWaveEnabled 	= ReplicatedStorage.Remotes.Settings:WaitForChild("SetAutoWaveEnabled")
 local SetSeamlessEnabled 	= ReplicatedStorage.Remotes.Settings:WaitForChild("SetSeamlessEnabled")
 
-local log = DebugLogger.new("MatchServerHandler")
+--// Debug
+local DEBUG = true
+local function log(...: any)
+	if DEBUG then
+		print("[MatchServerHandler]", ...)
+	end
+end
 
 --// State
 local matchStarted = false
 
 --// Initialisierung
 if EnemyManager and EnemyManager.Init then
-        EnemyManager:Init()
+	EnemyManager:Init()
 else
-        log:Warn("⚠️ EnemyManager.Init fehlt oder EnemyManager nicht korrekt geladen")
+	warn("⚠️ EnemyManager.Init fehlt oder EnemyManager nicht korrekt geladen")
 end
 
 EnemyManager:SetOnBaseDestroyed(function()
@@ -77,45 +82,45 @@ end)
 StartWaveRequest.OnServerEvent:Connect(function(player, mode)
 	log("📡 StartWaveRequest vom Client erhalten – Mode:", mode or "nil")
 
-        if mode == "NextWave" then
-                if not matchStarted then
-                        log:Warn("⚠️ Match noch nicht gestartet – NextWave ignoriert")
-                        return
-                end
-                WaveManager:StartWave()
-                return
-        end
+	if mode == "NextWave" then
+		if not matchStarted then
+			warn("⚠️ Match noch nicht gestartet – NextWave ignoriert")
+			return
+		end
+		WaveManager:StartWave()
+		return
+	end
 
 	-- Spielstart
-        if matchStarted then
-                log:Warn("⚠️ Match bereits gestartet – Init ignoriert")
-                return
-        end
+	if matchStarted then
+		warn("⚠️ Match bereits gestartet – Init ignoriert")
+		return
+	end
 
 	log("🌊 Starte Match von:", player.Name)
 	matchStarted = true
 
 	-- Profil laden
-        local profile = ProfileWrapper:GetProfile(player)
-        if not profile then
-                log:Warn("❌ Kein Profil für", player.Name)
-                return
-        end
+	local profile = ProfileWrapper:GetProfile(player)
+	if not profile then
+		warn("❌ Kein Profil für", player.Name)
+		return
+	end
 
-        local teleportData = ProfileWrapper:GetSelectedStage(player)
-        log("📦 teleportData =", teleportData)
-        if not teleportData or teleportData.MapName == "" or teleportData.StageId <= 0 then
-                log:Warn("❌ Kein gültiger SelectedStage im Profil:", player.Name)
-                return
-        end
+	local teleportData = ProfileWrapper:GetSelectedStage(player)
+	print("📦 teleportData =", teleportData)
+	if not teleportData or teleportData.MapName == "" or teleportData.StageId <= 0 then
+		warn("❌ Kein gültiger SelectedStage im Profil:", player.Name)
+		return
+	end
 
 	log("🧭 Spieler ausgewählte Stage:", teleportData.MapName, teleportData.StageId)
 
-        local stage = MapDataUtils.GetStageById(teleportData.MapName, teleportData.StageId)
-        if not stage then
-                log:Warn("❌ MapDataUtils konnte Stage nicht finden:", teleportData.MapName, teleportData.StageId)
-                return
-        end
+	local stage = MapDataUtils.GetStageById(teleportData.MapName, teleportData.StageId)
+	if not stage then
+		warn("❌ MapDataUtils konnte Stage nicht finden:", teleportData.MapName, teleportData.StageId)
+		return
+	end
 
 	-- Spieler registrieren + Stage übergeben
 	MatchStateModule.RegisterPlayers({ player }, stage)
@@ -177,22 +182,22 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 		local profile = ProfileWrapper:GetProfile(player)
 		if not profile then return end
 
-                if mapName == "" or stageId == 0 then
-                        log:Warn("[Continue] Kein gültiger SelectedStage gesetzt.")
-                        return
-                end
+		if mapName == "" or stageId == 0 then
+			warn("[Continue] Kein gültiger SelectedStage gesetzt.")
+			return
+		end
 
 		local nextStage = stageId + 1
 		local mapInfo = MapData[mapName]
 
-                if mapInfo and mapInfo.Stages and mapInfo.Stages[nextStage] then
-                        ProfileWrapper:SetSelectedStage(player, mapName, nextStage)
-                        StageTeleportService.TeleportToStage(player, mapName, nextStage)
-                        return
-                else
-                        log:Warn("[Continue] Kein nächstes Stage gefunden für:", mapName, "→", nextStage)
-                        return
-                end
+		if mapInfo and mapInfo.Stages and mapInfo.Stages[nextStage] then
+			ProfileWrapper:SetSelectedStage(player, mapName, nextStage)
+			StageTeleportService.TeleportToStage(player, mapName, nextStage)
+			return
+		else
+			warn("[Continue] Kein nächstes Stage gefunden für:", mapName, "→", nextStage)
+			return
+		end
 
 	elseif action == "Next" then
 		local mapInfo = MapData[mapName]
@@ -214,9 +219,9 @@ MatchResultAction.OnServerEvent:Connect(function(player, action)
 
 			ProfileWrapper:SetSelectedStage(player, nextMap, nextStageId)
 			StageTeleportService.TeleportToStage(player, nextMap, nextStageId)
-                else
-                        log:Warn("[Next] Kein NextStage definiert für", mapName, "Stage", stageId)
-                end
+		else
+			warn("[Next] Kein NextStage definiert für", mapName, "Stage", stageId)
+		end
 	end
 end)
 

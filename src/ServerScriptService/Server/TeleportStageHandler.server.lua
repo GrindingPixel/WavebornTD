@@ -22,25 +22,25 @@ remote.OnServerEvent:Connect(function(player: Player, worldName: string, stageId
         log("📦 TeleportStageRequest erhalten von", player.Name, "→", worldName, stageId)
 
 	-- Stage validieren
-        local stage = MapDataUtils.GetStageById(worldName, stageId)
-        if not stage then
-                log:Warn("❌ Ungültige Stage:", worldName, stageId)
-                return
-        end
+	local stage = MapDataUtils.GetStageById(worldName, stageId)
+	if not stage then
+		warn("[TeleportStageHandler] ❌ Ungültige Stage:", worldName, stageId)
+		return
+	end
 
 	-- Welt validieren
 	local worldData = MapData[worldName]
-        if not worldData or not worldData.PlaceId then
-                log:Warn("❌ Kein gültiger PlaceId für Welt:", worldName)
-                return
-        end
+	if not worldData or not worldData.PlaceId then
+		warn("[TeleportStageHandler] ❌ Kein gültiger PlaceId für Welt:", worldName)
+		return
+	end
 
 	-- Stage im Profil speichern
-        local success = ProfileStoreWrapper:SetSelectedStage(player, worldName, stageId)
-        if not success then
-                log:Warn("❌ Konnte SelectedStage nicht speichern")
-                return
-        end
+	local success = ProfileStoreWrapper:SetSelectedStage(player, worldName, stageId)
+	if not success then
+		warn("[TeleportStageHandler] ❌ Konnte SelectedStage nicht speichern")
+		return
+	end
 
 	log("💾 SelectedStage gespeichert für", player.Name, "→", worldName, "Stage", stageId)
 
@@ -49,9 +49,9 @@ remote.OnServerEvent:Connect(function(player: Player, worldName: string, stageId
 		return TeleportService:Teleport(worldData.PlaceId, player)
 	end)
 
-        if ok then
-                log("✅ Teleport ausgeführt für", player.Name)
-        else
-                log:Warn("❌ Teleport fehlgeschlagen:", result)
-        end
+	if ok then
+		log("✅ Teleport ausgeführt für", player.Name)
+	else
+		warn("[TeleportStageHandler] ❌ Teleport fehlgeschlagen:", result)
+	end
 end)

@@ -20,7 +20,6 @@ local ItemData = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
 local UnitDataModule = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
 local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("BattlepassInfoProvider"))
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Remotes
 local ProfileLoadedEvent = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileLoadedEvent")
@@ -31,6 +30,7 @@ local GetProfileRF = ReplicatedStorage.Remotes.Profile:WaitForChild("GetProfile"
 --// Einstellungen
 local DATASTORE_NAME = "WavebornTDPlayerData"
 local AUTOSAVE_INTERVAL = 120
+local DEBUG = true
 
 --// ProfileStore-Instanz
 local store = ProfileStore.New(DATASTORE_NAME, PlayerDataTemplate)
@@ -45,14 +45,14 @@ local function check(handlerName: string, markerName: string)
 		or Enemys:FindFirstChild(handlerName)
 		or StarterGui.Global:FindFirstChild(handlerName)
 
-        if scriptObj and scriptObj:IsA("Script") then
-                if scriptObj.Enabled then
-                        table.insert(systemsToWaitFor, markerName)
-                        log("✔️", markerName, "aktiviert über", handlerName)
-                else
-                        log("⛔", markerName, "ist deaktiviert (", handlerName, ")")
-                end
-        end
+	if scriptObj and scriptObj:IsA("Script") then
+		if scriptObj.Enabled then
+			table.insert(systemsToWaitFor, markerName)
+			if DEBUG then print("[ProfileStoreWrapper] ✔️", markerName, "aktiviert über", handlerName) end
+		else
+			if DEBUG then print("[ProfileStoreWrapper] ⛔", markerName, "ist deaktiviert (", handlerName, ")") end
+		end
+	end
 end
 --// Global-Handler
 check("SettingsClientScript", "Settings")
@@ -78,7 +78,8 @@ check("HealthBarUpdater", "TDHealthBar")
 
 local systemReady = {} -- [userId] = { [systemName] = true }
 
-local log = DebugLogger.new("ProfileStoreWrapper")
+local function log(...) if DEBUG then print("[ProfileStoreWrapper]", ...) end end
+local function warnf(...) if DEBUG then warn("[ProfileStoreWrapper]", ...) end end
 
 local ProfileWrapper = {}
 
@@ -194,7 +195,7 @@ function ProfileWrapper:RemoveEclipsium(player, amount)
 	local profile = getProfile(player)
 	if not profile then return false end
 	if (profile.Data.Player.Eclipsium or 0) < amount then
-            log:Warn("Nicht genug Eclipsium bei", player.Name)
+		warnf("Nicht genug Eclipsium bei", player.Name)
 		return false
 	end
 	-- data.Player.Eclipsium = data.Player.Eclipsium - amount, falls ' -=' Probleme macht
@@ -208,7 +209,7 @@ function ProfileWrapper:RemoveTDEclipsium(player, amount)
 	local profile = getProfile(player)
 	if not profile then return false end
 	if (profile.Data.Player.TDEclipsium or 0) < amount then
-            log:Warn("Nicht genug TDEclipsium bei", player.Name)
+		warnf("Nicht genug TDEclipsium bei", player.Name)
 		return false
 	end
 	profile.Data.Player.TDEclipsium -= amount
@@ -221,7 +222,7 @@ function ProfileWrapper:RemoveGems(player, amount)
 	local profile = getProfile(player)
 	if not profile then return false end
 	if (profile.Data.Player.Gems or 0) < amount then
-            log:Warn("Nicht genug Gems bei", player.Name)
+		warnf("Nicht genug Gems bei", player.Name)
 		return false
 	end
 	profile.Data.Player.Gems = profile.Data.Player.Gems - amount
@@ -377,7 +378,7 @@ function ProfileWrapper:AddItemTyped(player, itemType, itemId, amount, noSync)
 	if not profile then return end
 
 	local invCategory = profile.Data.Inventory[itemType]
-    if not invCategory then log:Warn("[Inventory] Ungültiger ItemType:", itemType); return end
+	if not invCategory then warnf("[Inventory] Ungültiger ItemType:", itemType); return end
 
 	invCategory[itemId] = (invCategory[itemId] or 0) + amount
 
@@ -430,7 +431,7 @@ function ProfileWrapper:IncrementQuest(player, questType, questId, amount, autoS
 
 	local profile = getProfile(player)
 	if not profile then
-            log:Warn("Kein Profil gefunden für", player.Name)
+		warnf("Kein Profil gefunden für", player.Name)
 		return false
 	end
 
@@ -515,7 +516,7 @@ function ProfileWrapper:AddUnit(player, unitId, overrideStar)
 
 	local unitData = UnitDataModule.GetUnitData(unitId)
 	if not unitData then
-            log:Warn("[Units] ❌ Unbekannter UnitId:", unitId)
+		warnf("[Units] ❌ Unbekannter UnitId:", unitId)
 		return false
 	end
 
@@ -545,7 +546,7 @@ function ProfileWrapper:RemoveUnit(player, unitUUID)
 	local profile = getProfile(player)
 	if not profile then return false end
 	if not profile.Data.Units[unitUUID] then
-            log:Warn("❌ Entfernen fehlgeschlagen – keine Unit mit UUID:", unitUUID)
+		warnf("❌ Entfernen fehlgeschlagen – keine Unit mit UUID:", unitUUID)
 		return false
 	end
 	profile.Data.Units[unitUUID] = nil
@@ -567,7 +568,7 @@ function ProfileWrapper:EquipUnit(player, slot, unitUUID)
 	end
 
 	if not profile.Data.Units[unitUUID] then
-            log:Warn("[Units] ❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
+		warn("[Units] ❌ Equip fehlgeschlagen – Unit nicht im Inventar:", unitUUID)
 		return false
 	end
 
@@ -695,7 +696,7 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 
 	for _, reward in ipairs(rewards) do
 		if typeof(reward) ~= "table" or not reward.type then
-                    log:Warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
+			warn("[ProfileWrapper] ❌ Ungültiger Reward-Eintrag:", reward)
 			continue
 		end
 
@@ -717,7 +718,7 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 		elseif reward.id then
 			self:AddItemTyped(player, rtype, reward.id, amount)
 		else
-                    log:Warn("[ProfileWrapper] ❌ Reward konnte nicht verarbeitet werden:", reward)
+			warn("[ProfileWrapper] ❌ Reward konnte nicht verarbeitet werden:", reward)
 		end
 	end
 
@@ -725,7 +726,7 @@ function ProfileWrapper:GrantRewards(player, rewards, isBattlepass)
 	ProfileSyncService:Send(player, "Purchases", profile.Data.Purchases)
 
 	if isBattlepass then
-            log("✅ Rewards wurden dem Inventar hinzugefügt (Battlepass)")
+		print("[ProfileWrapper] ✅ Rewards wurden dem Inventar hinzugefügt (Battlepass)")
 	end
 end
 
@@ -762,12 +763,12 @@ local function onPlayerAdded(player)
 	local userId = player.UserId
 	local profile = store:StartSessionAsync("Player_" .. userId)
 	if not profile then
-            log:Warn("Konnte Profil nicht laden für", player.Name)
+		warnf("Konnte Profil nicht laden für", player.Name)
 		player:Kick("Profil konnte nicht geladen werden.")
 		return
 	end
 
-        log("onPlayerAdded ausgeführt für", player.Name)
+	log("[DEBUG] onPlayerAdded ausgeführt für", player.Name)
 	profile:Reconcile()
 	profile.Data.Teleport = profile.Data.Teleport or {}
 
@@ -838,15 +839,19 @@ local function onPlayerAdded(player)
 	end)
 
 	-- Marker für alle aktiven Systeme setzen (bestehendes Verhalten bleibt)
-        for _, system in ipairs(systemsToWaitFor) do
-                log("✅ Setze Marker für aktives System:", system)
-                ProfileWrapper:MarkSystemReady(player, system)
-        end
+	for _, system in ipairs(systemsToWaitFor) do
+		if DEBUG then
+			print("[ProfileStoreWrapper] ✅ Setze Marker für aktives System:", system)
+		end
+		ProfileWrapper:MarkSystemReady(player, system)
+	end
 
 	-- GUI-Sync auslösen
 	ProfileLoadedEvent:FireClient(player)
 
-        log("✅ ProfileLoadedEvent gesendet für", player.Name)
+	if DEBUG then
+		print("[ProfileStoreWrapper] ✅ ProfileLoadedEvent gesendet für", player.Name)
+	end
 
 	profile.OnSessionEnd:Connect(function()
 		activeProfiles[userId] = nil

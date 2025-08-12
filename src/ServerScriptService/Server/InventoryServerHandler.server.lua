@@ -21,28 +21,28 @@ local getInventoryFunction = InventoryFolder:WaitForChild("GetInventoryData")
 local addItemEvent        = InventoryFolder:WaitForChild("AddItemRequest")
 local removeItemEvent     = InventoryFolder:WaitForChild("RemoveItemRequest")
 
-local log = DebugLogger.new("InventoryServerHandler", true)
+local log, warnf = DebugLogger.new("InventoryServerHandler", true)
 
 -- GetInventoryData: Inventory als Array an Client
 getInventoryFunction.OnServerInvoke = function(player)
-        if not ProfileWrapper:IsLoaded(player) then
-                log:Warn("❌ [GetInventoryData] Profil nicht geladen für", player)
-                return {}
-        end
+	if not ProfileWrapper:IsLoaded(player) then
+		warn("❌ [GetInventoryData] Profil nicht geladen für", player)
+		return {}
+	end
 
-        local inventory = ProfileWrapper:GetInventory(player)
-        if typeof(inventory) ~= "table" then
-                log:Warn("❌ [GetInventoryData] Ungültiges Inventory für", player, "Typ:", typeof(inventory))
-                return {}
-        end
+	local inventory = ProfileWrapper:GetInventory(player)
+	if typeof(inventory) ~= "table" then
+		warn("❌ [GetInventoryData] Ungültiges Inventory für", player, "Typ:", typeof(inventory))
+		return {}
+	end
 
 	local result = {}
 
 	for itemType, itemList in pairs(inventory) do
-                if typeof(itemList) ~= "table" then
-                        log:Warn("⚠️ [GetInventoryData] Ungültiger Container für Typ:", itemType, "→", typeof(itemList))
-                        continue
-                end
+		if typeof(itemList) ~= "table" then
+			warn("⚠️ [GetInventoryData] Ungültiger Container für Typ:", itemType, "→", typeof(itemList))
+			continue
+		end
 
 		for itemId, amount in pairs(itemList) do
 			table.insert(result, {
@@ -67,10 +67,10 @@ addItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
 	if ServerDebounce:Block(player, "AddItem", 1.0) then return end
 
 	local category = ItemData[itemId].category
-        if not category then
-                log:Warn("❌ Item ohne Kategorie:", itemId)
-                return
-        end
+	if not category then
+		warnf("❌ Item ohne Kategorie:", itemId)
+		return
+	end
 
 	ProfileWrapper:AddItemTyped(player, category, itemId, amount)
 	log("Item hinzugefügt:", itemId, "x", amount, "Typ:", category, "→", player.Name)
@@ -85,17 +85,17 @@ removeItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
 	if ServerDebounce:Block(player, "RemoveItem", 1.0) then return end
 
 	local category = ItemData[itemId].category
-        if not category then
-                log:Warn("❌ Item ohne Kategorie:", itemId)
-                return
-        end
+	if not category then
+		warnf("❌ Item ohne Kategorie:", itemId)
+		return
+	end
 
 	local success = ProfileWrapper:RemoveItemTyped(player, category, itemId, amount)
-        if success then
-                log("Item entfernt:", itemId, "x", amount, "Typ:", category, "←", player.Name)
-        else
-                log:Warn("❌ Entfernen fehlgeschlagen:", itemId, "bei", player.Name)
-        end
+	if success then
+		log("Item entfernt:", itemId, "x", amount, "Typ:", category, "←", player.Name)
+	else
+		warnf("❌ Entfernen fehlgeschlagen:", itemId, "bei", player.Name)
+	end
 
 	local profile = ProfileWrapper:GetProfile(player)
 	if profile then
