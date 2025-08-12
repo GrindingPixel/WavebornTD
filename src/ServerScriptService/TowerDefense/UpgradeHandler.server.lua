@@ -8,7 +8,7 @@ local ServerScriptService   = game:GetService("ServerScriptService")
 local Modules               = ServerScriptService:WaitForChild("Modules")
 
 --// Modules
-local ProfileStoreWrapper = require(Modules.ProfileStoreWrapper)
+local ProfileService = require(Modules.ProfileService)
 local CombatStatsProvider = require(ReplicatedStorage.TDModules.Combat.CombatStatsProvider)
 local UnitsDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
 local UpgradeConfig = require(ReplicatedStorage.TDModules.Systems.UpgradeConfig)
@@ -23,7 +23,7 @@ UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tu
 	local tuuid = payload.tuuid
 	local uuid = payload.uuid -- optional, wird nur für EXP verwendet
 
-	local profile = ProfileStoreWrapper:GetProfile(player)
+        local profile = ProfileService:GetProfile(player)
 	if not profile then return end
 
 	-- Turm-Model per TUUID suchen
@@ -89,7 +89,7 @@ UpgradeTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tu
 
 	-- Optional: Fortschrift registrieren
 	if uuid then
-		ProfileStoreWrapper:IncrementUnitKills(player, uuid, 0, true) -- für eventuelle Upgrade-Tracker
+                ProfileService:IncrementUnitKills(player, uuid, 0, true) -- für eventuelle Upgrade-Tracker
 	end
 
 	print(`[Upgrade] {player.Name} upgraded {unitId} (Level {newLevel}) für {upgradeCost} TDE`)

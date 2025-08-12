@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local Players = game:GetService("Players")
 
-local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
+local ProfileService = require(Modules:WaitForChild("ProfileService"))
 local debugFolder = ReplicatedStorage:WaitForChild("Remotes"):FindFirstChild("Debug")
 
 if not debugFolder then
@@ -18,7 +18,7 @@ remote.Name = "IncrementQuest"
 remote.Parent = debugFolder
 
 remote.OnServerEvent:Connect(function(player, questType, questId, amount)
-	if ProfileWrapper:IsLoaded(player) then
-		ProfileWrapper:IncrementQuest(player, questType, questId, amount, true)
-	end
+        if ProfileService:IsLoaded(player) then
+                ProfileService:IncrementQuest(player, questType, questId, amount, true)
+        end
 end)

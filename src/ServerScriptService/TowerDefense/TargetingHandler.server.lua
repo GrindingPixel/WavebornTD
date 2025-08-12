@@ -8,7 +8,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Modules = ServerScriptService:WaitForChild("Modules")
 
 --// Modules
-local ProfileStoreWrapper = require(Modules.ProfileStoreWrapper)
+local ProfileService = require(Modules.ProfileService)
 
 --// Remote
 local SetTargetingModeRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("SetTargetingModeRequest")
@@ -22,7 +22,7 @@ SetTargetingModeRequest.OnServerEvent:Connect(function(player: Player, payload: 
 	local tuuid = payload.tuuid
 	local mode = payload.mode
 
-	local profile = ProfileStoreWrapper:GetProfile(player)
+        local profile = ProfileService:GetProfile(player)
 	if not profile then return end
 
 	-- Modell finden
