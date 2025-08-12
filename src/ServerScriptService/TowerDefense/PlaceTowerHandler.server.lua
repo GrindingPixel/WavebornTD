@@ -11,7 +11,7 @@ local HttpService = game:GetService("HttpService")
 local PlaceTowerRequest = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("PlaceTowerRequest")
 
 --// Module
-local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
+local ProfileService = require(ServerScriptService.Modules.ProfileService)
 local UnitDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
 local DamageSystem = require(ServerScriptService.TowerDefense.Combat.DamageSystem)
 local UnitStatModule = require(ReplicatedStorage.Modules.UnitStatsModule)
@@ -40,7 +40,7 @@ PlaceTowerRequest.OnServerEvent:Connect(function(player: Player, unitName: strin
 		return
 	end
 
-	local profile = ProfileStoreWrapper:GetProfile(player)
+        local profile = ProfileService:GetProfile(player)
 	if not profile then
 		warn("❌ Kein Profil geladen für", player.Name)
 		return

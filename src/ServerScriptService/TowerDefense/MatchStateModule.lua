@@ -7,7 +7,8 @@ local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 
 --// Modules
-local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
+local ProfileService = require(ServerScriptService.Modules.ProfileService)
+local RewardService = require(ServerScriptService.Modules.RewardService)
 
 --// Remotes
 local MatchEndedEvent = ReplicatedStorage.Remotes.TowerDefenseEvents:WaitForChild("MatchEnded")
@@ -59,10 +60,10 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 
 	for _, player in ipairs(currentPlayers) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
-			local profile = ProfileStoreWrapper:GetProfile(player)
+                        local profile = ProfileService:GetProfile(player)
 			if profile then
 				if resultType == "Victory" and #rewards > 0 then
-					ProfileStoreWrapper:GrantRewards(player, rewards)
+                                        RewardService.GrantRewards(player, rewards)
 					print("🎁 Rewards an", player.Name, "vergeben.")
 				end
 
