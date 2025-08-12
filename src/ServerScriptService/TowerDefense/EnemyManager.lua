@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Modules
 local EnemyTypes = require(ReplicatedStorage.TDModules.Enemy.EnemyTypesModule)
@@ -82,13 +83,14 @@ end
 
 --// Modul
 local EnemyManager = {}
+local log = DebugLogger.new("EnemyManager")
 
 function EnemyManager:SetOnBaseDestroyed(callback: () -> ())
 	onBaseDestroyed = callback
 end
 
 function EnemyManager:Init()
-	print("✅ EnemyManager ready")
+        log("✅ EnemyManager ready")
 
 	if not globalEnd or not globalEnd:IsA("BasePart") then
 		error("❌ Global EndPoint (EnemyPath.Ende) missing or invalid!")
@@ -98,13 +100,13 @@ function EnemyManager:Init()
 		local enemy = hit:FindFirstAncestorWhichIsA("Model")
 		if enemy and enemy:IsDescendantOf(enemiesFolder) and not enemy:GetAttribute("ReachedEnd") then
 			enemy:SetAttribute("ReachedEnd", true)
-			baseHP -= 10
-			print("💥", enemy.Name, "reached base. Base HP now:", baseHP)
+                        baseHP -= 10
+                        log("💥", enemy.Name, "reached base. Base HP now:", baseHP)
 			enemy:Destroy()
 
 			if baseHP <= 0 and not matchLost then
 				matchLost = true
-				print("💀 Base destroyed – triggering match loss")
+                                log("💀 Base destroyed – triggering match loss")
 				if onBaseDestroyed then
 					onBaseDestroyed()
 				end
@@ -114,25 +116,25 @@ function EnemyManager:Init()
 end
 
 function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
-	print("🚀 Spawning enemy:", enemyId, "[Wave", wave, "]")
+        log("🚀 Spawning enemy:", enemyId, "[Wave", wave, "]")
 
 	local data = EnemyTypes[enemyId]
-	if not data then
-		warn("❌ Enemy type not found:", enemyId)
-		return
-	end
+        if not data then
+                log:Warn("❌ Enemy type not found:", enemyId)
+                return
+        end
 
-	local template = ServerStorage:FindFirstChild(enemyId)
-	if not template or not template:IsA("Model") then
-		warn("❌ Enemy model not found:", enemyId)
-		return
-	end
+        local template = ServerStorage:FindFirstChild(enemyId)
+        if not template or not template:IsA("Model") then
+                log:Warn("❌ Enemy model not found:", enemyId)
+                return
+        end
 
-	local paths = getAvailablePaths()
-	if #paths == 0 then
-		warn("❌ No valid enemy paths found.")
-		return
-	end
+        local paths = getAvailablePaths()
+        if #paths == 0 then
+                log:Warn("❌ No valid enemy paths found.")
+                return
+        end
 
 	local selectedPath = paths[math.random(1, #paths)]
 	local startPoint, pathPoints, endPoint = getPathData(selectedPath)
@@ -155,11 +157,11 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 
 	local hrp = enemy:FindFirstChild("HumanoidRootPart")
 	local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-	if not hrp or not humanoid then
-		warn("❌ Enemy missing HRP or Humanoid:", enemy.Name)
-		enemy:Destroy()
-		return
-	end
+        if not hrp or not humanoid then
+                log:Warn("❌ Enemy missing HRP or Humanoid:", enemy.Name)
+                enemy:Destroy()
+                return
+        end
 
 	enemy:MoveTo(startPoint.Position)
 
@@ -176,12 +178,12 @@ function EnemyManager:SpawnEnemy(enemyId: string, wave: number)
 			local success = humanoid.MoveToFinished:Wait(5)
 			if not success then break end
 		else
-			warn("⚠️ Ignoring non-BasePart path point:", point:GetFullName())
+                        log:Warn("⚠️ Ignoring non-BasePart path point:", point:GetFullName())
 		end
 	end
 
 	if enemy:IsDescendantOf(workspace) and not enemy:GetAttribute("ReachedEnd") then
-		warn("⚠️ Enemy did not reach End, but path completed:", enemy.Name)
+                log:Warn("⚠️ Enemy did not reach End, but path completed:", enemy.Name)
 		enemy:SetAttribute("ReachedEnd", true)
 		enemy:Destroy()
 	end

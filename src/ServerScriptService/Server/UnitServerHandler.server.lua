@@ -10,11 +10,8 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local UnitData = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
-
---// Debug
-local DEBUG = true
-local function log(...) if DEBUG then print("[UnitServerHandler]", ...) end end
-local function warnf(...) if DEBUG then warn("[UnitServerHandler]", ...) end end
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
+local log = DebugLogger.new("UnitServerHandler")
 
 --// Remotes
 local equipUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("EquipUnit")
@@ -23,10 +20,10 @@ local ProfileChanged = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileCh
 
 --// Units für Client abrufen (UUID-System)
 getUnitsFunction.OnServerInvoke = function(player)
-	if not ProfileWrapper:IsLoaded(player) then
-		warnf("GetPlayerUnits abgelehnt für", player and player.Name)
-		return {}
-	end
+        if not ProfileWrapper:IsLoaded(player) then
+                log:Warn("GetPlayerUnits abgelehnt für", player and player.Name)
+                return {}
+        end
 
 	local result = ProfileWrapper:GetUnits(player)
 	log("📦 Units gesendet für", player.Name, "(Anzahl:", #result, ")")
@@ -35,22 +32,22 @@ end
 
 --// Unit ausrüsten
 equipUnitEvent.OnServerEvent:Connect(function(player, slot, unitUUID)
-	if not ProfileWrapper:IsLoaded(player) then
-		warnf("EquipUnit abgelehnt – Profil nicht geladen für", player and player.Name)
-		return
-	end
-	if type(slot) ~= "number" or slot < 1 or slot > 6 then
-		warnf("Ungültiger Slot:", slot, "bei", player.Name)
-		return
-	end
-	if type(unitUUID) ~= "string" then
-	warnf("Ungültige UnitUUID:", unitUUID, "bei", player.Name)
-	return
+        if not ProfileWrapper:IsLoaded(player) then
+                log:Warn("EquipUnit abgelehnt – Profil nicht geladen für", player and player.Name)
+                return
+        end
+        if type(slot) ~= "number" or slot < 1 or slot > 6 then
+                log:Warn("Ungültiger Slot:", slot, "bei", player.Name)
+                return
+        end
+        if type(unitUUID) ~= "string" then
+        log:Warn("Ungültige UnitUUID:", unitUUID, "bei", player.Name)
+        return
 end
-	if ServerDebounce:Block(player, "EquipUnit_" .. unitUUID, 1.0) then
-		warnf("Debounce EquipUnit bei", player.Name)
-		return
-	end
+        if ServerDebounce:Block(player, "EquipUnit_" .. unitUUID, 1.0) then
+                log:Warn("Debounce EquipUnit bei", player.Name)
+                return
+        end
 
 	local equipped = ProfileWrapper:EquipUnit(player, slot, unitUUID)
 	if equipped then
@@ -70,7 +67,7 @@ end
 		end
 
 		ProfileChanged:FireClient(player, "Units", updated)
-	else
-		warnf("EquipUnit fehlgeschlagen für", player.Name, "→", unitUUID)
-	end
+        else
+                log:Warn("EquipUnit fehlgeschlagen für", player.Name, "→", unitUUID)
+        end
 end)

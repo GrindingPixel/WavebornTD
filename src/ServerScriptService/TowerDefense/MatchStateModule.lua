@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
+local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Modules
 local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
@@ -22,6 +23,7 @@ export type StageData = {
 
 --// Module
 local MatchStateModule = {}
+local log = DebugLogger.new("MatchStateModule")
 
 --// State
 local currentPlayers: { Player } = {}
@@ -40,7 +42,7 @@ function MatchStateModule.RegisterPlayers(players: { Player }, stage: StageData?
 		end
 	end
 
-	print("[MatchStateModule] ✅ Spieler registriert:", #currentPlayers)
+        log("✅ Spieler registriert:", #currentPlayers)
 end
 
 --// Match beenden
@@ -48,12 +50,12 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 	if matchEnded then return end
 	matchEnded = true
 
-	print("[MatchStateModule] 🛑 Match endet mit:", resultType)
+        log("🛑 Match endet mit:", resultType)
 
-	if #currentPlayers == 0 then
-		warn("[MatchStateModule] ⚠️ currentPlayers leer – fallback zu Players:GetPlayers()")
-		currentPlayers = Players:GetPlayers()
-	end
+        if #currentPlayers == 0 then
+                log:Warn("⚠️ currentPlayers leer – fallback zu Players:GetPlayers()")
+                currentPlayers = Players:GetPlayers()
+        end
 
 	local rewards = if mapStageData and mapStageData.Rewards then mapStageData.Rewards else {}
 
@@ -62,8 +64,8 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 			local profile = ProfileStoreWrapper:GetProfile(player)
 			if profile then
 				if resultType == "Victory" and #rewards > 0 then
-					ProfileStoreWrapper:GrantRewards(player, rewards)
-					print("🎁 Rewards an", player.Name, "vergeben.")
+                                        ProfileStoreWrapper:GrantRewards(player, rewards)
+                                        log("🎁 Rewards an", player.Name, "vergeben.")
 				end
 
 				-- (Optional) Reset von TDEclipsium nur zu Testzwecken
@@ -74,9 +76,9 @@ function MatchStateModule.EndMatch(resultType: "Victory" | "Defeat")
 				Result = resultType,
 				Rewards = if resultType == "Victory" then rewards else {},
 			})
-		else
-			warn("[MatchStateModule] ❌ Ungültiger Player-Eintrag:", player)
-		end
+                else
+                        log:Warn("❌ Ungültiger Player-Eintrag:", player)
+                end
 	end
 
 	-- Cleanup
@@ -96,7 +98,7 @@ function MatchStateModule.Reset()
 	currentPlayers = {}
 	matchEnded = false
 	mapStageData = nil
-	print("[MatchStateModule] 🔄 MatchState zurückgesetzt")
+        log("🔄 MatchState zurückgesetzt")
 end
 
 function MatchStateModule.IsMatchOver(): boolean
