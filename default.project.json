@@ -4,50 +4,48 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Modules": {
-        "$path": "src/ReplicatedStorage/Modules"
-      },
-      "Shared": {
-        "$path": "src/ReplicatedStorage/Shared"
-      },
       "Configs": {
         "$path": "src/ReplicatedStorage/Configs"
       },
       "Libs": {
         "$path": "src/ReplicatedStorage/Libs"
-      }
+      },
+      "$path": "src/shared"
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
-        "$path": "src/StarterPlayer/StarterPlayerScripts"
+        "$path": "src/client/StarterPlayerScripts"
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "Server": {
-        "$path": "src/ServerScriptService/Server"
+        "$path": "src/server/Server"
       },
       "Modules": {
-        "$path": "src/ServerScriptService/Modules"
+        "$path": "src/server/Modules"
       },
-       "Summoning": {
-        "$path": "src/ServerScriptService/Summoning"
+      "Summoning": {
+        "$path": "src/server/Summoning"
       },
-       "TowerDefense": {
-        "$path": "src/ServerScriptService/TowerDefense"
+      "TowerDefense": {
+        "$path": "src/server/TowerDefense"
       },
       "Debug": {
-        "$path": "src/ServerScriptService/Debug"
+        "$path": "src/server/Debug"
       }
     },
     "StarterGui": {
       "$className": "StarterGui",
       "Global": {
-        "$path": "src/StarterGui/Global"
+        "$path": "src/client/StarterGui/Global"
       },
       "GuiScripts": {
-        "$path": "src/StarterGui/GuiScripts"
+        "$path": "src/client/StarterGui/GuiScripts"
+      },
+      "TDGuiScripts": {
+        "$path": "src/client/StarterGui/TDGuiScripts"
       }
     }
   }

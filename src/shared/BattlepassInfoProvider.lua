@@ -1,0 +1,109 @@
+--// BattlepassInfoProvider.lua
+
+--// Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+--// Modules
+local ItemDataModule = require(ReplicatedStorage:WaitForChild("ItemDataModule"))
+
+--// State
+local SEASON_SEED = 46729440
+local battlepassData = {}
+local MAX_LEVEL = 100
+
+--// Setup
+local function getEXPForLevel(level)
+	return math.floor(100 * math.pow(1.12, level - 1))
+end
+
+local function pickRandom(list)
+	if typeof(list) == "table" and #list > 0 then
+		return list[math.random(1, #list)]
+	end
+	return nil
+end
+
+-- Eingebauter RewardPool
+local RewardPool = {
+	Scroll = { "SummonScroll_Common" },
+	Token = { "Reroll_Token", "Attribute_Token" },
+	Material = { "Universal_Fragment" },
+	Units = { "Issoi_HighSchool" }
+}
+
+local function generateBattlepassData(seed)
+	math.randomseed(seed or os.time())
+	local data = {}
+
+	for i = 1, MAX_LEVEL do
+		local rewardType
+		local rewardId
+		local amount = 1
+
+		if i % 10 == 0 then
+			rewardType = "Units"
+			rewardId = pickRandom(RewardPool.Units)
+		elseif i % 2 == 0 then
+			rewardType = "Scroll"
+			rewardId = pickRandom(RewardPool.Scroll)
+		else
+			rewardType = "Token"
+			rewardId = pickRandom(RewardPool.Token)
+		end
+
+		local freeReward = {
+			type = rewardType,
+			id = rewardId,
+			amount = amount,
+		}
+
+		local premiumReward = {
+			type = rewardType,
+			id = rewardId,
+			amount = amount * 3,
+		}
+
+		data[i] = {
+			free = freeReward,
+			premium = premiumReward,
+		}
+	end
+
+	return data
+end
+
+--// API
+local BattlepassInfoProvider = {}
+
+function BattlepassInfoProvider.Regenerate(seed)
+	SEASON_SEED = seed or SEASON_SEED
+	battlepassData = generateBattlepassData(SEASON_SEED)
+end
+
+function BattlepassInfoProvider.GetLevelData(level)
+	return battlepassData[level]
+end
+
+function BattlepassInfoProvider.GetEXPRequirement(level)
+	return getEXPForLevel(level)
+end
+
+function BattlepassInfoProvider.GetMaxLevel()
+	return MAX_LEVEL
+end
+
+function BattlepassInfoProvider.GetSeasonSeed()
+	return SEASON_SEED
+end
+
+function BattlepassInfoProvider.GetSeasonData()
+	return {
+		Seed = SEASON_SEED,
+		MaxLevel = MAX_LEVEL,
+	}
+end
+
+--// Init
+BattlepassInfoProvider.Regenerate(SEASON_SEED)
+
+return BattlepassInfoProvider
