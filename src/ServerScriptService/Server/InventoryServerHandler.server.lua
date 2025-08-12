@@ -53,8 +53,8 @@ getInventoryFunction.OnServerInvoke = function(player)
 		end
 	end
 
-        log("✅ [GetInventoryData] Sende", #result, "Items an", player.Name)
-        return result
+	print("✅ [GetInventoryData] Sende", #result, "Items an", player.Name)
+	return result
 end
 
 

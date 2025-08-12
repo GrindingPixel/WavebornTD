@@ -10,8 +10,11 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local UnitData = require(ReplicatedStorage.Modules:WaitForChild("UnitDataModule"))
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log, warnf = DebugLogger.new("UnitServerHandler")
+
+--// Debug
+local DEBUG = true
+local function log(...) if DEBUG then print("[UnitServerHandler]", ...) end end
+local function warnf(...) if DEBUG then warn("[UnitServerHandler]", ...) end end
 
 --// Remotes
 local equipUnitEvent = ReplicatedStorage.Remotes.Units:WaitForChild("EquipUnit")

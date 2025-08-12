@@ -1,10 +1,7 @@
+-- PanelManager.lua
 
 --// Services
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log = DebugLogger.new("PanelManager")
 
 --// Modul
 local PanelManager = {}
@@ -29,21 +26,21 @@ end
 
 -- Panel öffnen (schließt vorheriges automatisch)
 function PanelManager:OpenPanel(panel)
-        if not panel then return end
+	if not panel then return end
 
-        log("OpenPanel für", panel.Name)
+	print("PanelManager: OpenPanel für", panel.Name)
 
 	-- Schließe ggf. vorheriges Panel
 	if self.CurrentlyOpenPanel and self.CurrentlyOpenPanel ~= panel and self.CurrentlyOpenPanel.Visible then
-                log("Schließe vorheriges Panel:", self.CurrentlyOpenPanel.Name)
+		print("PanelManager: Schließe vorheriges Panel:", self.CurrentlyOpenPanel.Name)
 		self:ClosePanel(self.CurrentlyOpenPanel)
 	end
 
 	-- ScreenGui aktivieren
 	local screenGui = panel:FindFirstAncestorWhichIsA("ScreenGui")
 	if screenGui and not screenGui.Enabled then
-                screenGui.Enabled = true
-                log("ScreenGui aktiviert:", screenGui.Name)
+		screenGui.Enabled = true
+		print("PanelManager: ScreenGui aktiviert:", screenGui.Name)
 	end
 
 	-- Panel sichtbar machen
@@ -72,9 +69,9 @@ end
 
 -- Panel schließen (inkl. Fade & Shrink)
 function PanelManager:ClosePanel(panel)
-        if not panel then return end
+	if not panel then return end
 
-        log("ClosePanel für", panel.Name)
+	print("PanelManager: ClosePanel für", panel.Name)
 
 	local originalSize = self.OriginalSizes[panel] or panel.Size
 	local canvasGroup  = panel:FindFirstChildWhichIsA("CanvasGroup")
@@ -111,8 +108,8 @@ function PanelManager:ClosePanel(panel)
 					end
 				end
 				if not anyVisible then
-                                        screenGui.Enabled = false
-                                        log("ScreenGui deaktiviert:", screenGui.Name)
+					screenGui.Enabled = false
+					print("PanelManager: ScreenGui deaktiviert:", screenGui.Name)
 				end
 			end
 		end)
@@ -133,8 +130,8 @@ function PanelManager:ClosePanel(panel)
 				end
 			end
 			if not anyVisible then
-                                screenGui.Enabled = false
-                                log("ScreenGui deaktiviert:", screenGui.Name)
+				screenGui.Enabled = false
+				print("PanelManager: ScreenGui deaktiviert:", screenGui.Name)
 			end
 		end
 	end
@@ -144,7 +141,7 @@ end
 function PanelManager:InstantCloseAll(exceptPanel)
 	for _, panel in ipairs(self.RegisteredPanels) do
 		if panel ~= exceptPanel and panel.Visible then
-                        log("InstantClose für", panel.Name)
+			print("PanelManager: InstantClose für", panel.Name)
 			self:ClosePanel(panel)
 		end
 	end

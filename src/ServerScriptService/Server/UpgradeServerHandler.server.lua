@@ -9,8 +9,15 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 --// Modules
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log, warnf = DebugLogger.new("UpgradeServerHandler")
+
+--// Debug
+local DEBUG = true
+local function log(...)
+	if DEBUG then print("[UpgradeServerHandler]", ...) end
+end
+local function warnf(...)
+	if DEBUG then warn("[UpgradeServerHandler]", ...) end
+end
 
 --// Remotes
 local upgradeInventoryEvent = ReplicatedStorage.Remotes.Upgrades:WaitForChild("UpgradeInventory")

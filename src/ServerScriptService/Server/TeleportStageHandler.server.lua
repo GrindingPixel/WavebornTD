@@ -6,9 +6,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log = DebugLogger.new("TeleportStageHandler")
-
 --// Modules
 local MapData = require(ReplicatedStorage.Modules.MapDataModule)
 local MapDataUtils = require(ReplicatedStorage.Modules.MapDataUtils)
@@ -17,9 +14,17 @@ local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrap
 --// Remote
 local remote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportStageRequest")
 
+--// Debug Helper
+local DEBUG = true
+local function log(...: any)
+	if DEBUG then
+		print("[TeleportStageHandler]", ...)
+	end
+end
+
 --// Event Handler
 remote.OnServerEvent:Connect(function(player: Player, worldName: string, stageId: number)
-        log("📦 TeleportStageRequest erhalten von", player.Name, "→", worldName, stageId)
+	log("📦 TeleportStageRequest erhalten von", player.Name, "→", worldName, stageId)
 
 	-- Stage validieren
 	local stage = MapDataUtils.GetStageById(worldName, stageId)
