@@ -1,4 +1,4 @@
--- ProfileService.lua
+-- ProfileStoreWrapper.lua
 -- Typ: ModuleScript
 
 --// Services
@@ -930,18 +930,16 @@ function ProfileWrapper:Sync(player: Player, key: string)
 end
 
 task.spawn(function()
-        while true do
-                task.wait(AUTOSAVE_INTERVAL)
-                for userId, profile in pairs(activeProfiles) do
-                        if profile:IsActive() then
-                                profile:Save()
-                                local player = Players:GetPlayerByUserId(userId)
-                                if player then log("AutoSave für", player.Name) end
-                        end
-                end
-        end
+	while true do
+		task.wait(AUTOSAVE_INTERVAL)
+		for userId, profile in pairs(activeProfiles) do
+			if profile:IsActive() then
+				profile:Save()
+				local player = Players:GetPlayerByUserId(userId)
+				if player then log("AutoSave für", player.Name) end
+			end
+		end
+	end
 end)
-
-ProfileWrapper.SystemsToWaitFor = systemsToWaitFor
 
 return ProfileWrapper

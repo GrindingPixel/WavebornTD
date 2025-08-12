@@ -6,8 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local QuestData = require(ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
@@ -30,7 +29,7 @@ end)(), ", "))
 
 --// Einzelne Quest claimen
 claimQuestEvent.OnServerEvent:Connect(function(player, questData)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(questData) ~= "table" then return end
 
 	local questType = questData.tab
@@ -39,7 +38,7 @@ claimQuestEvent.OnServerEvent:Connect(function(player, questData)
 	if type(questType) ~= "string" or type(questId) ~= "string" then return end
 	if ServerDebounce:Block(player, "ClaimQuest_" .. questId, 1.5) then return end
 
-        local progress = ProfileService:GetQuestProgress(player, questType)
+	local progress = ProfileWrapper:GetQuestProgress(player, questType)
 	if progress[questId .. "_claimed"] then return end
 
 	local questList = QuestData[questType]
@@ -53,10 +52,10 @@ claimQuestEvent.OnServerEvent:Connect(function(player, questData)
 
 	if (progress[questId] or 0) < (quest.goal or 1) then return end
 
-        RewardService.GrantRewards(player, quest.rewards or {}, true)
-        ProfileService:ClaimQuest(player, questType, questId)
+	ProfileWrapper:GrantRewards(player, quest.rewards or {}, true)
+	ProfileWrapper:ClaimQuest(player, questType, questId)
 
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if profile then
 		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
 	end
@@ -67,14 +66,14 @@ end)
 
 --// Alle Quests eines Typs claimen
 claimAllQuestsEvent.OnServerEvent:Connect(function(player, data)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(data) ~= "table" or type(data.tab) ~= "string" then return end
 
 	local questType = data.tab
 	if ServerDebounce:Block(player, "ClaimAllQuests_" .. questType, 2.0) then return end
 
 	local claimedCount = 0
-        local progress = ProfileService:GetQuestProgress(player, questType)
+	local progress = ProfileWrapper:GetQuestProgress(player, questType)
 	local questList = QuestData[questType]
 	if not questList then return end
 
@@ -82,8 +81,8 @@ claimAllQuestsEvent.OnServerEvent:Connect(function(player, data)
 	for _, quest in ipairs(questList) do
 		local id = quest.id
 		if not progress[id .. "_claimed"] and (progress[id] or 0) >= (quest.goal or 1) then
-                        RewardService.GrantRewards(player, quest.rewards or {}, true)
-                        ProfileService:ClaimQuest(player, questType, id)
+			ProfileWrapper:GrantRewards(player, quest.rewards or {}, true)
+			ProfileWrapper:ClaimQuest(player, questType, id)
 			claimedCount += 1
 			table.insert(claimedList, {
 				Id = id,
@@ -95,7 +94,7 @@ claimAllQuestsEvent.OnServerEvent:Connect(function(player, data)
 
 	questClaimResult:FireClient(player, claimedList)
 
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if profile then
 		ProfileSyncService:Send(player, "QuestProgress", profile.Data.QuestProgress)
 	end
@@ -106,7 +105,7 @@ end)
 
 --// Quests abrufen
 getQuestsFunction.OnServerInvoke = function(player, questType)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("GetPlayerQuests abgelehnt für", player and player.Name)
 		return nil
 	end
@@ -122,7 +121,7 @@ getQuestsFunction.OnServerInvoke = function(player, questType)
 		return nil
 	end
 
-        local progress = ProfileService:GetQuestProgress(player, questType)
+	local progress = ProfileWrapper:GetQuestProgress(player, questType)
 	local result = {}
 
 	for _, quest in ipairs(questList) do

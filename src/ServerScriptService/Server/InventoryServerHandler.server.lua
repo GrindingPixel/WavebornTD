@@ -9,7 +9,7 @@ local Modules           = ServerScriptService:WaitForChild("Modules")
 local Players = game:GetService("Players")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ItemData       = require(ReplicatedStorage.Modules:WaitForChild("ItemDataModule"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local ProfileSyncService = require(Modules:WaitForChild("ProfileSyncService"))
@@ -25,12 +25,12 @@ local log, warnf = DebugLogger.new("InventoryServerHandler", true)
 
 -- GetInventoryData: Inventory als Array an Client
 getInventoryFunction.OnServerInvoke = function(player)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warn("❌ [GetInventoryData] Profil nicht geladen für", player)
 		return {}
 	end
 
-        local inventory = ProfileService:GetInventory(player)
+	local inventory = ProfileWrapper:GetInventory(player)
 	if typeof(inventory) ~= "table" then
 		warn("❌ [GetInventoryData] Ungültiges Inventory für", player, "Typ:", typeof(inventory))
 		return {}
@@ -60,7 +60,7 @@ end
 
 -- AddItemRequest: Item hinzufügen
 addItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(itemId) ~= "string" or itemId == "" then return end
 	if type(amount) ~= "number" or amount <= 0 or amount > 999 then return end
 	if not ItemData[itemId] then return end
@@ -72,13 +72,13 @@ addItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
 		return
 	end
 
-        ProfileService:AddItemTyped(player, category, itemId, amount)
+	ProfileWrapper:AddItemTyped(player, category, itemId, amount)
 	log("Item hinzugefügt:", itemId, "x", amount, "Typ:", category, "→", player.Name)
 end)
 
 -- RemoveItemRequest: Item entfernen
 removeItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
-        if not ProfileService:IsLoaded(player) then return end
+	if not ProfileWrapper:IsLoaded(player) then return end
 	if type(itemId) ~= "string" or itemId == "" then return end
 	if type(amount) ~= "number" or amount <= 0 or amount > 999 then return end
 	if not ItemData[itemId] then return end
@@ -90,14 +90,14 @@ removeItemEvent.OnServerEvent:Connect(function(player, itemId, amount)
 		return
 	end
 
-        local success = ProfileService:RemoveItemTyped(player, category, itemId, amount)
+	local success = ProfileWrapper:RemoveItemTyped(player, category, itemId, amount)
 	if success then
 		log("Item entfernt:", itemId, "x", amount, "Typ:", category, "←", player.Name)
 	else
 		warnf("❌ Entfernen fehlgeschlagen:", itemId, "bei", player.Name)
 	end
 
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if profile then
 		ProfileSyncService:Send(player, "Inventory", profile.Data.Inventory)
 	end

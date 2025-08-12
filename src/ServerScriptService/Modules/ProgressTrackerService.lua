@@ -5,7 +5,7 @@
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 
 --// Debug
 local DEBUG = true
@@ -21,7 +21,7 @@ local ProgressTrackerService = {}
 
 -- Inkrementiert Fortschritt (z. B. für Kills, Summons)
 function ProgressTrackerService:Increment(player, questType, questId, amount)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("Progress-Increment abgelehnt (Profil nicht geladen) für", player and player.Name)
 		return
 	end
@@ -38,7 +38,7 @@ function ProgressTrackerService:Increment(player, questType, questId, amount)
 		return
 	end
 
-        ProfileService:IncrementQuest(player, questType, questId, amount)
+	ProfileWrapper:IncrementQuest(player, questType, questId, amount)
 	log("Progress-Increment:", questType, questId, "+", amount, "bei", player.Name)
 end
 

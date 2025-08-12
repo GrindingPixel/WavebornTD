@@ -7,8 +7,7 @@ local Players = game:GetService("Players")
 local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 
 --// Modules
-local ProfileService = require(Modules:WaitForChild("ProfileService"))
-local RewardService = require(Modules:WaitForChild("RewardService"))
+local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local ServerDebounce = require(ReplicatedStorage.Modules:WaitForChild("ServerDebounce"))
 local CodesDataModule = require(ReplicatedStorage.Modules:WaitForChild("CodeDataModule"))
 
@@ -22,7 +21,7 @@ local redeemCodeEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("RedeemCode
 local codeResultEvent = ReplicatedStorage.Remotes.Codes:WaitForChild("CodeResultEvent")
 
 redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileWrapper:IsLoaded(player) then
 		warnf("RedeemCode abgelehnt (Profil nicht geladen) für", player and player.Name)
 		codeResultEvent:FireClient(player, false, "PROFILE_NOT_LOADED")
 		return
@@ -47,7 +46,7 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 	end
 
 	-- Profil holen
-        local profile = ProfileService:GetProfile(player)
+	local profile = ProfileWrapper:GetProfile(player)
 	if not profile then
 		warnf("Kein Profil gefunden bei", player.Name)
 		codeResultEvent:FireClient(player, false, "PROFILE_NOT_FOUND")
@@ -71,7 +70,7 @@ redeemCodeEvent.OnServerEvent:Connect(function(player, codeStr)
 
 	-- Rewards vergeben über ProfileWrapper
 	if codeInfo.Rewards then
-                RewardService.GrantRewards(player, codeInfo.Rewards)
+		ProfileWrapper:GrantRewards(player, codeInfo.Rewards)
 		log("Rewards vergeben für Code:", codeKey, "an", player.Name)
 	else
 		warnf("Kein Rewards-Feld im Code:", codeKey)

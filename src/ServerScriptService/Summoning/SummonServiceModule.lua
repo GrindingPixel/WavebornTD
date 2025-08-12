@@ -12,7 +12,7 @@ local SummonRemotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Su
 local SummonResult  = SummonRemotes:WaitForChild("SummonResult")
 
 --// Modules (Server)
-local ProfileService = require(ServerScriptService.Modules:WaitForChild("ProfileService"))
+local ProfileStoreWrapper = require(ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
 local SummonPoolModule    = require(ServerScriptService.Summoning:WaitForChild("SummonPoolModule"))
 
 -- Optional (Server-Schutz)
@@ -65,7 +65,7 @@ end
 
 local function tryConsumeTyped(player, itemType, itemId, amount): boolean
 	-- Nutze die vorhandene API des Wrappers
-        local ok = ProfileService:RemoveItemTyped(player, itemType, itemId, amount, false)
+	local ok = ProfileStoreWrapper:RemoveItemTyped(player, itemType, itemId, amount, false)
 	return ok == true
 end
 
@@ -77,7 +77,7 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 	end
 
 	-- Profil prüfen
-        if not ProfileService:IsLoaded(player) then
+	if not ProfileStoreWrapper:IsLoaded(player) then
 		warn("[SummonService] Profile not ready for", player.Name)
 		return
 	end
@@ -93,7 +93,7 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 	local costType, costId, costAmount = SummonPoolModule:GetCost(summonType)
 	if costType and costId and costAmount and costAmount > 0 then
 		-- Nur getypte Items (Scroll/Token/Material/...) werden hier behandelt
-                local inv = ProfileService:GetInventory(player)
+		local inv = ProfileStoreWrapper:GetInventory(player)
 		local have = getTypedCount(inv, costType, costId)
 
 		if have < costAmount then
@@ -122,9 +122,9 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 
 	-- Units ins Inventar
 	for _, unitId in ipairs(unitIds) do
-                local ok, err = pcall(function()
-                        ProfileService:AddUnit(player, unitId)
-                end)
+		local ok, err = pcall(function()
+			ProfileStoreWrapper:AddUnit(player, unitId)
+		end)
 		if not ok then
 			warn("[SummonService] AddUnit fehlgeschlagen:", unitId, err)
 		end

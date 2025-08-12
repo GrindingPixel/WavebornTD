@@ -9,7 +9,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 --// Module
 local MapData = require(ReplicatedStorage.Modules.MapDataModule)
 local MapDataUtils = require(ReplicatedStorage.Modules.MapDataUtils)
-local ProfileService = require(ServerScriptService.Modules.ProfileService)
+local ProfileStoreWrapper = require(ServerScriptService.Modules.ProfileStoreWrapper)
 
 --// Debug Helper
 local DEBUG = true
@@ -43,7 +43,7 @@ function StageTeleportService.TeleportToStage(player: Player, worldName: string,
 
 	-- Stage im Profil speichern
 	if worldName ~= "Lobby" then
-                local success = ProfileService:SetSelectedStage(player, worldName, stageId)
+		local success = ProfileStoreWrapper:SetSelectedStage(player, worldName, stageId)
 		if not success then
 			warn("[StageTeleportService] ❌ Konnte SelectedStage nicht speichern")
 			return false

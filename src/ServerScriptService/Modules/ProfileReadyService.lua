@@ -15,7 +15,7 @@ local ProfileReadyRE = RemotesRoot:FindFirstChild("ProfileReady") :: RemoteEvent
 
 -- Projekt-Module
 local ModulesRoot = ServerScriptService:WaitForChild("Modules")
-local ProfileService = require(ModulesRoot:WaitForChild("ProfileService"))
+local ProfileStoreWrapper = require(ModulesRoot:WaitForChild("ProfileStoreWrapper"))
 
 -- MatchState liegt NUR in Story-Maps unter ServerScriptService.TowerDefense (optional)
 local TowerDefenseFolder = ServerScriptService:FindFirstChild("TowerDefense")
@@ -182,7 +182,7 @@ Players.PlayerAdded:Connect(function(player)
 		local profile
 		local t0 = os.clock()
 		repeat
-                        profile = ProfileService:GetProfile(player)
+			profile = ProfileStoreWrapper:GetProfile(player)
 			if profile then break end
 			task.wait(0.1)
 		until (os.clock() - t0) > 15.0 or not player.Parent
@@ -201,12 +201,12 @@ end)
 
 local AwaitProfileRF_Typed: RemoteFunction = AwaitProfileRF
 AwaitProfileRF_Typed.OnServerInvoke = function(player: Player)
-    local profile = ProfileService:GetProfile(player)
+	local profile = ProfileStoreWrapper:GetProfile(player)
 	if not profile then
 		local t0 = os.clock()
 		repeat
 			task.wait(0.1)
-                    profile = ProfileService:GetProfile(player)
+			profile = ProfileStoreWrapper:GetProfile(player)
 			if profile then break end
 		until (os.clock() - t0) > 15.0
 		if not profile then
