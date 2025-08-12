@@ -10,7 +10,6 @@ local GuiResolver    = require(ReplicatedStorage.Modules.GuiResolver)
 local PanelManager   = require(ReplicatedStorage.Modules.PanelManager)
 local PanelDebounce  = require(ReplicatedStorage.Modules.PanelDebounce)
 local LocalDataCache = require(ReplicatedStorage.Modules.LocalDataCache)
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 --// Remotes
 local ProfileChanged       = ReplicatedStorage.Remotes.Profile:WaitForChild("ProfileChanged")
@@ -53,7 +52,9 @@ if not isReady then
 end
 
 --// Debug
-local log = DebugLogger.new("QuestClient")
+local DEBUG = true
+local function log(...)   if DEBUG then print("[📘 QuestClient]", ...) end end
+local function warnf(...) if DEBUG then warn("[❌ QuestClient]", ...) end end
 
 --// State
 local currentQuest = nil
@@ -162,10 +163,10 @@ local function applyTabHover(tab, tabKey)
 end
 
 function loadQuests(tabName)
-        if not tabName or typeof(tabName) ~= "string" then
-                log:Warn("loadQuests: Ungültiger tabName", tabName)
-                return
-        end
+	if not tabName or typeof(tabName) ~= "string" then
+		warnf("loadQuests: Ungültiger tabName", tabName)
+		return
+	end
 
 	currentTab = tabName
 	clearList()
@@ -173,11 +174,11 @@ function loadQuests(tabName)
 	infoFrame.Visible = false
 	claimButton.Visible = false
 
-        local questList = GetPlayerQuests:InvokeServer(currentTab)
-        if not questList then
-                log:Warn("Konnte Quests nicht laden")
-                return
-        end
+	local questList = GetPlayerQuests:InvokeServer(currentTab)
+	if not questList then
+		warnf("Konnte Quests nicht laden")
+		return
+	end
 
 	log("Quests erhalten für Tab:", currentTab)
 
@@ -212,7 +213,7 @@ end
 --// Init
 PanelManager:RegisterPanel(panel, {
 	OnOpen = function()
-            log("Panel geöffnet → starte Quest-Aufbau")
+		print("[QuestClient] Panel geöffnet → starte Quest-Aufbau")
 		loadQuests(currentTab)
 	end,
 })
@@ -288,6 +289,6 @@ task.defer(function()
 		setTabStyle(dailyTab, TAB_COLORS["Daily"], true)
 		loadQuests("Daily")
 	else
-            log:Warn("DailyTab nicht gefunden")
+		warn("[❌ QuestClient] DailyTab nicht gefunden")
 	end
 end)

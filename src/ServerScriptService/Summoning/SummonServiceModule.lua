@@ -14,7 +14,6 @@ local SummonResult  = SummonRemotes:WaitForChild("SummonResult")
 --// Modules (Server)
 local ProfileStoreWrapper = require(ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
 local SummonPoolModule    = require(ServerScriptService.Summoning:WaitForChild("SummonPoolModule"))
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
 
 -- Optional (Server-Schutz)
 local ServerDebounce = nil
@@ -23,7 +22,6 @@ pcall(function()
 end)
 
 local SummonServiceModule = {}
-local log = DebugLogger.new("SummonService")
 
 -- Konfiguration
 local MULTI_COUNT = 10 -- Anzahl Pulls bei MultiSummon
@@ -79,17 +77,17 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 	end
 
 	-- Profil prüfen
-        if not ProfileStoreWrapper:IsLoaded(player) then
-                log:Warn("Profile not ready for", player.Name)
-                return
-        end
+	if not ProfileStoreWrapper:IsLoaded(player) then
+		warn("[SummonService] Profile not ready for", player.Name)
+		return
+	end
 
 	-- Aktiver Pool
 	local pool = SummonPoolModule:GetActivePool()
-        if not pool or not pool.Units or #pool.Units == 0 then
-                log:Warn("Pool leer oder ungültig.")
-                return
-        end
+	if not pool or not pool.Units or #pool.Units == 0 then
+		warn("[SummonService] Pool leer oder ungültig.")
+		return
+	end
 
 	-- ✅ Kosten prüfen/abbuchen (typed Inventory)
 	local costType, costId, costAmount = SummonPoolModule:GetCost(summonType)
@@ -98,16 +96,17 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 		local inv = ProfileStoreWrapper:GetInventory(player)
 		local have = getTypedCount(inv, costType, costId)
 
-                if have < costAmount then
-                        log:Warn(("%s hat zu wenige %s (%d/%d)"):format(player.Name, costId, have, costAmount))
-                        return
-                end
+		if have < costAmount then
+			-- Optional: Client-Feedback senden (hier belassen wir’s bei stillem Abbruch)
+			warn(("[SummonService] %s hat zu wenige %s (%d/%d)"):format(player.Name, costId, have, costAmount))
+			return
+		end
 
-                if not tryConsumeTyped(player, costType, costId, costAmount) then
-                        log:Warn("RemoveItemTyped fehlgeschlagen für", costType, costId, costAmount, "bei", player.Name)
-                        return
-                end
-        end
+		if not tryConsumeTyped(player, costType, costId, costAmount) then
+			warn("[SummonService] RemoveItemTyped fehlgeschlagen für", costType, costId, costAmount, "bei", player.Name)
+			return
+		end
+	end
 
 	-- Ziehung
 	local unitIds
@@ -126,18 +125,18 @@ function SummonServiceModule:ProcessSummon(player, summonType)
 		local ok, err = pcall(function()
 			ProfileStoreWrapper:AddUnit(player, unitId)
 		end)
-                if not ok then
-                        log:Warn("AddUnit fehlgeschlagen:", unitId, err)
-                end
+		if not ok then
+			warn("[SummonService] AddUnit fehlgeschlagen:", unitId, err)
+		end
 	end
 
 	-- Ergebnis an Client
 	local ok2, err2 = pcall(function()
 		SummonResult:FireClient(player, unitIds)
 	end)
-        if not ok2 then
-                log:Warn("SummonResult FireClient fehlgeschlagen:", err2)
-        end
+	if not ok2 then
+		warn("[SummonService] SummonResult FireClient fehlgeschlagen:", err2)
+	end
 end
 
 return SummonServiceModule

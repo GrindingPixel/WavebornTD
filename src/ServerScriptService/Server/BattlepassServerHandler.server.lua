@@ -10,8 +10,6 @@ local Modules = game:GetService("ServerScriptService"):WaitForChild("Modules")
 local ProfileWrapper = require(Modules:WaitForChild("ProfileStoreWrapper"))
 local BattlepassInfoProvider = require(ReplicatedStorage.Modules:WaitForChild("BattlepassInfoProvider"))
 BattlepassInfoProvider.Regenerate()
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log = DebugLogger.new("BattlepassServerHandler")
 
 --// Remotes
 local BattlepassFolder = ReplicatedStorage.Remotes:WaitForChild("Battlepass")
@@ -20,6 +18,10 @@ local ClaimFree = BattlepassFolder:WaitForChild("ClaimFreeRewards")
 local ClaimPremium = BattlepassFolder:WaitForChild("ClaimPremiumRewards")
 
 --// Debug
+local DEBUG = true
+local function log(...)   if DEBUG then print("[BattlepassServerHandler]", ...) end end
+local function warnf(...) if DEBUG then warn("[BattlepassServerHandler]", ...) end end
+
 --// Battlepass Info abrufen
 GetBattlepassInfo.OnServerInvoke = function(player)
 	if not ProfileWrapper:IsLoaded(player) then return nil end
@@ -30,11 +32,11 @@ GetBattlepassInfo.OnServerInvoke = function(player)
 	for i = 1, BattlepassInfoProvider.GetMaxLevel() do
 		local entry = BattlepassInfoProvider.GetLevelData(i)
 
-                if entry == nil then
-                        log:Warn("❌ Kein Eintrag für Level", i)
-                elseif not entry.free then
-                        log:Warn("❌ entry.free fehlt bei Level", i, "| Inhalt:", entry)
-                end
+		if entry == nil then
+			warnf("❌ Kein Eintrag für Level", i)
+		elseif not entry.free then
+			warnf("❌ entry.free fehlt bei Level", i, "| Inhalt:", entry)
+		end
 
 		if entry and (entry.free or entry.premium) then
 			levelData[i] = {
@@ -105,11 +107,11 @@ ClaimPremium.OnServerEvent:Connect(function(player, level)
 		return
 	end
 
-        local entry = BattlepassInfoProvider.GetLevelData(level)
-        if not entry or not entry.premium then
-                log:Warn("❌ Kein gültiger Premium-Reward bei Level", level, "| entry:", entry)
-                return
-        end
+	local entry = BattlepassInfoProvider.GetLevelData(level)
+	if not entry or not entry.premium then
+		warnf("❌ Kein gültiger Premium-Reward bei Level", level, "| entry:", entry)
+		return
+	end
 
 	if (playerBP.Level or 0) < level then
 		log(player.Name, "hat nicht genug Level für PREMIUM", level)

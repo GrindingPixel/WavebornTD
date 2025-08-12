@@ -1,9 +1,5 @@
 -- ServerScriptService/CollisionGroupSetup.server.lua
 local PhysicsService = game:GetService("PhysicsService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log = DebugLogger.new("CollisionGroupSetup")
 
 -- Nur selbst erstellbare Gruppen (Default darf nicht enthalten sein!)
 local groups = {
@@ -28,9 +24,9 @@ for _, group in ipairs(groups) do
 		PhysicsService:RegisterCollisionGroup(group)
 	end)
 	if ok then
-                log("✅ Gruppe erstellt:", group)
+		print("✅ Gruppe erstellt:", group)
 	else
-                log("ℹ️  Gruppe bereits vorhanden oder Fehler:", group, err)
+		print("ℹ️  Gruppe bereits vorhanden oder Fehler:", group, err)
 	end
 end
 
@@ -43,13 +39,13 @@ for groupA, rules in pairs(matrix) do
 			local ok, err = pcall(function()
 				PhysicsService:CollisionGroupSetCollidable(groupA, groupB, shouldCollide)
 			end)
-                        if ok then
-                                log("🔧 Regel gesetzt:", groupA, "<->", groupB, "=", shouldCollide)
-                        else
-                                log:Warn("⚠️ Fehler bei Regel:", groupA, groupB, err)
-                        end
+			if ok then
+				print("🔧 Regel gesetzt:", groupA, "<->", groupB, "=", shouldCollide)
+			else
+				warn("⚠️ Fehler bei Regel:", groupA, groupB, err)
+			end
 		end
 	end
 end
 
-log("✅ CollisionGroup Setup abgeschlossen")
+print("✅ CollisionGroup Setup abgeschlossen")

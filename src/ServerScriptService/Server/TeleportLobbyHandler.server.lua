@@ -5,9 +5,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
 local Workspace         = game:GetService("Workspace")
 
-local DebugLogger = require(ReplicatedStorage.Modules:WaitForChild("DebugLogger"))
-local log = DebugLogger.new("TeleportLobbyHandler")
-
 --// Remotes
 local teleportRemote = ReplicatedStorage.Remotes.Teleport:WaitForChild("TeleportToAreaRequest")
 
@@ -26,16 +23,16 @@ teleportRemote.OnServerEvent:Connect(function(player, areaData)
         end
 
         if typeof(areaName) ~= "string" then
-                log:Warn("⚠️ Ungültige Teleport-Anfrage:", areaData)
+                warn("[TeleportLobbyHandler] ⚠️ Ungültige Teleport-Anfrage:", areaData)
                 return
         end
 
         local target = targetFolder:FindFirstChild(areaName)
         if not target then
-                log:Warn("⚠️ Ungültiges Zielgebiet:", areaName)
+                warn("[TeleportLobbyHandler] ⚠️ Ungültiges Zielgebiet:", areaName)
                 return
         end
 
-        log("📦 Teleportiere", player.Name, "nach", areaName)
+        print("[TeleportLobbyHandler] 📦 Teleportiere", player.Name, "nach", areaName)
         character:PivotTo(target.CFrame + Vector3.new(0, 3, 0))
 end)
