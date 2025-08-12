@@ -159,7 +159,6 @@ GroupPool = {
         { type = "Eclipsium", amount = 100 },
         { type = "Scroll", id = "SummonScroll_Common", amount = 1 },
     }
-},
 {
     StageId = 2,
     Name = "Forgotten Quarters",
