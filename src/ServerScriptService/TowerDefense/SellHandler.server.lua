@@ -8,7 +8,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Modules = ServerScriptService:WaitForChild("Modules")
 
 --// Modules
-local ProfileStoreWrapper = require(Modules.ProfileStoreWrapper)
+local ProfileService = require(Modules.ProfileService)
 local UnitsDataModule = require(ReplicatedStorage.Modules.UnitDataModule)
 local UpgradeConfig = require(ReplicatedStorage.TDModules.Systems.UpgradeConfig)
 local UnitStatModule = require(ReplicatedStorage.Modules.UnitStatsModule)
@@ -30,7 +30,7 @@ SellTowerRequest.OnServerEvent:Connect(function(player: Player, payload: { tuuid
 	local tuuid = payload.tuuid
 	local uuid = payload.uuid
 
-	local profile = ProfileStoreWrapper:GetProfile(player)
+        local profile = ProfileService:GetProfile(player)
 	if not profile then
 		warn(`[SellHandler] ❌ Kein Profil für Spieler {player.Name} gefunden`)
 		return

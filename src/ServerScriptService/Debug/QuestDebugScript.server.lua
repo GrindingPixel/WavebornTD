@@ -7,7 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 --// Module
-local ProfileWrapper = require(game.ServerScriptService.Modules:WaitForChild("ProfileStoreWrapper"))
+local ProfileService = require(game.ServerScriptService.Modules:WaitForChild("ProfileService"))
 local QuestData = require(game.ReplicatedStorage.Modules:WaitForChild("QuestDataModule"))
 
 --// Einstellungen
@@ -19,14 +19,14 @@ local testPlayerName = "RDBEmpire"
 --// Funktion: Quest erhöhen
 local function incrementQuest()
 	local player = Players:FindFirstChild(testPlayerName)
-	if not player or not ProfileWrapper:IsLoaded(player) then
-		warn("❌ Kein Spieler oder Profil nicht geladen")
-		return
-	end
+        if not player or not ProfileService:IsLoaded(player) then
+                warn("❌ Kein Spieler oder Profil nicht geladen")
+                return
+        end
 
-	ProfileWrapper:IncrementQuest(player, questType, questId, addAmount)
+        ProfileService:IncrementQuest(player, questType, questId, addAmount)
 
-	local progress = ProfileWrapper:GetQuestProgress(player, questType)
+        local progress = ProfileService:GetQuestProgress(player, questType)
 	local questList = QuestData[questType]
 	local questData = nil
 
