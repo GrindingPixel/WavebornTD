@@ -7,7 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules
-local UnitStats = require(ReplicatedStorage.Modules.UnitStatsModule)
+local UnitStats = require(ReplicatedStorage.UnitStatsModule)
 local UpgradeConfig = require(ReplicatedStorage.TDModules.Systems.UpgradeConfig)
 
 --// Typdefinition
